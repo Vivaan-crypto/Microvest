@@ -1,33 +1,38 @@
-import os
 from datetime import datetime, timedelta
 
 import joblib
 import pandas as pd
 import pandas_ta as ta
 import yfinance as yf
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from xgboost import XGBClassifier
 
-# Configuration
+# ======================
+# CONFIGURATION
+# ======================
 TICKER = "AMZN"
 DAYS = 500
 MODEL_PATH = r"C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\model\model.pkl"
-os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+INTERVAL = "1h"
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
 
-# 1. Data Fetching
+# ======================
+# DATA FETCHING + CLEANING
+# ======================
 print(f"Fetching {TICKER} data...")
-end_date = datetime.now()
-start_date = end_date - timedelta(days=DAYS)
 data = yf.download(
-    tickers=TICKER, start=start_date, end=end_date, interval="1h", progress=False
+    tickers=TICKER,
+    start=datetime.now() - timedelta(days=DAYS),
+    end=datetime.now(),
+    interval=INTERVAL,
+    progress=False,
 )
 
-if data.empty:
-    raise ValueError("No data returned - check ticker or internet connection")
-# 2. Feature Engineering
-print("Calculating indicators...")
-data.columns = data.columns.droplevel(1)  # Remove ticker level
+# Clean column names
+data.columns = data.columns.droplevel(1)
 data = data.rename(
     columns={
         "Open": "open",
@@ -37,94 +42,77 @@ data = data.rename(
         "Volume": "volume",
     }
 )
-for i in data.columns:
-    data[i] = round(data[i], 2)
 
+# ======================
+# FEATURE ENGINEERING
+# ======================
+# Price Features
+data["returns"] = data["close"].pct_change()
+data["volatility"] = data["returns"].rolling(24).std()
+
+# Volume Features
+data["volume_ma"] = data["volume"].rolling(24).mean()
+data["volume_z"] = (data["volume"] - data["volume_ma"]) / data["volume_ma"].replace(
+    0, 1e-6
+)
 
 # Technical Indicators
 data["rsi"] = ta.rsi(data["close"], length=14)
-data["macd"] = ta.ema(close=data["close"], length=12) - ta.ema(
-    close=data["close"], length=26
-)
-data["ema_20"] = ta.ema(close=data["close"], length=20)
-# Target Variable
-data["target"] = (data["close"].shift(-3) / data["close"] - 1 > 0.005).astype(int)
-# Momentum Indicators
-data["stoch_k"] = ta.stoch(data["high"], data["low"], data["close"], k=14, d=3)[
-    "STOCHk_14_3_3"
-]  # Stochastic %K
-data["stoch_d"] = ta.stoch(data["high"], data["low"], data["close"], k=14, d=3)[
-    "STOCHd_14_3_3"
-]  # Stochastic %D
-data["cci"] = ta.cci(
-    data["high"], data["low"], data["close"], length=20
-)  # Commodity Channel Index
-data["mom"] = ta.mom(data["close"], length=10)  # Momentum (10-period)
+data["macd"] = ta.ema(data["close"], length=12) - ta.ema(data["close"], length=26)
+data["atr"] = ta.atr(data["high"], data["low"], data["close"], length=14)
 
-# Trend Indicators
-data["adx"] = ta.adx(data["high"], data["low"], data["close"], length=14)[
-    "ADX_14"
-]  # Average Directional Index
-data["psar"] = ta.psar(data["high"], data["low"], data["close"])[
-    "PSARl_0.02_0.2"
-]  # Parabolic SAR
+# Lagged Features
+for lag in [1, 3, 6]:
+    data[f"rsi_lag{lag}"] = data["rsi"].shift(lag)
 
-# Volume Indicators
-data["obv"] = ta.obv(data["close"], data["volume"])  # On-Balance Volume
-data["vwap"] = ta.vwap(
-    data["high"], data["low"], data["close"], data["volume"]
-)  # Volume Weighted Avg Price
+# Target (1 if price increases >0.5% in next 3 periods)
+data["target"] = (data["close"].shift(-3) > data["close"] * 1.005).astype(int)
 
-# Volatility Indicators
-data["atr"] = ta.atr(
-    data["high"], data["low"], data["close"], length=14
-)  # Average True Range
-data["bb_width"] = ta.bbands(data["close"], length=20)[
-    "BBB_20_2.0"
-]  # Bollinger Band Width
+# Clean data
 data = data.dropna()
-# 3. Model Training
-print("Training model...")
-features = [
-    "rsi",
-    "macd",
-    "ema_20",
-    "stoch_k",
-    "stoch_d",
-    "cci",
-    "mom",
-    "adx",
-    "psar",
-    "obv",
-    "vwap",
-    "atr",
-    "bb_width",
-]
+
+# ======================
+# MODEL TRAINING
+# ======================
+# Selected Features
+features = ["rsi", "macd", "atr", "volatility", "volume_z", "rsi_lag1", "rsi_lag3"]
 X = data[features]
 y = data["target"]
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
-# Scale features
+# Train-Test Split (time-series aware)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=TEST_SIZE, shuffle=False, random_state=RANDOM_STATE
+)
+
+# Feature Scaling
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(x_train)
-X_test_scaled = scaler.fit_transform(x_test)
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-
-# Train model
-model = RandomForestClassifier(
-    n_estimators=400, max_depth=10, random_state=42, n_jobs=-1
+# Initialize and train model
+model = XGBClassifier(
+    n_estimators=150,
+    max_depth=6,
+    learning_rate=0.05,
+    subsample=0.8,
+    reg_alpha=0.1,  # L1 regularization
 )
 model.fit(X_train_scaled, y_train)
 
-# 4. Save Model
-print(f"Saving model to {MODEL_PATH}")
-joblib.dump((model, scaler, features), MODEL_PATH)
+# ======================
+# EVALUATION
+# ======================
+train_acc = accuracy_score(y_train, model.predict(X_train_scaled))
+test_acc = accuracy_score(y_test, model.predict(X_test_scaled))
 
-# 5. Quick Validation
-train_acc = model.score(X_train_scaled, y_train)
-test_acc = model.score(X_test_scaled, y_test)
-print(f"Training accuracy: {train_acc:.2%}")
-print(f"Testing accuracy: {test_acc:.2%}")
+print("\n=== Model Performance ===")
+print(f"Training Accuracy: {train_acc:.2%}")
+print(f"Test Accuracy: {test_acc:.2%}")
+print("\nClassification Report:")
+print(classification_report(y_test, model.predict(X_test_scaled)))
 
-
-print("Model training complete!")
+# ======================
+# SAVE MODEL
+# ======================
+joblib.dump({"model": model, "scaler": scaler, "features": features}, MODEL_PATH)
+print(f"\nModel saved to {MODEL_PATH}")

@@ -5,142 +5,179 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
+import seaborn as sns
 import streamlit as st
 import yfinance as yf
 from sklearn.preprocessing import StandardScaler
 
-# Configuration
-TICKER = "AAPL"  # Default ticker
-DAYS = 30  # Lookback period
+# ======================================
+# CONFIGURATION & STYLING
+# ======================================
+# Visual settings
+sns.set_style("whitegrid")
+sns.set_palette("deep")
+plt.rcParams["figure.facecolor"] = "white"
+plt.rcParams["axes.grid"] = True
+plt.rcParams["grid.alpha"] = 0.3
+
+# Default parameters
+TICKER = "AAPL"
+DAYS = 90
 MODEL_PATH = r"C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\model\model.pkl"
+THRESHOLDS = {
+    "STRONG_BUY": 0.75,
+    "BUY": 0.65,
+    "WEAK_BUY": 0.55,
+    "NEUTRAL": (0.45, 0.55),
+    "SELL": 0.35,
+    "STRONG_SELL": 0.25,
+}
 
-# Streamlit UI
-st.set_page_config(layout="wide", page_title="Stock Analyzer")
-st.title("📈 Enhanced Stock Analysis (1-Hour Intervals)")
+# ======================================
+# STREAMLIT UI
+# ======================================
+st.set_page_config(layout="wide", page_title="Stock Predictor Pro")
+st.title("📊 Stock Predictor Pro - AI-Driven Analysis")
 
-# User input
-ticker = st.text_input("Enter stock ticker:", TICKER)
-days = st.slider("Lookback days:", 7, 90, DAYS)
+# Sidebar controls
+with st.sidebar:
+    st.header("Analysis Parameters")
+    ticker = st.text_input("Stock Ticker", TICKER)
+    days = st.slider("Lookback Period (days)", 7, 365, DAYS)
+    st.markdown("---")
+    st.caption("Model Settings:")
+    show_confidence = st.checkbox("Show Confidence Metrics", True)
+    show_raw = st.checkbox("Show Raw Data", False)
 
-if st.button("Analyze"):
-    with st.spinner("Fetching df..."):
+# ======================================
+# MAIN ANALYSIS FUNCTION
+# ======================================
+if st.button("Run Analysis", type="primary"):
+    with st.spinner("Crunching market data..."):
         try:
-            # 1. df Fetching with yfinance (unchanged)
+            # --------------------------
+            # 1. DATA FETCHING
+            # --------------------------
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
             df = yf.download(
-                ticker, start=start_date, end=end_date, interval="1h", progress=False
+                tickers=ticker,
+                start=start_date,
+                end=end_date,
+                interval="1h",
+                progress=False,
             )
 
             if df.empty:
-                st.error("No df returned - check ticker or try again later")
+                st.error("⚠️ No data returned - check ticker or try again later")
                 st.stop()
 
-            # 2. Feature Engineering (keeping all original indicators)
-            df.columns = df.columns.droplevel(1)  # Remove ticker level
-            df = df.rename(
-                columns={
-                    "Open": "open",
-                    "High": "high",
-                    "Low": "low",
-                    "Close": "close",
-                    "Volume": "volume",
-                }
-            )
+            # Clean data
+            df.columns = df.columns.droplevel(1)
+            df.columns = [col.lower() for col in df.columns]
+            df = df.rename(columns={"adj close": "close"})
 
-            # Original indicator calculations (unchanged)
+            # --------------------------
+            # 2. FEATURE ENGINEERING
+            # --------------------------
+            # Technical Indicators
             df["rsi"] = ta.rsi(df["close"], length=14)
-            df["macd"] = ta.ema(close=df["close"], length=12) - ta.ema(
-                close=df["close"], length=26
-            )
-            df["ema_20"] = ta.ema(close=df["close"], length=20)
-            # Target Variable
-            df["target"] = (df["close"].shift(-3) / df["close"] - 1 > 0.005).astype(int)
-            # Momentum Indicators
-            df["stoch_k"] = ta.stoch(df["high"], df["low"], df["close"], k=14, d=3)[
-                "STOCHk_14_3_3"
-            ]  # Stochastic %K
-            df["stoch_d"] = ta.stoch(df["high"], df["low"], df["close"], k=14, d=3)[
-                "STOCHd_14_3_3"
-            ]  # Stochastic %D
-            df["cci"] = ta.cci(
-                df["high"], df["low"], df["close"], length=20
-            )  # Commodity Channel Index
-            df["mom"] = ta.mom(df["close"], length=10)  # Momentum (10-period)
-
-            # Trend Indicators
-            df["adx"] = ta.adx(df["high"], df["low"], df["close"], length=14)[
-                "ADX_14"
-            ]  # Average Directional Index
-            df["psar"] = ta.psar(df["high"], df["low"], df["close"])[
-                "PSARl_0.02_0.2"
-            ]  # Parabolic SAR
-
-            # Volume Indicators
-            df["obv"] = ta.obv(df["close"], df["volume"])  # On-Balance Volume
-            df["vwap"] = ta.vwap(
-                df["high"], df["low"], df["close"], df["volume"]
-            )  # Volume Weighted Avg Price
-
-            # Volatility Indicators
-            df["atr"] = ta.atr(
-                df["high"], df["low"], df["close"], length=14
-            )  # Average True Range
-            df["bb_width"] = ta.bbands(df["close"], length=20)[
-                "BBB_20_2.0"
-            ]  # Bollinger Band Width
+            df["macd"] = ta.ema(df["close"], length=12) - ta.ema(df["close"], length=26)
+            df["macd_signal"] = ta.ema(df["macd"], length=9)
+            df["ema_200"] = ta.ema(df["close"], length=200)
+            df["atr"] = ta.atr(df["high"], df["low"], df["close"], length=14)
             df["returns"] = df["close"].pct_change()
+            df["volatility"] = df["returns"].rolling(24).std()
+
+            # Lagged features
+            for lag in [1, 3, 6]:
+                df[f"rsi_lag{lag}"] = df["rsi"].shift(lag)
+                df[f"volume_lag{lag}"] = df["volume"].shift(lag)
+
             df = df.dropna()
 
-            # 3. Load Model and Predict (unchanged)
+            # --------------------------
+            # 3. MODEL PREDICTION
+            # --------------------------
+            # Load model artifacts
             model, scaler, features = joblib.load(MODEL_PATH)
+            # Prepare and scale features
             X = df[features]
             X_scaled = scaler.transform(X)
+
+            # Get predictions
             predictions = model.predict_proba(X_scaled)
-            df["prediction"] = predictions[:, 1]  # Probability of positive return
-            # Get latest prediction
+            df["prediction"] = predictions[:, 1]
             latest_pred = df["prediction"].iloc[-1]
 
-            # 4. Generate Trading Signal (NEW)
-            if latest_pred > 0.75:
+            # --------------------------
+            # 4. TRADING SIGNAL
+            # --------------------------
+            if latest_pred >= THRESHOLDS["STRONG_BUY"]:
                 signal = "STRONG BUY"
-                color = "darkgreen"
+                color = "#006400"  # Dark green
                 emoji = "🚀"
-            elif latest_pred > 0.65:
+            elif latest_pred >= THRESHOLDS["BUY"]:
                 signal = "BUY"
-                color = "green"
+                color = "#228B22"  # Forest green
                 emoji = "📈"
-            elif latest_pred > 0.55:
+            elif latest_pred >= THRESHOLDS["WEAK_BUY"]:
                 signal = "WEAK BUY"
-                color = "limegreen"
+                color = "#7CFC00"  # Lawn green
                 emoji = "↗️"
-            elif latest_pred < 0.45:
-                signal = "SELL"
-                color = "red"
-                emoji = "📉"
-            elif latest_pred < 0.35:
+            elif latest_pred <= THRESHOLDS["STRONG_SELL"]:
                 signal = "STRONG SELL"
-                color = "darkred"
+                color = "#8B0000"  # Dark red
                 emoji = "⚠️"
+            elif latest_pred <= THRESHOLDS["SELL"]:
+                signal = "SELL"
+                color = "#FF0000"  # Red
+                emoji = "📉"
             else:
                 signal = "NEUTRAL"
-                color = "gray"
+                color = "#696969"  # Dim gray
                 emoji = "➖"
 
-            confidence = f"{max(latest_pred, 1-latest_pred)*100:.1f}%"
+            # Calculate directional confidence (0-100%)
+            if latest_pred > 0.5:
+                confidence = (latest_pred - 0.5) * 2  # Buy confidence
+            else:
+                confidence = (0.5 - latest_pred) * 2  # Sell confidence
 
-            # 5. Enhanced Visualization (NEW but keeping original indicators)
-            fig = plt.figure(figsize=(14, 10))
-            gs = fig.add_gridspec(3, 1, height_ratios=[3, 1, 1])
+            confidence_str = f"{confidence*100:.1f}%"
 
-            # Price Chart (with original SMA_20)
+            # --------------------------
+            # 5. VISUALIZATION
+            # --------------------------
+            # Create figure with subplots
+            fig = plt.figure(figsize=(14, 12), facecolor="white")
+            gs = fig.add_gridspec(4, 1, height_ratios=[3, 1, 1, 1])
             ax1 = fig.add_subplot(gs[0])
-            ax1.plot(df.index, df["close"], label="Price", color="blue", linewidth=2)
-            ax1.plot(
-                df.index, df["ema_20"], label="20 EMA", color="orange", linestyle="--"
+            ax2 = fig.add_subplot(gs[1])
+            ax3 = fig.add_subplot(gs[2])
+            ax4 = fig.add_subplot(gs[3])
+
+            # Main price chart
+            sns.lineplot(
+                data=df,
+                x=df.index,
+                y="close",
+                ax=ax1,
+                color="#1f77b4",
+                linewidth=2,
+                label="Price",
+            )
+            sns.lineplot(
+                data=df,
+                x=df.index,
+                y="ema_200",
+                ax=ax1,
+                color="#ff7f0e",
+                linestyle="--",
+                label="200 EMA",
             )
 
-            # Highlight prediction zones
+            # Add prediction zones
             ax1.fill_between(
                 df.index,
                 df["close"],
@@ -152,72 +189,133 @@ if st.button("Analyze"):
             ax1.fill_between(
                 df.index,
                 df["close"],
-                where=(df["prediction"] < 0.45),
+                where=(df["prediction"] < 0.35),
                 color="red",
                 alpha=0.1,
                 label="Sell Zone",
             )
 
             ax1.set_title(
-                f"{ticker} Price - Current Signal: {emoji} {signal} ({confidence} confidence)",
+                f"{ticker} Price Analysis - {emoji} {signal} ({confidence_str} Confidence)",
                 fontsize=14,
                 fontweight="bold",
+                pad=20,
                 color=color,
             )
             ax1.legend(loc="upper left")
-            ax1.grid(True, alpha=0.3)
 
-            # RSI Chart (unchanged)
-            ax2 = fig.add_subplot(gs[1], sharex=ax1)
-            ax2.plot(df.index, df["rsi"], label="RSI 14", color="purple")
-            ax2.axhline(70, color="red", linestyle="--")
-            ax2.axhline(30, color="green", linestyle="--")
-            ax2.set_title("RSI Indicator")
-            ax2.grid(True, alpha=0.3)
+            # RSI subplot
+            sns.lineplot(data=df, x=df.index, y="rsi", ax=ax2, color="#9467bd")
+            ax2.axhline(70, color="red", linestyle=":", alpha=0.7)
+            ax2.axhline(30, color="green", linestyle=":", alpha=0.7)
+            ax2.fill_between(df.index, 70, 30, color="gray", alpha=0.1)
+            ax2.set_title("RSI (14-period)", fontsize=10)
 
-            """
-            # MACD Chart (unchanged)
-            ax3 = fig.add_subplot(gs[2], sharex=ax1)
-            ax3.plot(df.index, df["MACD_12_26_9"], label="MACD", color="blue")
-            ax3.plot(df.index, df["MACDs_12_26_9"], label="Signal", color="orange")
+            # MACD subplot
+            sns.lineplot(
+                data=df,
+                x=df.index,
+                y="macd",
+                ax=ax3,
+                color="#1f77b4",
+                label="MACD",
+            )
+            sns.lineplot(
+                data=df,
+                x=df.index,
+                y="macd_signal",
+                ax=ax3,
+                color="#ff7f0e",
+                label="Signal",
+            )
             ax3.bar(
                 df.index,
-                df["MACDh_12_26_9"],
-                color=np.where(df["MACDh_12_26_9"] > 0, "green", "red"),
-                alpha=0.5,
+                df["macd"] - df["macd_signal"],
+                color=np.where((df["macd"] - df["macd_signal"]) > 0, "green", "red"),
+                alpha=0.3,
+                width=0.01,
             )
-            ax3.set_title("MACD (12,26,9)")
+            ax3.axhline(0, color="black", linestyle="-", alpha=0.5)
+            ax3.set_title("MACD (12,26,9)", fontsize=10)
             ax3.legend(loc="upper left")
-            ax3.grid(True, alpha=0.3)
+
+            # Prediction probability subplot
+            sns.lineplot(data=df, x=df.index, y="prediction", ax=ax4, color=color)
+            ax4.axhline(0.5, color="gray", linestyle="--", alpha=0.5)
+            ax4.set_ylim(0, 1)
+            ax4.set_title("Model Prediction Probability", fontsize=10)
+            ax4.fill_between(
+                df.index,
+                df["prediction"],
+                where=(df["prediction"] > 0.5),
+                color="green",
+                alpha=0.1,
+            )
+            ax4.fill_between(
+                df.index,
+                df["prediction"],
+                where=(df["prediction"] < 0.5),
+                color="red",
+                alpha=0.1,
+            )
 
             plt.tight_layout()
-            """
-            # 6. Display Results (NEW)
             st.pyplot(fig)
 
-            # Signal Summary Card
+            # --------------------------
+            # 6. DASHBOARD METRICS
+            # --------------------------
+            # Signal card
             st.markdown(
                 f"""
             <div style="
-                border: 2px solid {color};
-                border-radius: 5px;
-                padding: 10px;
-                text-align: center;
-                margin: 10px 0;
-                background-color: {color}10;
+                border-left: 6px solid {color};
+                border-radius: 4px;
+                padding: 16px;
+                background-color: #f8f9fa;
+                margin: 16px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             ">
-                <h2 style="color: {color};">{emoji} {signal}</h2>
-                <p style="font-size: 20px;">Confidence: {confidence}</p>
-                <p>Current Price: ${df['close'].iloc[-1]:.2f}</p>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 32px;">{emoji}</span>
+                    <div>
+                        <h2 style="margin: 0; color: {color};">{signal} SIGNAL</h2>
+                        <p style="margin: 4px 0; font-size: 18px;">Confidence: <strong>{confidence_str}</strong></p>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px;">
+                    <div>Current Price: <strong>${df['close'].iloc[-1]:.2f}</strong></div>
+                    <div>ATR (Volatility): <strong>{df['atr'].iloc[-1]:.2f}</strong></div>
+                    <div>RSI: <strong>{df['rsi'].iloc[-1]:.1f}</strong></div>
+                </div>
             </div>
             """,
                 unsafe_allow_html=True,
             )
 
-            # Key Metrics Columns
-            col1, col2, col3 = st.columns(3)
+            # Key metrics columns
+            st.subheader("Technical Snapshot")
+            col1, col2, col3, col4 = st.columns(4)
 
             with col1:
+                st.metric(
+                    "Prediction Strength",
+                    f"{latest_pred:.1%}",
+                    delta=(
+                        f"{(latest_pred-0.5)*100:.1f}% from neutral"
+                        if latest_pred != 0.5
+                        else "0%"
+                    ),
+                )
+
+            with col2:
+                st.metric(
+                    "Volatility (ATR)",
+                    f"{df['atr'].iloc[-1]:.2f}",
+                    delta=f"{df['atr'].pct_change().iloc[-1]:.1%} change",
+                )
+
+            with col3:
                 st.metric(
                     "RSI (14)",
                     f"{df['rsi'].iloc[-1]:.1f}",
@@ -228,46 +326,56 @@ if st.button("Analyze"):
                     ),
                 )
 
-            """
-            with col2:
+            with col4:
+                macd_diff = df["macd"].iloc[-1] - df["macd_signal"].iloc[-1]
                 st.metric(
-                    "MACD",
-                    f"{df['MACD_12_26_9'].iloc[-1]:.2f}",
-                    (
-                        "Bullish"
-                        if df["MACD_12_26_9"].iloc[-1] > df["MACDs_12_26_9"].iloc[-1]
-                        else "Bearish"
-                    ),
-                )
-            """
-            with col3:
-                st.metric(
-                    "20 SMA vs Price",
-                    f"{(df['close'].iloc[-1]/df['ema_20'].iloc[-1]-1)*100:.1f}%",
-                    (
-                        "Above EMA"
-                        if df["close"].iloc[-1] > df["ema_20"].iloc[-1]
-                        else "Below EMA"
-                    ),
+                    "MACD Diff",
+                    f"{macd_diff:.2f}",
+                    "Bullish" if macd_diff > 0 else "Bearish",
                 )
 
-            # Recent df Table (unchanged column names)
-            st.subheader("Recent df")
-            st.dataframe(
-                df[["close", "rsi", "macd", "prediction"]]
-                .tail(10)
-                .style.format(
-                    {
-                        "Close": "${:.2f}",
-                        "RSI": "{:.1f}",
-                        "MACD": "{:.2f}",
-                        "Chance of Success": "{:.2%}",
-                    }
-                )
-                .background_gradient(subset=["prediction"], cmap="RdYlGn")
-                .highlight_max(subset=["prediction"], color="lightgreen")
-                .highlight_min(subset=["prediction"], color="salmon")
+            # Recent predictions
+            st.subheader("Recent Predictions")
+            recent_data = df[["close", "rsi", "macd", "prediction"]].tail(24)
+
+            # Prediction heatmap
+            fig_heat, ax_heat = plt.subplots(figsize=(12, 1))
+            sns.heatmap(
+                recent_data[["prediction"]].T,
+                annot=True,
+                fmt=".0%",
+                cmap="RdYlGn",
+                vmin=0,
+                vmax=1,
+                cbar=False,
+                ax=ax_heat,
+                annot_kws={"size": 8},
             )
+            ax_heat.set_xticklabels(
+                [d.strftime("%m/%d %H:%M") for d in recent_data.index], rotation=45
+            )
+            ax_heat.set_title("Prediction Probability Over Last 24 Periods")
+            st.pyplot(fig_heat)
+
+            # Raw data table
+            if show_raw:
+                st.subheader("Detailed Data")
+                st.dataframe(
+                    recent_data.style.format(
+                        {
+                            "close": "${:.2f}",
+                            "rsi": "{:.1f}",
+                            "macd": "{:.2f}",
+                            "prediction": "{:.1%}",
+                        }
+                    ).background_gradient(
+                        subset=["prediction"], cmap="RdYlGn", vmin=0, vmax=1
+                    )
+                )
 
         except Exception as e:
-            st.error(f"Error occurred: {str(e)}")
+            st.error(f"❌ Analysis failed: {str(e)}")
+            st.exception(e)
+
+# Add footer
+st.markdown("---")
