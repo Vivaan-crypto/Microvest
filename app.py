@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
+import pytz
 import seaborn as sns
 import streamlit as st
 import yfinance as yf
@@ -32,6 +33,8 @@ THRESHOLDS = {
     "SELL": 0.35,
     "STRONG_SELL": 0.25,
 }
+UTC = pytz.timezone("UTC")
+EASTERN = pytz.timezone("US/Eastern")
 
 # ======================================
 # STREAMLIT UI
@@ -43,7 +46,7 @@ st.title("📊 Stock Predictor Pro - AI-Driven Analysis")
 with st.sidebar:
     st.header("Analysis Parameters")
     ticker = st.text_input("Stock Ticker", TICKER)
-    days = st.slider("Lookback Period (days)", 7, 365, DAYS)
+    days = st.slider("Lookback Period (days)", 7, 729, DAYS)
     st.markdown("---")
     st.caption("Model Settings:")
     show_confidence = st.checkbox("Show Confidence Metrics", True)
@@ -59,7 +62,7 @@ if st.button("Run Analysis", type="primary"):
             # 1. DATA FETCHING
             # --------------------------
             end_date = datetime.now()
-            start_date = end_date - timedelta(days=days)
+            start_date = end_date - timedelta(days=729)
             df = yf.download(
                 tickers=ticker,
                 start=start_date,
@@ -74,6 +77,7 @@ if st.button("Run Analysis", type="primary"):
 
             # Clean data
             df.columns = df.columns.droplevel(1)
+            df.index = pd.to_datetime(df.index).tz_convert("US/Eastern")
             df.columns = [col.lower() for col in df.columns]
             df = df.rename(columns={"adj close": "close"})
 
@@ -89,19 +93,26 @@ if st.button("Run Analysis", type="primary"):
             df["returns"] = df["close"].pct_change()
             df["volatility"] = df["returns"].rolling(24).std()
 
+            # Volume features
+            df["volume_ma"] = df["volume"].rolling(24).mean()
+            df["volume_z"] = (df["volume"] - df["volume_ma"]) / df["volume_ma"].replace(
+                0, 1e-6
+            )
+
             # Lagged features
             for lag in [1, 3, 6]:
                 df[f"rsi_lag{lag}"] = df["rsi"].shift(lag)
-                df[f"volume_lag{lag}"] = df["volume"].shift(lag)
-
             df = df.dropna()
 
             # --------------------------
             # 3. MODEL PREDICTION
             # --------------------------
             # Load model artifacts
-            model, scaler, features = joblib.load(MODEL_PATH)
-            # Prepare and scale features
+            artifacts = joblib.load(MODEL_PATH)
+            model = artifacts["model"]
+            scaler = artifacts["scaler"]
+            features = artifacts["features"]
+
             X = df[features]
             X_scaled = scaler.transform(X)
 
@@ -138,12 +149,7 @@ if st.button("Run Analysis", type="primary"):
                 color = "#696969"  # Dim gray
                 emoji = "➖"
 
-            # Calculate directional confidence (0-100%)
-            if latest_pred > 0.5:
-                confidence = (latest_pred - 0.5) * 2  # Buy confidence
-            else:
-                confidence = (0.5 - latest_pred) * 2  # Sell confidence
-
+            confidence = max(latest_pred, 1 - latest_pred)
             confidence_str = f"{confidence*100:.1f}%"
 
             # --------------------------
@@ -176,7 +182,8 @@ if st.button("Run Analysis", type="primary"):
                 linestyle="--",
                 label="200 EMA",
             )
-
+            plt.ylim(df["close"].min() - 10, df["close"].max() + 10)
+            plt.xlim(end_date - timedelta(days=days), end_date)
             # Add prediction zones
             ax1.fill_between(
                 df.index,
