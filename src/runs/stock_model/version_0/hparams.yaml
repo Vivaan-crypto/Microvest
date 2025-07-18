@@ -1,0 +1,6 @@
+attention_heads: 4
+dropout: 0.2
+hidden_size: 248
+input_size: 71
+learning_rate: 0.001
+num_layers: 10
