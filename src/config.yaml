@@ -1,0 +1,143 @@
+# Stock Prediction Configuration
+# This file contains all configuration parameters for the stock prediction system
+
+# Model Configuration
+model:
+  hidden_size: 248
+  num_layers: 10
+  dropout: 0.2
+  attention_heads: 4
+  use_attention: true
+  learning_rate: 0.001
+  batch_size: 64
+  epochs: 100
+  sequence_length: 30
+  validation_split: 0.2
+  early_stopping_patience: 10
+  log_every_n_steps: 5
+
+# Data Configuration
+data:
+  tickers:
+    - "AAPL"
+    - "MSFT"
+    - "NVDA"
+    - "GOOGL"
+    - "META"
+    - "AMZN"
+    - "TSLA"
+    - "JPM"
+    - "BAC"
+    - "JNJ"
+    - "PG"
+    - "KO"
+    - "WMT"
+    - "DIS"
+    - "V"
+    - "MA"
+    - "HD"
+    - "PFE"
+    - "XOM"
+    - "NFLX"
+    - "BABA"
+    - "AMD"
+    - "CRM"
+    - "SHOP"
+    - "NKE"
+    - "CVX"
+    - "MRNA"
+    - "SQ"
+    - "ROKU"
+    - "FSLR"
+    - "PLTR"
+    - "RIVN"
+    - "AFRM"
+    - "UBER"
+    - "LYFT"
+    - "DKNG"
+    - "SOFI"
+    - "ABNB"
+    - "TWLO"
+    - "SNOW"
+    - "INTC"
+    - "COST"
+    - "GS"
+    - "T"
+    - "F"
+    - "GE"
+    - "CAT"
+    - "NIO"
+    - "PANW"
+    - "ZS"
+    - "ENPH"
+    - "MU"
+    - "DDOG"
+    - "NET"
+    - "LULU"
+    - "TGT"
+    - "UAL"
+    - "BA"
+
+
+  period: "2y"
+  prediction_days: 5
+
+  # Technical indicators periods
+  sma_period: 20
+  ema_period: 12
+  rsi_period: 14
+  volatility_window: 20
+  volume_ratio_window: 20
+
+  # Features to use
+  features:
+    - "Close"
+    - "Open"
+    - "High"
+    - "Low"
+    - "Volume"
+    - "price_change"
+    - "volatility"
+    - "volume_ratio"
+    - "SMA_20"
+    - "EMA_12"
+    - "RSI_14"
+    - "MACD_12_26_9"
+    - "OBV"
+
+# Prediction Configuration
+prediction:
+  high_confidence_threshold: 0.8
+  medium_confidence_threshold: 0.6
+  buy_threshold: 0.6
+  sell_threshold: 0.6
+  confidence_multiplier: 10
+
+# File Paths
+paths:
+  output_dir: "output"
+  model_dir: "output/models"
+  complete_model_file: "complete_model.pkl"
+  combined_model_path: "C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src/output/models/complete_model.pkl"
+
+# System Configuration
+system:
+  random_seed: 42
+  suppress_warnings: true
+
+# Dashboard Configuration
+dashboard:
+  page_title: "Stock Prediction Dashboard"
+  page_icon: "📈"
+  layout: "wide"
+
+  period_options:
+    "1 Month": 30
+    "3 Months": 90
+    "6 Months": 180
+    "1 Year": 365
+    "2 Years": 730
+    "5 Years": 1825
+
+  chart_height: 600
+  gauge_height: 300
