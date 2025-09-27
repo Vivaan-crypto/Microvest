@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 import torch
 from model import lstm_model
 from sklearn.metrics import r2_score
-import numpy as np
 
 
 class LightningDataModule(L.LightningDataModule):

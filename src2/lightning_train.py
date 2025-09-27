@@ -1,4 +1,3 @@
-import torch.nn as nn
 from lightning_modules import LightningDataModule, LightningModule
 from lightning.pytorch.loggers import TensorBoardLogger
 import lightning as L
