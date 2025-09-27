@@ -1,73 +1,62 @@
-import torch
-import torch.nn as nn
-import pytorch_lightning as L
-from torch.utils.data import DataLoader
-from dataset import StockDataset
+"""
+LightningDataModule + feature engineering in ~60 lines.
+Concepts:
+  - We create **log returns** as regression target.
+  - We z-score every feature per ticker.
+  - We slice sliding windows (seq_len) for LSTM consumption.
+"""
 
+import yfinance as yf, pandas as pd, torch
+from torch.utils.data import Dataset, DataLoader
+from sklearn.preprocessing import StandardScaler
+import pytorch_lightning as L
+
+class StockDataset(Dataset):
+    def __init__(self, X, y):
+        self.X, self.y = map(torch.FloatTensor, (X, y))
+    def __len__(self): return len(self.X)
+    def __getitem__(self, i): return self.X[i], self.y[i]
 
 class StockDataModule(L.LightningDataModule):
-    """Simplified data module"""
-
-    def __init__(self, train_features, train_targets, val_features, val_targets,
-                 batch_size=64, sequence_length=30):
+    def __init__(self, cfg, X_train, y_train, X_val, y_val):
         super().__init__()
-        self.train_features = train_features
-        self.train_targets = train_targets
-        self.val_features = val_features
-        self.val_targets = val_targets
-        self.batch_size = batch_size
-        self.sequence_length = sequence_length
+        self.cfg, self.train_ds, self.val_ds = cfg, StockDataset(X_train, y_train), StockDataset(X_val, y_val)
 
-    def setup(self, stage=None):
-        self.train_dataset = StockDataset(
-            self.train_features, self.train_targets, self.sequence_length
-        )
-        self.val_dataset = StockDataset(
-            self.val_features, self.val_targets, self.sequence_length
-        )
+    @classmethod
+    def from_dataframe(cls, df, cfg):
+        df = df.copy()
+        # 1) compute technicals
+        import pandas_ta as ta
+        techs = df.groupby('ticker').apply(lambda d: d.ta.sma(length=cfg.techs['sma'])
+                                                      .ta.ema(length=cfg.techs['ema'])
+                                                      .ta.rsi(length=cfg.techs['rsi'])
+                                                      .ta.macd())
+        df = pd.concat([df, techs], axis=1).dropna()
 
-    def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
+        # 2) target = next-day log return
+        df['target'] = df.groupby('ticker')['Close'].pct_change().shift(-1)
+        df = df.dropna()
 
-    def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
+        # 3) scale features per ticker
+        scalers = {t: StandardScaler() for t in cfg.tickers}
+        feats = ['Close','Volume','SMA_20','EMA_12','RSI_14','MACD_12_26_9']
+        for t in cfg.tickers:
+            mask = df.ticker==t
+            df.loc[mask, feats] = scalers[t].fit_transform(df.loc[mask, feats])
 
+        # 4) sliding windows
+        def to_windows(tdf):
+            X, y = [], []
+            for i in range(cfg.seq_len, len(tdf)):
+                X.append(tdf[feats].iloc[i-cfg.seq_len:i].values)
+                y.append(tdf['target'].iloc[i])
+            return X, y
+        X, y = map(torch.tensor, zip(*(to_windows(df[df.ticker==t]) for t in cfg.tickers)))
+        X, y = X.reshape(-1, cfg.seq_len, len(feats)), y.flatten()
 
-class StockPredictor(L.LightningModule):
-    """Simplified Lightning model"""
+        # 5) train/val split
+        split = int(len(X)*0.8)
+        return cls(cfg, X[:split], y[:split], X[split:], y[split:])
 
-    def __init__(self, input_size, hidden_size=128, num_layers=2, dropout=0.2,
-                 learning_rate=0.001):
-        super().__init__()
-        self.save_hyperparameters()
-
-        self.lstm = nn.LSTM(
-            input_size=input_size,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            dropout=dropout,
-            batch_first=True
-        )
-        self.fc = nn.Linear(hidden_size, 1)
-        self.criterion = nn.MSELoss()
-
-    def forward(self, x):
-        lstm_out, _ = self.lstm(x)
-        return self.fc(lstm_out[:, -1, :])
-
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self(x).squeeze()
-        loss = self.criterion(y_hat, y)
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self(x).squeeze()
-        loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss, on_epoch=True, prog_bar=True)
-        return loss
-
-    def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+    def train_dataloader(self): return DataLoader(self.train_ds, batch_size=self.cfg.batch_size, shuffle=True)
+    def val_dataloader(self):   return DataLoader(self.val_ds, batch_size=self.cfg.batch_size)

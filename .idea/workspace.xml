@@ -4,7 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="changing the app a bit" />
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="changing the app a bit">
+      <change afterPath="$PROJECT_DIR$/src2/app.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/config.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/constants.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/dataset.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/lightning_modules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/lightning_train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/model/model.pth" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src2/preprocessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Microvest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Microvest.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/config.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lightning_modules.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -28,35 +48,45 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.app.executor": "Run",
-    "Python.model.executor": "Run",
-    "Python.squeeze_pro.executor": "Run",
-    "Python.train.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "v2",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "run.code.analysis.last.selected.profile": "aDefault",
-    "settings.editor.selected.configurable": "preferences.toDoOptions",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_modules.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
+    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;v2&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src2&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src2" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src2\data" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest" />
       <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\screeners\data" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.train">
-    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.lightning_train">
+    <configuration name="lightning_modules" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -65,12 +95,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src2" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/app.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src2/lightning_modules.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -79,7 +108,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="lightning_train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -88,12 +117,35 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src2" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/train.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src2/lightning_train.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="preprocessing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src2" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src2/preprocessing.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -103,21 +155,22 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.app" />
-      <item itemvalue="Python.train" />
+      <item itemvalue="Python.lightning_modules" />
+      <item itemvalue="Python.lightning_train" />
+      <item itemvalue="Python.preprocessing" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.train" />
-        <item itemvalue="Python.app" />
+        <item itemvalue="Python.lightning_train" />
+        <item itemvalue="Python.preprocessing" />
+        <item itemvalue="Python.lightning_modules" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-PY-251.26927.74" />
-        <option value="bundled-python-sdk-657d8234b839-64d779b69b7a-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.26927.74" />
+        <option value="bundled-python-sdk-b3d66beaba9a-c6efb3732140-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26199.168" />
       </set>
     </attachedChunks>
   </component>
@@ -132,7 +185,20 @@
       <workItem from="1752207408221" duration="850000" />
       <workItem from="1752208336878" duration="617000" />
       <workItem from="1752209053258" duration="24266000" />
-      <workItem from="1752585217530" duration="21451000" />
+      <workItem from="1752585217530" duration="28316000" />
+      <workItem from="1753236299395" duration="2436000" />
+      <workItem from="1753240929578" duration="2253000" />
+      <workItem from="1753243733232" duration="3923000" />
+      <workItem from="1753324958669" duration="29125000" />
+      <workItem from="1753841027977" duration="3310000" />
+      <workItem from="1754018359875" duration="2518000" />
+      <workItem from="1754078133635" duration="3000" />
+      <workItem from="1754108778008" duration="1211000" />
+      <workItem from="1754162310427" duration="5892000" />
+      <workItem from="1754764399919" duration="1018000" />
+      <workItem from="1754861443666" duration="432000" />
+      <workItem from="1755037339346" duration="2889000" />
+      <workItem from="1755256856446" duration="11000" />
     </task>
     <task id="LOCAL-00001" summary="changing the app a bit">
       <option name="closed" value="true" />
@@ -152,8 +218,31 @@
     <MESSAGE value="changing the app a bit" />
     <option name="LAST_COMMIT_MESSAGE" value="changing the app a bit" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src2/preprocessing.py</url>
+          <line>42</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src2/lightning_modules.py</url>
+          <line>59</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="x_tensor" />
+      </configuration>
+    </watches-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Microvest$app.coverage" NAME="app Coverage Results" MODIFIED="1752718437910" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/Microvest$train.coverage" NAME="train Coverage Results" MODIFIED="1752729346437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/Microvest$preprocessing.coverage" NAME="preprocessing Coverage Results" MODIFIED="1754157028196" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
+    <SUITE FILE_PATH="coverage/Microvest$lightning_train.coverage" NAME="lightning_train Coverage Results" MODIFIED="1754020523363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
+    <SUITE FILE_PATH="coverage/Microvest$train.coverage" NAME="train Coverage Results" MODIFIED="1753625439453" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>

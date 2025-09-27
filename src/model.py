@@ -1,59 +1,78 @@
-import torch
-import torch.nn as nn
-import pytorch_lightning as L
+"""
+Attention-LSTM for stock prediction
+-----------------------------------
+1. LSTM captures **sequential** dependencies.
+2. Attention lets the network *focus* on the most relevant timesteps.
+3. The whole thing is wrapped as a LightningModule so we get
+   training, validation, checkpointing for free.
+"""
 
+import torch, torch.nn as nn, pytorch_lightning as L
+from torchmetrics import MeanSquaredError
 
 class AttentionLSTM(L.LightningModule):
-    """Advanced LSTM with attention mechanism"""
-
-    def __init__(self, input_size, hidden_size=128, num_layers=3, dropout=0.3,
-                 attention_heads=4, learning_rate=0.001):
+    def __init__(self, cfg):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(cfg)          # keeps cfg in checkpoints
+        C = cfg                                 # short alias
 
+        # 1) LSTM: returns (batch, seq, hidden*2) because bidirectional=True
         self.lstm = nn.LSTM(
-            input_size, hidden_size, num_layers,
-            batch_first=True, dropout=dropout, bidirectional=True
+            input_size  = C.n_features,
+            hidden_size = C.hidden,
+            num_layers  = C.layers,
+            dropout     = C.dropout if C.layers>1 else 0,
+            batch_first = True,
+            bidirectional = True
         )
 
-        lstm_output_size = hidden_size * 2
-        self.attention = nn.MultiheadAttention(
-            lstm_output_size, attention_heads, dropout=dropout, batch_first=True
+        # 2) Attention: query = key = value = lstm_out
+        self.attn = nn.MultiheadAttention(
+            embed_dim = C.hidden*2,
+            num_heads = C.heads,
+            dropout   = C.dropout,
+            batch_first = True
         )
 
-        self.feature_layers = nn.Sequential(
-            nn.Linear(lstm_output_size, hidden_size),
+        # 3) Head: maps hidden → 1 (regression of next-day return)
+        self.head = nn.Sequential(
+            nn.Linear(C.hidden*2, C.hidden//2),
             nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_size, hidden_size // 2),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_size // 2, 1)
+            nn.Dropout(C.dropout),
+            nn.Linear(C.hidden//2, 1)
         )
-
-        self.batch_norm = nn.BatchNorm1d(lstm_output_size)
         self.criterion = nn.MSELoss()
 
+    # --------------------------------------------------
+    # forward pass
+    # --------------------------------------------------
     def forward(self, x):
-        lstm_out, _ = self.lstm(x)
-        attended_out, _ = self.attention(lstm_out, lstm_out, lstm_out)
-        last_output = attended_out[:, -1, :]
-        normalized = self.batch_norm(last_output)
-        return self.feature_layers(normalized)
+        """
+        x : (batch, seq_len, n_features)
+        returns raw log-return prediction
+        """
+        lstm_out, _ = self.lstm(x)                  # (B,T,2H)
+        attn_out, _ = self.attn(lstm_out, lstm_out, lstm_out)  # same shape
+        # we only need last timestep after attention
+        return self.head(attn_out[:,-1,:]).squeeze(-1)
 
-    def training_step(self, batch, batch_idx):
+    # --------------------------------------------------
+    # Lightning hooks
+    # --------------------------------------------------
+    def _step(self, batch):
         x, y = batch
-        y_hat = self(x).squeeze()
+        y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        return loss, y_hat, y
+
+    def training_step(self, batch, _):
+        loss, *_ = self._step(batch)
+        self.log("train_loss", loss, prog_bar=True)
         return loss
 
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self(x).squeeze()
-        loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss, on_epoch=True, prog_bar=True)
-        return loss
+    def validation_step(self, batch, _):
+        loss, *_ = self._step(batch)
+        self.log("val_loss", loss, prog_bar=True)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
