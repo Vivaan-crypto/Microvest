@@ -2,6 +2,8 @@ from lightning_modules import LightningDataModule, LightningModule
 from lightning.pytorch.loggers import TensorBoardLogger
 import lightning as L
 import torch
+
+
 def main():
     model = LightningModule()
     x_path = 'data/x_tensors.pt'
@@ -12,12 +14,11 @@ def main():
         logger=logger,
         max_epochs=25,
         log_every_n_steps=2,
-        accelerator = 'cpu',
+        accelerator='cpu',
     )
 
     trainer.fit(model, data_module)
     torch.save(model.state_dict(), "model/model.pth")
-
 
 
 if __name__ == '__main__':

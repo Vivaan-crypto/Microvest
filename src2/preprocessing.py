@@ -60,3 +60,4 @@ if __name__ == '__main__':
     X_data, y_data = get_data(ticker_list, '2015-01-01', '2025-01-01', target_len=5)
     torch.save(X_data, 'data/x_tensors.pt')
     torch.save(y_data, 'data/y_tensors.pt')
+    #TODO: Stock splits are not taken into account!
