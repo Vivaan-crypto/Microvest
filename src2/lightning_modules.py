@@ -5,7 +5,7 @@ from dataset import StockDataset
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 import torch
-from model import lstm_model
+from model import StockLSTMModel
 from sklearn.metrics import r2_score
 import random
 
@@ -39,7 +39,7 @@ class LightningModule(L.LightningModule):
     def __init__(self, learning_rate: float = 0.001):
         super().__init__()
         self.save_hyperparameters()
-        self.model = lstm_model()
+        self.model = StockLSTMModel()
         self.criterion = torch.nn.MSELoss()
 
         # Store predictions & targets during validation
@@ -49,7 +49,9 @@ class LightningModule(L.LightningModule):
     def shared_step(self, batch, stage: str):
         features, price = batch
         price = price.squeeze(dim=1)
-        output = self.model(features)
+        features_OHLCV = features[:, :5]
+        features_indicators = features[:, 5:]
+        output = self.model(features_OHLCV, features_indicators)
 
         loss = self.criterion(output, price)
 
@@ -61,10 +63,8 @@ class LightningModule(L.LightningModule):
         # Safe R² calculation
         y_true = price.detach().cpu().numpy()
         y_pred = output.detach().cpu().numpy()
-        try:
-            r2 = r2_score(y_true, y_pred)
-        except Exception:
-            r2 = float("nan")
+        r2 = r2_score(y_true, y_pred)
+
 
         self.log(f"{stage}/loss", loss, prog_bar=True)
         self.log(f"{stage}/r2", r2, prog_bar=True)

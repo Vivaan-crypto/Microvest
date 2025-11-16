@@ -11,7 +11,7 @@ class StockLSTMModel(nn.Module):
             indicator_input_size: number of extra features (technical indicators, sentiment)
             lstm_hidden_size: hidden size of LSTM
             lstm_layers: number of LSTM layers
-            dropout_prob: dropout rate
+            dropout_prob: dropout ratez
         """
         super().__init__()
 
@@ -25,29 +25,25 @@ class StockLSTMModel(nn.Module):
             input_size=price_input_size,
             hidden_size=lstm_hidden_size,
             num_layers=lstm_layers,
-            batch_first=True,
-            dropout=dropout_prob if lstm_layers > 1 else 0,
-            bidirectional=False
-        )
+            batch_first=True
+        ) #[32, 1, 256]
 
         # Feedforward branch for indicators
+        #TODO: Add Dropouts after Activation Functions (RELU) 'nn.Dropout(dropout_prob)'
+
         self.ff = nn.Sequential(
             nn.Linear(indicator_input_size, 128),
             nn.ReLU(),
-            nn.Dropout(dropout_prob),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Dropout(dropout_prob)
-        )
+        )#[32, 64]
 
         # Combined head
         self.combined_ff = nn.Sequential(
             nn.Linear(lstm_hidden_size + 64, 64),
             nn.ReLU(),
-            nn.Dropout(dropout_prob),
             nn.Linear(64, 32),
             nn.ReLU(),
-            nn.Dropout(dropout_prob),
             nn.Linear(32, 1)
         )
 
@@ -58,13 +54,12 @@ class StockLSTMModel(nn.Module):
         """
         # LSTM branch
         lstm_out, (hidden, cell) = self.lstm(price_seq)
-        lstm_feat = lstm_out[:, -1, :]  # last time-step hidden
 
         # Feedforward branch
         ff_feat = self.ff(indicators)
 
-            # Concatenate features
-        combined = torch.cat([lstm_feat, ff_feat], dim=1)
+        # Concatenate features
+        combined = torch.cat([lstm_out, ff_feat], dim=1)
 
         # Final regression head
         output = self.combined_ff(combined)
