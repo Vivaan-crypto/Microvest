@@ -4,13 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Pushing current model">
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Model is actually training. It does not seems the best. (r^2 is hovering around 0 after a couple epochs).">
+      <change afterPath="$PROJECT_DIR$/src/PredictionApp/ConfiguationFiles/config.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/PredictionApp/app.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/PredictionApp/preprocessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Microvest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Microvest.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src2/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src2/lightning_modules.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src2/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src2/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src2/preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/src2/preprocessing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lightning_modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/runs/stock_model/version_0/events.out.tfevents.1752729358.DaGameyBros.34404.0" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/runs/stock_model/version_0/hparams.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/app.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/constants.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/lightning_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src2/preprocessing.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,78 +58,70 @@
   &quot;associatedIndex&quot;: 7
 }</component>
   <component name="ProjectId" id="2zQvGxede9A8i8o6ribiPLdyyXj" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.app.executor": "Run",
-    "Python.lightning_modules.executor": "Debug",
-    "Python.lightning_train.executor": "Run",
-    "Python.model.executor": "Run",
-    "Python.preprocessing.executor": "Run",
-    "Python.scratch_4.executor": "Run",
-    "Python.scratch_5.executor": "Run",
-    "Python.squeeze_pro.executor": "Run",
-    "Python.train.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "v2",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src2",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "run.code.analysis.last.selected.profile": "aDefault",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.marketmap.executor&quot;: &quot;Run&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pred.executor&quot;: &quot;Run&quot;,
+    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_4.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_5.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_6.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_7.executor&quot;: &quot;Run&quot;,
+    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tempCodeRunnerFile.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;v2&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src/PredictionApp/LightningLogs&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
-      "Python",
-      "PLAIN_TEXT"
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;Python&quot;,
+      &quot;PLAIN_TEXT&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp\LightningLogs" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
       <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src2" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\MarketInfo\assets" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp\ConfiguationFiles" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp\Model" />
       <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src2\data" />
-      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest" />
-      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\screeners\data" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.lightning_train">
-    <configuration name="lightning_modules" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Microvest" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src2" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src2/lightning_modules.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python.marketmap">
     <configuration name="lightning_train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Microvest" />
       <option name="ENV_FILES" value="" />
@@ -124,12 +131,55 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src2" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src2/lightning_train.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="marketmap" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/MarketInfo" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/MarketInfo/marketmap.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pred" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp\pred.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -147,12 +197,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src2" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src2/preprocessing.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/preprocessing.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -161,7 +210,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="scratch_4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="scratch_7" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -174,29 +223,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_4.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="scratch_5" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Microvest" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -206,19 +233,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.scratch_5" />
-      <item itemvalue="Python.scratch_4" />
-      <item itemvalue="Python.lightning_modules" />
       <item itemvalue="Python.lightning_train" />
+      <item itemvalue="Python.marketmap" />
+      <item itemvalue="Python.pred" />
       <item itemvalue="Python.preprocessing" />
+      <item itemvalue="Python.scratch_7" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.marketmap" />
         <item itemvalue="Python.lightning_train" />
         <item itemvalue="Python.preprocessing" />
-        <item itemvalue="Python.scratch_4" />
-        <item itemvalue="Python.scratch_5" />
-        <item itemvalue="Python.lightning_modules" />
+        <item itemvalue="Python.scratch_7" />
+        <item itemvalue="Python.pred" />
       </list>
     </recent_temporary>
   </component>
@@ -287,7 +314,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762394323258</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Model is actually training. It does not seems the best. (r^2 is hovering around 0 after a couple epochs).">
+      <option name="closed" value="true" />
+      <created>1763269953454</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1763269953454</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -298,7 +333,8 @@
     <MESSAGE value="Model is training, but it is really bad at it LOL." />
     <MESSAGE value="New VENV and some small tweaks." />
     <MESSAGE value="Pushing current model" />
-    <option name="LAST_COMMIT_MESSAGE" value="Pushing current model" />
+    <MESSAGE value="Model is actually training. It does not seems the best. (r^2 is hovering around 0 after a couple epochs)." />
+    <option name="LAST_COMMIT_MESSAGE" value="Model is actually training. It does not seems the best. (r^2 is hovering around 0 after a couple epochs)." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -312,5 +348,13 @@
     <SUITE FILE_PATH="coverage/Microvest$preprocessing.coverage" NAME="preprocessing Coverage Results" MODIFIED="1754157028196" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
     <SUITE FILE_PATH="coverage/Microvest$lightning_train.coverage" NAME="lightning_train Coverage Results" MODIFIED="1754020523363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
     <SUITE FILE_PATH="coverage/Microvest$train.coverage" NAME="train Coverage Results" MODIFIED="1753625439453" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
   </component>
 </project>
