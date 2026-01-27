@@ -12,6 +12,8 @@
       <excludeFolder url="file://$MODULE_DIR$/src/data" />
       <excludeFolder url="file://$MODULE_DIR$/src/lightning_logs" />
       <excludeFolder url="file://$MODULE_DIR$/src/model" />
+      <excludeFolder url="file://$MODULE_DIR$/src/PredictionApp/lightning_logs" />
+      <excludeFolder url="file://$MODULE_DIR$/src/PredictionApp/tb_logs" />
     </content>
     <orderEntry type="jdk" jdkName="uv (Microvest)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

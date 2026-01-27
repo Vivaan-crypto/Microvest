@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import torch
 import yfinance as yf
 from model import StockLSTMModel
-import pandas_ta as ta
+import talib
 
 # ----------------------
 # App / model constants
@@ -17,7 +17,7 @@ PRICE_COLS = ["Open", "High", "Low", "Close", "Volume"]
 INDICATOR_COLS = ["SMA20", "EMA12", "RSI14", "MACD", "MACD_signal", "MACD_hist"]  # 6 features
 PRICE_INPUT_SIZE = 5
 INDICATOR_INPUT_SIZE = 6
-PATH = "//LightningLogs/version_16/checkpoints/epoch=217-step=299750.ckpt"
+PATH = "C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src/PredictionApp/LightningLogs/version_17/checkpoints/epoch=54-step=75625.ckpt"
 
 
 # ----------------------
@@ -38,22 +38,13 @@ def compute_indicators(_df: pd.DataFrame) -> pd.DataFrame:
     """
     _df = _df.copy()
 
-    # These use Close by default, like your training script
-    _df.ta.sma(length=20, append=True)
-    _df.ta.ema(length=12, append=True)
-    _df.ta.rsi(length=14, append=True)
-    _df.ta.macd(fast=12, slow=26, signal=9, append=True)
-
-    # Rename to the names used in INDICATOR_COLS
-    rename_map = {
-        "SMA_20": "SMA20",
-        "EMA_12": "EMA12",
-        "RSI_14": "RSI14",
-        "MACD_12_26_9": "MACD",
-        "MACDs_12_26_9": "MACD_signal",
-        "MACDh_12_26_9": "MACD_hist",
-    }
-    _df = _df.rename(columns=rename_map)
+    # indicators
+    _df["SMA20"] = talib.SMA(_df["Close"], timeperiod=20)
+    _df["EMA12"] = talib.EMA(_df["Close"], timeperiod=12)
+    _df["RSI14"] = talib.RSI(_df["Close"], timeperiod=14)
+    _df["MACD"], _df["MACD_signal"], _df["MACD_hist"] = talib.MACD(
+        _df["Close"], fastperiod=12, slowperiod=26, signalperiod=9
+    )
 
     return _df
 
@@ -87,11 +78,7 @@ def build_model_and_weights() -> StockLSTMModel:
             else:
                 cleaned[k] = v
 
-        missing, unexpected = model.load_state_dict(cleaned, strict=False)
-        if missing:
-            st.warning(f"Missing keys when loading model: {missing}")
-        if unexpected:
-            st.warning(f"Unexpected keys when loading model: {unexpected}")
+        model.load_state_dict(cleaned, strict=False)
     else:
         st.warning(
             f"Checkpoint not found at {weights_path}. "
