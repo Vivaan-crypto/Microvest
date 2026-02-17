@@ -1,297 +1,27 @@
 """
-Reusable UI Components
-Separates presentation (UI) from business logic
-
-Industry pattern: "Component Library"
-- Each function returns a Dash component
-- Pure functions (no side effects)
-- Easy to test and reuse
+UI Components - Premium Design
+Beautiful, modern components for financial dashboard
 """
 
 from dash import html, dcc
-import plotly.graph_objects as go
-from config import Colors, Typography, Spacing
+from config import Colors, Typography, Spacing, Effects
 from styles import (
-    flexbox, card, text, button, stat_row, divider,
-    badge, merge_styles, conditional_style
+    flexbox, grid, text, card, button, badge,
+    overlay, merge_styles, glass_card
 )
 
 
 # =============================================================================
-# BASIC COMPONENTS (Building blocks)
+# FONTS
 # =============================================================================
 
-def Stat(label, value, value_color=Colors.TEXT_PRIMARY):
+def get_font_imports():
     """
-    Display a label-value pair
-
-    Args:
-        label: Left side text (e.g., "Gainers")
-        value: Right side value (e.g., "25")
-        value_color: Color for the value
-
-    Example:
-        Stat("Gainers", "25", Colors.SUCCESS)
+    Google Fonts import for premium typography
     """
-    return html.Div([
-        html.Span(label, style=text(size=Typography.SIZE_BASE, color=Colors.TEXT_PRIMARY)),
-        html.Span(
-            str(value),
-            style=text(size=Typography.SIZE_XL, weight=Typography.WEIGHT_BOLD, color=value_color)
-        )
-    ], style=stat_row())
-
-
-def SectionHeader(title, uppercase=True):
-    """
-    Section header with consistent styling
-
-    Example:
-        SectionHeader("MARKET OVERVIEW")
-    """
-    return html.Div(
-        title,
-        style={
-            **text(
-                size=Typography.SIZE_XS,
-                weight=Typography.WEIGHT_BOLD,
-                color=Colors.TEXT_MUTED
-            ),
-            "textTransform": "uppercase" if uppercase else "none",
-            "letterSpacing": "1px"
-        }
-    )
-
-
-def Divider(margin=f"{Spacing.LG} 0"):
-    """
-    Horizontal divider line
-
-    Example:
-        Divider(margin="20px 0")
-    """
-    return html.Div(style=divider(margin))
-
-
-def Badge(content, is_positive=None):
-    """
-    Badge showing percentage change with color
-
-    Args:
-        content: Text to display (e.g., "+2.5%")
-        is_positive: True for green, False for red, None for neutral
-
-    Example:
-        Badge("+2.5%", is_positive=True)
-    """
-    if is_positive is None:
-        bg_color = Colors.TEXT_MUTED
-        arrow = "→"
-    elif is_positive:
-        bg_color = Colors.SUCCESS
-        arrow = "↑"
-    else:
-        bg_color = Colors.DANGER
-        arrow = "↓"
-
-    return html.Div([
-        html.Span(arrow, style={"marginRight": Spacing.SM, "fontSize": Typography.SIZE_LG}),
-        html.Span(content)
-    ], style=badge(bg_color, Colors.WHITE))
-
-
-def BackButton(id="nav_back"):
-    """
-    Back button component
-
-    Example:
-        BackButton(id="my-back-btn")
-    """
-    return html.Button(
-        [html.Span("← "), html.Span("BACK")],
-        id=id,
-        n_clicks=0,
-        style=merge_styles(
-            button("primary"),
-            {
-                "display": "none",
-                "position": "absolute",
-                "top": Spacing.XL,
-                "left": Spacing.XL,
-                "zIndex": "2000"
-            }
-        )
-    )
-
-
-# =============================================================================
-# CARD COMPONENTS (Composite components)
-# =============================================================================
-
-def StatsCard(title, stats_list):
-    """
-    Card displaying a list of statistics
-
-    Args:
-        title: Card title (e.g., "MARKET")
-        stats_list: List of Stat components
-
-    Example:
-        StatsCard("MARKET", [
-            Stat("Gainers", 25, Colors.SUCCESS),
-            Stat("Losers", 15, Colors.DANGER)
-        ])
-    """
-    return html.Div([
-        SectionHeader(title),
-        html.Div(stats_list, style=flexbox(direction="column", gap=Spacing.SM))
-    ], style=flexbox(direction="column", gap=Spacing.XS))
-
-
-def TickerInfoCard(ticker=None, sector=None, price=None, change_pct=None):
-    """
-    Card showing ticker details
-
-    Args:
-        ticker: Stock symbol (e.g., "AAPL")
-        sector: Sector name (e.g., "Technology")
-        price: Current price (e.g., 175.50)
-        change_pct: Percentage change (e.g., 2.5)
-
-    Example:
-        TickerInfoCard("AAPL", "Technology", 175.50, 2.5)
-    """
-    if not ticker:
-        return html.Div(
-            "Select a ticker",
-            style=merge_styles(
-                card(),
-                flexbox(align="center", justify="center"),
-                text(size=Typography.SIZE_LG, weight=Typography.WEIGHT_MEDIUM, color=Colors.TEXT_MUTED),
-                {"height": "100%"}
-            )
-        )
-
-    is_positive = change_pct > 0 if change_pct != 0 else None
-
-    return html.Div([
-        # Ticker name and sector
-        html.Div([
-            html.Div(
-                ticker,
-                style=text(
-                    size=Typography.SIZE_DISPLAY,
-                    weight=Typography.WEIGHT_BLACK,
-                    color=Colors.TEXT_PRIMARY
-                )
-            ),
-            html.Div(
-                sector,
-                style={
-                    **text(size=Typography.SIZE_SM, weight=Typography.WEIGHT_MEDIUM, color=Colors.TEXT_MUTED),
-                    "marginTop": Spacing.SM,
-                    "textTransform": "uppercase"
-                }
-            )
-        ]),
-
-        # Price
-        html.Div([
-            html.Div(
-                f"${price:.2f}",
-                style=text(size=Typography.SIZE_XXXL, weight=Typography.WEIGHT_BOLD, color=Colors.TEXT_PRIMARY)
-            ),
-            html.Div(
-                "Current Price",
-                style={
-                    **text(size=Typography.SIZE_XS, weight=Typography.WEIGHT_MEDIUM, color=Colors.TEXT_MUTED),
-                    "marginTop": Spacing.XS,
-                    "textTransform": "uppercase"
-                }
-            )
-        ]),
-
-        # Change badge
-        Badge(f"{abs(change_pct):.2f}%", is_positive)
-
-    ], style=merge_styles(
-        card(padding=f"{Spacing.XL} {Spacing.XXXL}"),
-        {
-            "display": "grid",
-            "gridTemplateColumns": "auto 1fr auto",
-            "gap": Spacing.XXL,
-            "alignItems": "center"
-        }
-    ))
-
-
-def EmptyState(message="No data available", icon="📊"):
-    """
-    Empty state component
-
-    Example:
-        EmptyState("No stocks selected", "📈")
-    """
-    return html.Div([
-        html.Div(icon, style={"fontSize": "48px", "marginBottom": Spacing.LG}),
-        html.Div(
-            message,
-            style=text(size=Typography.SIZE_LG, weight=Typography.WEIGHT_MEDIUM, color=Colors.TEXT_MUTED)
-        )
-    ], style=merge_styles(
-        flexbox(direction="column", align="center", justify="center"),
-        {"height": "100%", "padding": Spacing.XXXL}
-    ))
-
-
-# =============================================================================
-# CHART COMPONENTS
-# =============================================================================
-
-def ChartContainer(figure, id="chart", config=None):
-    """
-    Wrapper for Plotly chart with consistent styling
-
-    Args:
-        figure: Plotly figure object
-        id: Element ID
-        config: Chart config options
-
-    Example:
-        ChartContainer(my_figure, id="heatmap")
-    """
-    default_config = {
-        "displayModeBar": False,
-        "scrollZoom": False
-    }
-
-    return dcc.Graph(
-        id=id,
-        figure=figure,
-        config=config or default_config,
-        style={"height": "100%", "width": "100%"}
-    )
-
-
-def ChartOverlay(id="chart_overlay", content_id="chart_content", visible=False):
-    """
-    Full-screen overlay for detailed charts
-
-    Args:
-        id: Overlay container ID
-        content_id: Content container ID
-        visible: Whether overlay is initially visible
-
-    Example:
-        ChartOverlay(visible=True)
-    """
-    from styles import overlay
-
-    return html.Div(
-        html.Div(id=content_id, style={"height": "100%"}),
-        id=id,
-        n_clicks=0,
-        style=overlay(visible)
+    return html.Link(
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap",
+        rel="stylesheet"
     )
 
 
@@ -301,43 +31,179 @@ def ChartOverlay(id="chart_overlay", content_id="chart_content", visible=False):
 
 def PageContainer(children):
     """
-    Main page container with consistent padding and styling
-
-    Example:
-        PageContainer([Header(), Content(), Footer()])
+    Premium page container with gradient background
     """
-    return html.Div(
-        children,
+    return html.Div([
+        get_font_imports(),
+
+        # Animated background gradient
+        html.Div(style={
+            "position": "fixed",
+            "top": "0",
+            "left": "0",
+            "right": "0",
+            "bottom": "0",
+            "background": f"""
+                radial-gradient(circle at 20% 20%, {Colors.ACCENT_PRIMARY}08 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, {Colors.ACCENT_SECONDARY}08 0%, transparent 50%),
+                {Colors.BG_PRIMARY}
+            """,
+            "zIndex": "-1"
+        }),
+
+        # Main content
+        html.Div(
+            children,
+            style={
+                "minHeight": "100vh",
+                "display": "flex",
+                "flexDirection": "column",
+                "fontFamily": Typography.FONT_BODY,
+                "padding": Spacing.XXL,
+                "gap": Spacing.XL,
+                "position": "relative"
+            }
+        )
+    ])
+
+
+def Header(title="STOCK MARKET"):
+    """
+    Premium header with gradient text
+    """
+    return html.Div([
+        html.Div([
+            html.H1(
+                title,
+                style={
+                    "fontFamily": Typography.FONT_DISPLAY,
+                    "fontSize": Typography.SIZE_HERO,
+                    "fontWeight": Typography.WEIGHT_BLACK,
+                    "lineHeight": Typography.LINE_TIGHT,
+                    "background": Colors.GRADIENT_PRIMARY,
+                    "WebkitBackgroundClip": "text",
+                    "WebkitTextFillColor": "transparent",
+                    "backgroundClip": "text",
+                    "margin": "0",
+                    "letterSpacing": "-0.03em"
+                }
+            ),
+            html.Div(
+                "Real-time market visualization",
+                style={
+                    **text(
+                        size=Typography.SIZE_SM,
+                        color=Colors.TEXT_SECONDARY,
+                        font=Typography.FONT_DISPLAY
+                    ),
+                    "marginTop": Spacing.SM,
+                    "textTransform": "uppercase",
+                    "letterSpacing": "0.1em"
+                }
+            )
+        ]),
+
+        # Live indicator
+        html.Div([
+            html.Div(style={
+                "width": "8px",
+                "height": "8px",
+                "borderRadius": "50%",
+                "background": Colors.SUCCESS,
+                "boxShadow": Effects.GLOW_SUCCESS,
+                "animation": "pulse 2s ease-in-out infinite"
+            }),
+            html.Span(
+                "LIVE",
+                style={
+                    **text(
+                        size=Typography.SIZE_XS,
+                        weight=Typography.WEIGHT_BOLD,
+                        color=Colors.SUCCESS,
+                        font=Typography.FONT_MONO
+                    ),
+                    "letterSpacing": "0.1em"
+                }
+            )
+        ], style={
+            **flexbox(gap=Spacing.SM),
+            "padding": f"{Spacing.SM} {Spacing.MD}",
+            "background": f"{Colors.SUCCESS}10",
+            "border": f"1px solid {Colors.SUCCESS}30",
+            "borderRadius": Effects.RADIUS_FULL
+        })
+    ], style=flexbox(justify="space-between", align="flex-start"))
+
+
+def BackButton(id="nav_back"):
+    """
+    Floating back button with glow effect
+    """
+    return html.Button(
+        [
+            html.Span("←", style={"fontSize": Typography.SIZE_XL}),
+            html.Span("BACK", style={"marginLeft": Spacing.SM})
+        ],
+        id=id,
+        n_clicks=0,
         style={
-            "backgroundColor": Colors.BLACK,
-            "minHeight": "100vh",
-            "display": "flex",
-            "flexDirection": "column",
-            "fontFamily": Typography.FONT_FAMILY,
-            "padding": Spacing.LG,
-            "gap": Spacing.LG
+            **button("primary"),
+            "display": "none",
+            "position": "fixed",
+            "top": Spacing.XXL,
+            "left": Spacing.XXL,
+            "zIndex": "2000",
+            "boxShadow": Effects.GLOW_ACCENT
         }
     )
 
 
-def TwoColumnLayout(left_content, right_content, left_ratio=2, right_ratio=1):
+# =============================================================================
+# CHART COMPONENTS
+# =============================================================================
+
+def ChartContainer(figure, id="chart", config=None):
     """
-    Two-column grid layout
-
-    Args:
-        left_content: Content for left column
-        right_content: Content for right column
-        left_ratio: Relative width of left column
-        right_ratio: Relative width of right column
-
-    Example:
-        TwoColumnLayout(main_chart, sidebar, left_ratio=3, right_ratio=1)
+    Premium chart container with glass effect
     """
-    from styles import grid
+    default_config = {
+        "displayModeBar": True,
+        "displaylogo": False,
+        "modeBarButtonsToRemove": ["lasso2d", "select2d"],
+        "scrollZoom": True
+    }
 
+    return html.Div([
+        dcc.Graph(
+            id=id,
+            figure=figure,
+            config=config or default_config,
+            style={"height": "100%", "width": "100%"}
+        )
+    ], style={
+        **glass_card(),
+        "padding": "0",
+        "overflow": "hidden",
+        "minHeight": "600px"
+    })
+
+
+def ChartOverlay(id="chart_overlay", content_id="chart_content", visible=False):
+    """
+    Premium full-screen overlay
+    """
     return html.Div(
-        [left_content, right_content],
-        style=grid(columns=f"{left_ratio}fr {right_ratio}fr", gap=Spacing.LG)
+        html.Div(
+            id=content_id,
+            style={
+                "width": "100%",
+                "maxWidth": "1600px",
+                "height": "90vh",
+                "maxHeight": "900px"
+            }
+        ),
+        id=id,
+        style=overlay(visible)
     )
 
 
@@ -345,54 +211,214 @@ def TwoColumnLayout(left_content, right_content, left_ratio=2, right_ratio=1):
 # DATA DISPLAY COMPONENTS
 # =============================================================================
 
-def MarketStatsPanel(gainers=0, losers=0, avg_change=0.0):
+def StockBadge(ticker, price, change):
     """
-    Complete market statistics panel
-
-    Example:
-        MarketStatsPanel(gainers=25, losers=15, avg_change=1.2)
+    Premium stock badge with live data
     """
-    avg_color = Colors.SUCCESS if avg_change > 0 else Colors.DANGER if avg_change < 0 else Colors.TEXT_MUTED
+    is_positive = change > 0
+    color = Colors.SUCCESS if is_positive else Colors.DANGER
+    arrow = "↑" if is_positive else "↓"
 
-    return StatsCard("MARKET", [
-        Stat("Gainers", gainers, Colors.SUCCESS),
-        Stat("Losers", losers, Colors.DANGER),
-        Stat("Avg", f"{avg_change:+.2f}%", avg_color)
-    ])
+    return html.Div([
+        # Ticker
+        html.Div(
+            ticker,
+            style={
+                **text(
+                    size=Typography.SIZE_XXL,
+                    weight=Typography.WEIGHT_BLACK,
+                    font=Typography.FONT_DISPLAY
+                ),
+                "letterSpacing": "-0.02em"
+            }
+        ),
+
+        # Price
+        html.Div(
+            f"${price:,.2f}",
+            style={
+                **text(
+                    size=Typography.SIZE_HERO,
+                    weight=Typography.WEIGHT_BOLD,
+                    font=Typography.FONT_MONO
+                ),
+                "lineHeight": Typography.LINE_TIGHT,
+                "marginTop": Spacing.SM
+            }
+        ),
+
+        # Change badge
+        html.Div([
+            html.Span(arrow, style={"fontSize": Typography.SIZE_LG}),
+            html.Span(f"{abs(change):.2f}%")
+        ], style={
+            **badge(color),
+            "marginTop": Spacing.MD,
+            "fontSize": Typography.SIZE_MD
+        })
+    ], style={
+        **card(elevated=True),
+        "background": f"linear-gradient(135deg, {Colors.BG_ELEVATED} 0%, {Colors.BG_SECONDARY} 100%)",
+        "minWidth": "280px"
+    })
 
 
-def WatchlistStatsPanel(gainers=0, losers=0, avg_change=0.0):
+def SectorTag(sector):
     """
-    Watchlist statistics panel
-
-    Example:
-        WatchlistStatsPanel(gainers=2, losers=1, avg_change=-0.5)
+    Sector category tag
     """
-    avg_color = Colors.SUCCESS if avg_change > 0 else Colors.DANGER if avg_change < 0 else Colors.TEXT_MUTED
+    return html.Div(
+        sector,
+        style={
+            "padding": f"{Spacing.XS} {Spacing.MD}",
+            "background": f"{Colors.ACCENT_PRIMARY}15",
+            "border": f"1px solid {Colors.ACCENT_PRIMARY}40",
+            "borderRadius": Effects.RADIUS_SM,
+            "color": Colors.ACCENT_PRIMARY,
+            "fontSize": Typography.SIZE_TINY,
+            "fontWeight": Typography.WEIGHT_BOLD,
+            "fontFamily": Typography.FONT_MONO,
+            "textTransform": "uppercase",
+            "letterSpacing": "0.1em"
+        }
+    )
 
-    return StatsCard("WATCHLIST", [
-        Stat("Gainers", gainers, Colors.SUCCESS),
-        Stat("Losers", losers, Colors.DANGER),
-        Stat("Avg", f"{avg_change:+.2f}%", avg_color)
-    ])
 
-
-def StatsContainer(market_stats, watchlist_stats):
+def InfoPanel(ticker=None, sector=None, price=None, change=None):
     """
-    Container for all stats panels
-
-    Example:
-        StatsContainer(
-            MarketStatsPanel(25, 15, 1.2),
-            WatchlistStatsPanel(2, 1, -0.5)
+    Premium information panel
+    """
+    if not ticker:
+        return html.Div(
+            [
+                html.Div("📊", style={"fontSize": "48px", "marginBottom": Spacing.LG}),
+                html.Div(
+                    "Select a stock from the heatmap",
+                    style={
+                        **text(
+                            size=Typography.SIZE_LG,
+                            color=Colors.TEXT_MUTED,
+                            font=Typography.FONT_DISPLAY
+                        ),
+                        "textAlign": "center"
+                    }
+                )
+            ],
+            style={
+                **card(elevated=True),
+                **flexbox(direction="column", align="center", justify="center"),
+                "minHeight": "200px",
+                "background": f"linear-gradient(135deg, {Colors.BG_ELEVATED} 0%, {Colors.BG_SECONDARY} 100%)"
+            }
         )
+
+    is_positive = change > 0
+    color = Colors.SUCCESS if is_positive else Colors.DANGER
+    arrow = "↑" if is_positive else "↓"
+
+    return html.Div([
+        # Top row - Ticker and sector
+        html.Div([
+            html.Div([
+                html.H2(
+                    ticker,
+                    style={
+                        **text(
+                            size=Typography.SIZE_XXXL,
+                            weight=Typography.WEIGHT_BLACK,
+                            font=Typography.FONT_DISPLAY
+                        ),
+                        "margin": "0",
+                        "letterSpacing": "-0.02em"
+                    }
+                ),
+                SectorTag(sector)
+            ], style=flexbox(align="center", gap=Spacing.MD)),
+
+            # Change badge
+            html.Div([
+                html.Span(arrow, style={"fontSize": Typography.SIZE_XL, "marginRight": Spacing.SM}),
+                html.Span(f"{abs(change):.2f}%")
+            ], style={
+                **badge(color),
+                "fontSize": Typography.SIZE_LG,
+                "padding": f"{Spacing.MD} {Spacing.XL}"
+            })
+        ], style=flexbox(justify="space-between", align="center")),
+
+        # Divider
+        html.Div(style={
+            "height": "1px",
+            "background": f"linear-gradient(90deg, transparent 0%, {Colors.BORDER_BRIGHT} 50%, transparent 100%)",
+            "margin": f"{Spacing.XL} 0"
+        }),
+
+        # Price display
+        html.Div([
+            html.Div(
+                "CURRENT PRICE",
+                style={
+                    **text(
+                        size=Typography.SIZE_TINY,
+                        weight=Typography.WEIGHT_BOLD,
+                        color=Colors.TEXT_MUTED,
+                        font=Typography.FONT_DISPLAY
+                    ),
+                    "letterSpacing": "0.15em",
+                    "marginBottom": Spacing.SM
+                }
+            ),
+            html.Div(
+                f"${price:,.2f}",
+                style={
+                    "fontFamily": Typography.FONT_MONO,
+                    "fontSize": Typography.SIZE_HERO,
+                    "fontWeight": Typography.WEIGHT_BOLD,
+                    "lineHeight": Typography.LINE_TIGHT,
+                    "background": Colors.GRADIENT_PRIMARY,
+                    "WebkitBackgroundClip": "text",
+                    "WebkitTextFillColor": "transparent",
+                    "backgroundClip": "text"
+                }
+            )
+        ])
+    ], style={
+        **card(elevated=True),
+        "background": f"linear-gradient(135deg, {Colors.BG_ELEVATED} 0%, {Colors.BG_SECONDARY} 100%)",
+        "position": "relative",
+        "overflow": "hidden"
+    })
+
+
+# =============================================================================
+# LOADING STATES
+# =============================================================================
+
+def LoadingSpinner():
+    """
+    Premium loading spinner
     """
     return html.Div([
-        SectionHeader("MARKET STATS"),
-        html.Div([
-            market_stats,
-            Divider(),
-            watchlist_stats,
-            Divider(margin=f"{Spacing.LG} 0 {Spacing.SM}")
-        ], style=flexbox(direction="column", gap=Spacing.XS))
-    ], style=card())
+        html.Div(style={
+            "width": "40px",
+            "height": "40px",
+            "border": f"3px solid {Colors.BORDER}",
+            "borderTop": f"3px solid {Colors.ACCENT_PRIMARY}",
+            "borderRadius": "50%",
+            "animation": "spin 1s linear infinite"
+        }),
+        html.Div(
+            "Loading...",
+            style={
+                **text(
+                    size=Typography.SIZE_SM,
+                    color=Colors.TEXT_MUTED,
+                    font=Typography.FONT_DISPLAY
+                ),
+                "marginTop": Spacing.MD
+            }
+        )
+    ], style={
+        **flexbox(direction="column", align="center", justify="center"),
+        "padding": Spacing.XXXL
+    })

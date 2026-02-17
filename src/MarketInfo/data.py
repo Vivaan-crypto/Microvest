@@ -20,7 +20,7 @@ from config import SYMBOLS, SECTORS
 # DATA FETCHING
 # =============================================================================
 
-def fetch_snapshot_data() -> pd.DataFrame:
+def all_stock_data() -> pd.DataFrame:
     """
     Fetch current snapshot of all stocks
 
@@ -78,7 +78,7 @@ def fetch_snapshot_data() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def fetch_stock_history(ticker: str, period: str = "1y") -> pd.DataFrame:
+def single_stock_data(ticker: str, period: str = "1y") -> pd.DataFrame:
     """
     Fetch historical data for a single stock
 

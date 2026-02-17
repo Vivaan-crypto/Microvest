@@ -21,18 +21,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Test Class">
-      <change beforePath="$PROJECT_DIR$/.idea/Microvest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Microvest.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarketInfo/AAPL.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarketInfo/main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarketInfo/marketmap.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarketInfo/screener.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MarketInfo/tempCodeRunnerFile.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/ConfiguationFiles/config.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/charts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/charts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/components.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/components.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/styles.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/styles.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,6 +60,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -160,7 +156,7 @@
       <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp\Model" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.app">
+  <component name="RunManager" selected="Python.stock dashboard">
     <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Microvest" />
       <option name="ENV_FILES" value="" />
@@ -211,8 +207,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.app" />
         <item itemvalue="Python.stock dashboard" />
+        <item itemvalue="Python.app" />
       </list>
     </recent_temporary>
   </component>
@@ -312,6 +308,17 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="changing the app a bit" />
     <MESSAGE value="Model is training, but it is really bad at it LOL." />
@@ -339,11 +346,12 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Microvest$preprocessing.coverage" NAME="preprocessing Coverage Results" MODIFIED="1754157028196" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
-    <SUITE FILE_PATH="coverage/Microvest$app.coverage" NAME="app Coverage Results" MODIFIED="1770733371562" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/PredictionApp" />
+    <SUITE FILE_PATH="coverage/Microvest$scratch_1.coverage" NAME="scratch_1 Coverage Results" MODIFIED="1771111414827" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
+    <SUITE FILE_PATH="coverage/Microvest$app.coverage" NAME="app Coverage Results" MODIFIED="1771194498935" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/PredictionApp" />
     <SUITE FILE_PATH="coverage/Microvest$lightning_train.coverage" NAME="lightning_train Coverage Results" MODIFIED="1754020523363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
     <SUITE FILE_PATH="coverage/Microvest$train.coverage" NAME="train Coverage Results" MODIFIED="1753625439453" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/Microvest$marketmap.coverage" NAME="app Coverage Results" MODIFIED="1770513632967" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
-    <SUITE FILE_PATH="coverage/Microvest$stock_dashboard.coverage" NAME="stock dashboard Coverage Results" MODIFIED="1770588338386" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
+    <SUITE FILE_PATH="coverage/Microvest$stock_dashboard.coverage" NAME="stock dashboard Coverage Results" MODIFIED="1771339447980" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
     <SUITE FILE_PATH="coverage/Microvest$app__1_.coverage" NAME="app (1) Coverage Results" MODIFIED="1770513644153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
   </component>
   <component name="github-copilot-workspace">

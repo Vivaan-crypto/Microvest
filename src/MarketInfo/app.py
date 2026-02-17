@@ -1,27 +1,17 @@
 """
-Main Application
-Ties together all components using the Dash framework
-
-Industry pattern: "Application Layer" / "Composition Root"
-- Minimal business logic (delegates to other modules)
-- Focused on wiring components together
-- Easy to understand the app structure at a glance
+Main Application - Premium Stock Dashboard
+Beautiful, modern interface with smooth interactions
 """
 
 from dash import Dash, dcc, html, Input, Output, State, callback_context
 
-# Import our organized modules
-from config import SNAPSHOT_REFRESH_MS, APP_HOST, APP_PORT, DEBUG_MODE, WATCHLIST_TICKERS
+# Import modules
+from config import SNAPSHOT_REFRESH_MS, APP_HOST, APP_PORT, DEBUG_MODE, Colors
 from components import (
-    PageContainer, TwoColumnLayout, BackButton, ChartContainer,
-    ChartOverlay, TickerInfoCard, StatsContainer,
-    MarketStatsPanel, WatchlistStatsPanel
+    PageContainer, Header, ChartContainer, ChartOverlay,
+    BackButton, InfoPanel
 )
-from data import (
-    fetch_snapshot_data, fetch_stock_history,
-    calculate_market_stats, calculate_watchlist_stats,
-    get_stock_by_ticker
-)
+from data import all_stock_data, single_stock_data, get_stock_by_ticker
 from charts import create_heatmap, create_stock_chart
 from styles import overlay
 
@@ -30,7 +20,65 @@ from styles import overlay
 # =============================================================================
 
 app = Dash(__name__)
-app.title = "Stock Market Dashboard"
+app.title = "Premium Stock Dashboard"
+
+# Custom CSS for animations
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+        <style>
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.6; }
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            * {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            body {
+                margin: 0;
+                overflow-x: hidden;
+            }
+            /* Scrollbar styling */
+            ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: ''' + Colors.BG_SECONDARY + ''';
+            }
+            ::-webkit-scrollbar-thumb {
+                background: ''' + Colors.BORDER_BRIGHT + ''';
+                border-radius: 4px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: ''' + Colors.ACCENT_PRIMARY + ''';
+            }
+        </style>
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
 
 # =============================================================================
 # LAYOUT
@@ -38,9 +86,10 @@ app.title = "Stock Market Dashboard"
 
 app.layout = PageContainer([
     # =========================================================================
-    # DATA STORES (invisible components that hold state)
+    # DATA STORES
     # =========================================================================
     dcc.Store(id="snapshot_data"),
+    dcc.Store(id="chart_cache"),
     dcc.Store(id="selected_ticker"),
 
     # =========================================================================
@@ -53,49 +102,49 @@ app.layout = PageContainer([
     ),
 
     # =========================================================================
-    # MAIN CONTENT AREA
+    # HEADER
+    # =========================================================================
+    Header(),
+
+    # =========================================================================
+    # MAIN CONTENT
     # =========================================================================
     html.Div([
-        # Back button (hidden by default, shown when chart overlay is open)
+        # Back button (floating, hidden by default)
         BackButton(id="nav_back"),
 
-        # Main heatmap
+        # Heatmap
         ChartContainer(
             figure={},
             id="heatmap",
             config={"displayModeBar": False}
         ),
 
-        # Chart overlay (slides over heatmap when ticker is clicked)
+        # Chart overlay
         ChartOverlay(
             id="chart_overlay",
             content_id="chart_content",
             visible=False
         )
     ], style={
-        "flex": 1,
+        "flex": "1",
         "position": "relative",
-        "minHeight": "500px"
+        "minHeight": "600px",
+        "animation": "fadeIn 0.6s ease-out"
     }),
 
     # =========================================================================
-    # BOTTOM INFO PANEL (2-column layout)
+    # INFO PANEL
     # =========================================================================
-    TwoColumnLayout(
-        # Left column: Selected stock info
-        left_content=html.Div(id="info_card"),
-
-        # Right column: Market statistics
-        right_content=html.Div(id="stats_container"),
-
-        left_ratio=2,
-        right_ratio=1
+    html.Div(
+        id="info_panel",
+        style={"animation": "fadeIn 0.6s ease-out 0.2s both"}
     )
 ])
 
 
 # =============================================================================
-# CALLBACKS (Application Logic)
+# CALLBACKS
 # =============================================================================
 
 @app.callback(
@@ -105,88 +154,45 @@ app.layout = PageContainer([
 )
 def update_snapshot(n_intervals):
     """
-    Callback 1: Fetch and display latest stock data
-
-    Triggered by: Timer (every SNAPSHOT_REFRESH_MS milliseconds)
-    Updates: Heatmap visualization and stored snapshot data
-
-    Industry note: This is the "data refresh" callback
-    It's the single source of truth for market data
+    Fetch and display latest stock data
     """
-    # Fetch latest data
-    df = fetch_snapshot_data()
-
-    # Generate heatmap visualization
+    df = all_stock_data()
     fig = create_heatmap(df)
-
-    # Store data for other callbacks (convert to dict for JSON serialization)
     data = df.to_dict("records")
-
     return fig, data
 
 
 @app.callback(
-    Output("info_card", "children"),
-    Output("stats_container", "children"),
-    Input("snapshot_data", "data"),
-    State("selected_ticker", "data")
+    Output("info_panel", "children"),
+    Input("heatmap", "clickData"),
+    Input("snapshot_data", "data")
 )
-def update_info_and_stats(snapshot_data, selected_ticker):
+def update_info_panel(click_data, snapshot_data):
     """
-    Callback 2: Update info card and statistics panels
-
-    Triggered by: New snapshot data
-    Updates: Ticker info card and market/watchlist stats
-
-    Industry pattern: "Derived State"
-    - Takes raw data and computes what should be displayed
-    - Separates data transformation from presentation
+    Update info panel when stock is clicked
     """
     import pandas as pd
 
     if not snapshot_data:
-        # No data available yet
-        return TickerInfoCard(), StatsContainer(
-            MarketStatsPanel(),
-            WatchlistStatsPanel()
-        )
+        return InfoPanel()
 
     df = pd.DataFrame(snapshot_data)
 
-    # Update ticker info card
-    if selected_ticker:
-        stock = get_stock_by_ticker(df, selected_ticker)
-        if stock:
-            info_card = TickerInfoCard(
-                ticker=stock["Ticker"],
-                sector=stock["Sector"],
-                price=stock["Last"],
-                change_pct=stock["Change"]
-            )
-        else:
-            info_card = TickerInfoCard()
-    else:
-        info_card = TickerInfoCard()
+    if not click_data or "points" not in click_data:
+        return InfoPanel()
 
-    # Calculate market statistics
-    market_stats = calculate_market_stats(df)
-    watchlist_stats = calculate_watchlist_stats(df, WATCHLIST_TICKERS)
+    ticker = click_data["points"][0].get("label")
+    stock = get_stock_by_ticker(df, ticker)
 
-    # Build stats panels
-    stats = StatsContainer(
-        MarketStatsPanel(
-            gainers=market_stats["gainers"],
-            losers=market_stats["losers"],
-            avg_change=market_stats["avg_change"]
-        ),
-        WatchlistStatsPanel(
-            gainers=watchlist_stats["gainers"],
-            losers=watchlist_stats["losers"],
-            avg_change=watchlist_stats["avg_change"]
-        )
+    if not stock:
+        return InfoPanel()
+
+    return InfoPanel(
+        ticker=stock["Ticker"],
+        sector=stock["Sector"],
+        price=stock["Last"],
+        change=stock["Change"]
     )
-
-    return info_card, stats
 
 
 @app.callback(
@@ -194,33 +200,25 @@ def update_info_and_stats(snapshot_data, selected_ticker):
     Output("chart_overlay", "style"),
     Output("chart_content", "children"),
     Output("nav_back", "style"),
+    Output("chart_cache", "data"),
     Input("heatmap", "clickData"),
     Input("nav_back", "n_clicks"),
-    Input("chart_overlay", "n_clicks"),
     State("snapshot_data", "data"),
     State("selected_ticker", "data"),
-    State("chart_overlay", "style")
+    State("chart_overlay", "style"),
+    State("chart_cache", "data"),
+    prevent_initial_call=True
 )
-def handle_chart_interactions(
-        heatmap_click,
-        back_click,
-        overlay_click,
-        snapshot_data,
-        current_ticker,
-        current_overlay_style
+def handle_chart_overlay(
+    heatmap_click,
+    back_click,
+    snapshot_data,
+    current_ticker,
+    current_overlay_style,
+    chart_cache
 ):
     """
-    Callback 3: Handle user interactions with charts
-
-    Triggered by:
-    - Clicking on heatmap (show detail chart)
-    - Clicking back button (hide detail chart)
-    - Clicking overlay background (hide detail chart)
-
-    Industry pattern: "Event Handler"
-    - Determines which interaction occurred
-    - Updates UI state accordingly
-    - Uses callback_context to identify trigger
+    Handle chart overlay with smooth transitions and caching
     """
     import pandas as pd
 
@@ -228,76 +226,121 @@ def handle_chart_interactions(
     hidden_overlay = overlay(visible=False)
     hidden_button = {"display": "none"}
     visible_button = {
-        "display": "block",
-        "position": "absolute",
-        "top": "20px",
-        "left": "20px",
+        "display": "flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "position": "fixed",
+        "top": "24px",
+        "left": "24px",
         "zIndex": "2000"
     }
 
-    # Check if we have data
     if not snapshot_data:
-        return current_ticker, hidden_overlay, None, hidden_button
+        print("No snapshot data")
+        return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
     df = pd.DataFrame(snapshot_data)
 
-    # Determine which input triggered this callback
+    # Determine trigger
     ctx = callback_context
     if not ctx.triggered:
-        return current_ticker, hidden_overlay, None, hidden_button
+        print("No trigger")
+        return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    print(f"Trigger ID: {trigger_id}")
 
-    # =========================================================================
-    # INTERACTION 1: Back button clicked
-    # =========================================================================
+    # Handle back button
     if trigger_id == "nav_back":
-        if current_overlay_style and current_overlay_style.get("opacity") == "1":
-            # Close the overlay
-            return current_ticker, hidden_overlay, None, hidden_button
+        print("Back button clicked")
+        return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
-    # =========================================================================
-    # INTERACTION 2: Heatmap clicked (show detail chart)
-    # =========================================================================
-    if trigger_id == "heatmap" and heatmap_click:
+    # Handle heatmap click
+    if trigger_id == "heatmap":
+        if not heatmap_click:
+            print("No heatmap click data")
+            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+
         if "points" not in heatmap_click:
-            return current_ticker, hidden_overlay, None, hidden_button
+            print("No points in click data")
+            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
-        # Get clicked ticker
-        ticker = heatmap_click["points"][0].get("label")
+        # Get ticker from click - try customdata first, then label
+        point = heatmap_click["points"][0]
 
-        # Validate ticker exists in our data
+        # Try to get ticker from customdata (index 0)
+        if "customdata" in point and point["customdata"] and len(point["customdata"]) > 0:
+            ticker = point["customdata"][0]
+            print(f"Got ticker from customdata: {ticker}")
+        else:
+            # Fallback to label
+            ticker = point.get("label")
+            print(f"Got ticker from label: {ticker}")
+
+        if not ticker:
+            print("No ticker found in click data")
+            print(f"Point data: {point}")
+            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+
+        # Validate ticker
         if ticker not in df["Ticker"].values:
-            return current_ticker, hidden_overlay, None, hidden_button
+            print(f"Ticker {ticker} not found in data")
+            print(f"Available tickers: {df['Ticker'].tolist()[:5]}...")
+            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
-        # Fetch historical data for this ticker
-        hist_df = fetch_stock_history(ticker, period="1y")
+        print(f"Fetching data for {ticker}")
 
-        if hist_df.empty:
-            return current_ticker, hidden_overlay, None, hidden_button
+        # Check cache
+        if chart_cache and chart_cache.get("ticker") == ticker:
+            print("Using cached data")
+            hist_data = chart_cache.get("data")
+            hist_df = pd.DataFrame(hist_data)
+            hist_df.index = pd.to_datetime(hist_df.index)
+        else:
+            print("Fetching fresh data")
+            # Fetch fresh data
+            hist_df = single_stock_data(ticker, period="1y")
+            if hist_df.empty:
+                print(f"Failed to fetch history for {ticker}")
+                return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
-        # Create detailed chart
+            print(f"Fetched {len(hist_df)} rows")
+
+            # Cache it
+            chart_cache = {
+                "ticker": ticker,
+                "data": hist_df.reset_index().to_dict("records")
+            }
+
+        # Create chart
+        print("Creating chart")
         fig = create_stock_chart(ticker, hist_df)
 
         if not fig:
-            return current_ticker, hidden_overlay, None, hidden_button
+            print("Failed to create chart")
+            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+
+        print("Chart created successfully")
 
         # Build chart component
         chart_component = ChartContainer(
             figure=fig,
             id="detail_chart",
-            config={"displayModeBar": True, "scrollZoom": True}
+            config={
+                "displayModeBar": True,
+                "displaylogo": False,
+                "scrollZoom": True
+            }
         )
 
-        # Show overlay with chart
         visible_overlay = overlay(visible=True)
 
-        return ticker, visible_overlay, chart_component, visible_button
+        print("Returning visible overlay")
+        return ticker, visible_overlay, chart_component, visible_button, chart_cache
 
-    # =========================================================================
-    # DEFAULT: No changes
-    # =========================================================================
-    return current_ticker, hidden_overlay, None, hidden_button
+    # Default
+    print("Returning default state")
+    return current_ticker, hidden_overlay, None, hidden_button, chart_cache
 
 
 # =============================================================================
@@ -305,12 +348,6 @@ def handle_chart_interactions(
 # =============================================================================
 
 if __name__ == "__main__":
-    """
-    Application entry point
-
-    Industry note: This pattern allows the app to be imported
-    without running (useful for testing and deployment)
-    """
     app.run(
         host=APP_HOST,
         port=APP_PORT,
