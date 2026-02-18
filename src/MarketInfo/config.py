@@ -9,26 +9,26 @@ Centralizes all app configuration with enhanced design tokens
 
 TICKERS = [
     ("AAPL", "Technology"), ("MSFT", "Technology"), ("GOOGL", "Technology"),
-    ("NVDA", "Technology"), ("AVGO", "Technology"), ("AMD", "Technology"),
-    ("INTC", "Technology"), ("ASML", "Technology"), ("CRM", "Technology"),
-    ("ADBE", "Technology"),
-    ("META", "Communication Services"), ("NFLX", "Communication Services"),
-    ("DIS", "Communication Services"),
+    # ("NVDA", "Technology"), ("AVGO", "Technology"), ("AMD", "Technology"),
+    # ("INTC", "Technology"), ("ASML", "Technology"), ("CRM", "Technology"),
+    # ("ADBE", "Technology"),
+    # ("META", "Communication Services"), ("NFLX", "Communication Services"),
+    # ("DIS", "Communication Services"),
     ("AMZN", "Consumer Discretionary"), ("TSLA", "Consumer Discretionary"),
-    ("HD", "Consumer Discretionary"), ("LOW", "Consumer Discretionary"),
-    ("NKE", "Consumer Discretionary"), ("SBUX", "Consumer Discretionary"),
-    ("MCD", "Consumer Discretionary"), ("TGT", "Consumer Discretionary"),
-    ("JPM", "Financials"), ("BAC", "Financials"), ("WFC", "Financials"),
-    ("GS", "Financials"), ("MS", "Financials"), ("V", "Financials"),
-    ("MA", "Financials"), ("BLK", "Financials"),
-    ("XOM", "Energy"), ("CVX", "Energy"), ("COP", "Energy"),
-    ("SLB", "Energy"),
-    ("UNH", "Health Care"), ("ABBV", "Health Care"),
-    ("LLY", "Health Care"), ("JNJ", "Health Care"), ("PFE", "Health Care"),
-    ("KO", "Consumer Staples"), ("PEP", "Consumer Staples"),
-    ("COST", "Consumer Staples"), ("WMT", "Consumer Staples"),
-    ("CAT", "Industrials"), ("BA", "Industrials"), ("UPS", "Industrials"),
-    ("^SPX", "Index"), ("^NDX", "Index"), ("^DJI", "Index")
+    # ("HD", "Consumer Discretionary"), ("LOW", "Consumer Discretionary"),
+    # ("NKE", "Consumer Discretionary"), ("SBUX", "Consumer Discretionary"),
+    # ("MCD", "Consumer Discretionary"), ("TGT", "Consumer Discretionary"),
+    # ("JPM", "Financials"), ("BAC", "Financials"), ("WFC", "Financials"),
+    # ("GS", "Financials"), ("MS", "Financials"), ("V", "Financials"),
+    # ("MA", "Financials"), ("BLK", "Financials"),
+    # ("XOM", "Energy"), ("CVX", "Energy"), ("COP", "Energy"),
+    # ("SLB", "Energy"),
+    # ("UNH", "Health Care"), ("ABBV", "Health Care"),
+    # ("LLY", "Health Care"), ("JNJ", "Health Care"), ("PFE", "Health Care"),
+    # ("KO", "Consumer Staples"), ("PEP", "Consumer Staples"),
+    # ("COST", "Consumer Staples"), ("WMT", "Consumer Staples"),
+    # ("CAT", "Industrials"), ("BA", "Industrials"), ("UPS", "Industrials"),
+    # ("^SPX", "Index"), ("^NDX", "Index"), ("^DJI", "Index")
 ]
 
 # Derived configurations
@@ -39,7 +39,7 @@ SECTORS = {t: s for t, s in TICKERS}
 # APP SETTINGS
 # =============================================================================
 
-SNAPSHOT_REFRESH_MS = 1500  # Milliseconds between data refreshes
+SNAPSHOT_REFRESH_MS = 5000  # Milliseconds between data refreshes
 APP_HOST = "127.0.0.1"
 APP_PORT = 8050
 DEBUG_MODE = False
@@ -82,7 +82,7 @@ class Colors:
 
     # Chart colors
     CHART_BLUE = "#3b82f6"
-    CHART_PURPLE = "#a855f7"
+    CHART_PURPLE = "rgba(67, 34, 98, 0.6)"
     CHART_ORANGE = "#fb923c"
     CHART_YELLOW = "#fbbf24"
 

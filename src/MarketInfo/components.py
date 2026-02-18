@@ -31,25 +31,10 @@ def get_font_imports():
 
 def PageContainer(children):
     """
-    Premium page container with gradient background
+    Premium page container - clean dark background
     """
     return html.Div([
         get_font_imports(),
-
-        # Animated background gradient
-        html.Div(style={
-            "position": "fixed",
-            "top": "0",
-            "left": "0",
-            "right": "0",
-            "bottom": "0",
-            "background": f"""
-                radial-gradient(circle at 20% 20%, {Colors.ACCENT_PRIMARY}08 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, {Colors.ACCENT_SECONDARY}08 0%, transparent 50%),
-                {Colors.BG_PRIMARY}
-            """,
-            "zIndex": "-1"
-        }),
 
         # Main content
         html.Div(
@@ -61,7 +46,8 @@ def PageContainer(children):
                 "fontFamily": Typography.FONT_BODY,
                 "padding": Spacing.XXL,
                 "gap": Spacing.XL,
-                "position": "relative"
+                "position": "relative",
+                "background": Colors.BG_PRIMARY  # Solid dark background
             }
         )
     ])
@@ -164,7 +150,7 @@ def BackButton(id="nav_back"):
 
 def ChartContainer(figure, id="chart", config=None):
     """
-    Premium chart container with glass effect
+    Premium chart container with enhanced glass effect
     """
     default_config = {
         "displayModeBar": True,
@@ -181,7 +167,12 @@ def ChartContainer(figure, id="chart", config=None):
             style={"height": "100%", "width": "100%"}
         )
     ], style={
-        **glass_card(),
+        "background": "rgba(32, 32, 46, 0.3)",  # More transparent
+        "backdropFilter": "blur(20px)",
+        "WebkitBackdropFilter": "blur(20px)",
+        "border": "1px solid rgba(160, 160, 184, 0.2)",
+        "borderRadius": Effects.RADIUS_LG,
+        "boxShadow": "0 8px 32px rgba(0, 0, 0, 0.4)",
         "padding": "0",
         "overflow": "hidden",
         "minHeight": "600px"

@@ -120,7 +120,7 @@ def button(variant="primary"):
 
     variants = {
         "primary": {
-            "background": Colors.GRADIENT_PRIMARY,
+            "background": Colors.OVERLAY,
             "color": Colors.BG_PRIMARY,
             "boxShadow": Effects.GLOW_ACCENT
         },
@@ -175,7 +175,7 @@ def stat_display():
         "fontSize": Typography.SIZE_HERO,
         "fontWeight": Typography.WEIGHT_BOLD,
         "lineHeight": Typography.LINE_TIGHT,
-        "background": Colors.GRADIENT_PRIMARY,
+        "background": Colors.OVERLAY,
         "WebkitBackgroundClip": "text",
         "WebkitTextFillColor": "transparent",
         "backgroundClip": "text"

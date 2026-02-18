@@ -78,31 +78,30 @@ def all_stock_data() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def single_stock_data(ticker: str, period: str = "1y") -> pd.DataFrame:
+def single_stock_data(ticker: str, period_days: int = 365) -> pd.DataFrame:
     """
     Fetch historical data for a single stock
 
     Args:
         ticker: Stock symbol (e.g., "AAPL")
-        period: Time period (e.g., "1y", "6mo", "1mo")
+        period_days: Time period in days (int)
 
     Returns:
         DataFrame with OHLCV data
 
     Industry note: Cache this data since historical data doesn't change
     """
-    try:
-        hist = yf.download(
-            ticker,
-            period=period,
-            interval="1d",
-            auto_adjust=True,
-            progress=False,
-            multi_level_index=False,
-        )
-        return hist
-    except Exception as e:
-        return pd.DataFrame()
+
+    hist = yf.download(
+        ticker,
+        start=pd.Timestamp.now() - pd.Timedelta(days=period_days),
+        end=pd.Timestamp.now(),
+        interval="1d",
+        auto_adjust=True,
+        progress=False,
+        multi_level_index=False,
+    )
+    return hist
 
 
 # =============================================================================

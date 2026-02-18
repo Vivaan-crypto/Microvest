@@ -89,7 +89,6 @@ app.layout = PageContainer([
     # DATA STORES
     # =========================================================================
     dcc.Store(id="snapshot_data"),
-    dcc.Store(id="chart_cache"),
     dcc.Store(id="selected_ticker"),
 
     # =========================================================================
@@ -181,7 +180,13 @@ def update_info_panel(click_data, snapshot_data):
     if not click_data or "points" not in click_data:
         return InfoPanel()
 
-    ticker = click_data["points"][0].get("label")
+    # Get ticker from customdata or label
+    point = click_data["points"][0]
+    if "customdata" in point and point["customdata"] and len(point["customdata"]) > 0:
+        ticker = point["customdata"][0]
+    else:
+        ticker = point.get("label")
+
     stock = get_stock_by_ticker(df, ticker)
 
     if not stock:
@@ -200,13 +205,11 @@ def update_info_panel(click_data, snapshot_data):
     Output("chart_overlay", "style"),
     Output("chart_content", "children"),
     Output("nav_back", "style"),
-    Output("chart_cache", "data"),
     Input("heatmap", "clickData"),
     Input("nav_back", "n_clicks"),
     State("snapshot_data", "data"),
     State("selected_ticker", "data"),
     State("chart_overlay", "style"),
-    State("chart_cache", "data"),
     prevent_initial_call=True
 )
 def handle_chart_overlay(
@@ -214,11 +217,11 @@ def handle_chart_overlay(
     back_click,
     snapshot_data,
     current_ticker,
-    current_overlay_style,
-    chart_cache
+    current_overlay_style
 ):
     """
-    Handle chart overlay with smooth transitions and caching
+    Handle chart overlay with smooth transitions
+    No caching - fetches fresh data each time
     """
     import pandas as pd
 
@@ -237,7 +240,7 @@ def handle_chart_overlay(
 
     if not snapshot_data:
         print("No snapshot data")
-        return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+        return current_ticker, hidden_overlay, None, hidden_button
 
     df = pd.DataFrame(snapshot_data)
 
@@ -245,7 +248,7 @@ def handle_chart_overlay(
     ctx = callback_context
     if not ctx.triggered:
         print("No trigger")
-        return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+        return current_ticker, hidden_overlay, None, hidden_button
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     print(f"Trigger ID: {trigger_id}")
@@ -253,17 +256,17 @@ def handle_chart_overlay(
     # Handle back button
     if trigger_id == "nav_back":
         print("Back button clicked")
-        return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+        return current_ticker, hidden_overlay, None, hidden_button
 
     # Handle heatmap click
     if trigger_id == "heatmap":
         if not heatmap_click:
             print("No heatmap click data")
-            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+            return current_ticker, hidden_overlay, None, hidden_button
 
         if "points" not in heatmap_click:
             print("No points in click data")
-            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+            return current_ticker, hidden_overlay, None, hidden_button
 
         # Get ticker from click - try customdata first, then label
         point = heatmap_click["points"][0]
@@ -280,37 +283,24 @@ def handle_chart_overlay(
         if not ticker:
             print("No ticker found in click data")
             print(f"Point data: {point}")
-            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+            return current_ticker, hidden_overlay, None, hidden_button
 
         # Validate ticker
         if ticker not in df["Ticker"].values:
             print(f"Ticker {ticker} not found in data")
             print(f"Available tickers: {df['Ticker'].tolist()[:5]}...")
-            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+            return current_ticker, hidden_overlay, None, hidden_button
 
-        print(f"Fetching data for {ticker}")
+        print(f"Fetching fresh data for {ticker}")
 
-        # Check cache
-        if chart_cache and chart_cache.get("ticker") == ticker:
-            print("Using cached data")
-            hist_data = chart_cache.get("data")
-            hist_df = pd.DataFrame(hist_data)
-            hist_df.index = pd.to_datetime(hist_df.index)
-        else:
-            print("Fetching fresh data")
-            # Fetch fresh data
-            hist_df = single_stock_data(ticker, period="1y")
-            if hist_df.empty:
-                print(f"Failed to fetch history for {ticker}")
-                return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+        # Fetch fresh data (no caching)
+        hist_df = single_stock_data(ticker)
 
-            print(f"Fetched {len(hist_df)} rows")
+        if hist_df.empty:
+            print(f"Failed to fetch history for {ticker}")
+            return current_ticker, hidden_overlay, None, hidden_button
 
-            # Cache it
-            chart_cache = {
-                "ticker": ticker,
-                "data": hist_df.reset_index().to_dict("records")
-            }
+        print(f"Fetched {len(hist_df)} rows")
 
         # Create chart
         print("Creating chart")
@@ -318,7 +308,7 @@ def handle_chart_overlay(
 
         if not fig:
             print("Failed to create chart")
-            return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+            return current_ticker, hidden_overlay, None, hidden_button
 
         print("Chart created successfully")
 
@@ -336,11 +326,11 @@ def handle_chart_overlay(
         visible_overlay = overlay(visible=True)
 
         print("Returning visible overlay")
-        return ticker, visible_overlay, chart_component, visible_button, chart_cache
+        return ticker, visible_overlay, chart_component, visible_button
 
     # Default
     print("Returning default state")
-    return current_ticker, hidden_overlay, None, hidden_button, chart_cache
+    return current_ticker, hidden_overlay, None, hidden_button
 
 
 # =============================================================================

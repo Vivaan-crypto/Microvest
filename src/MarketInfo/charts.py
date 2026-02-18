@@ -21,22 +21,23 @@ from data import calculate_technical_indicators, calculate_volume_colors
 
 def get_premium_layout(title: str = "", height: int = 600) -> dict:
     """
-    Premium dark theme layout for charts
+    Premium dark theme layout for charts with glassmorphism
     """
     return {
-        "paper_bgcolor": Colors.BG_PRIMARY,
-        "plot_bgcolor": Colors.BG_SECONDARY,
+        "paper_bgcolor": "rgba(10, 10, 15, 0.6)",  # Semi-transparent
+        "plot_bgcolor": "rgba(19, 19, 26, 0.4)",  # Very transparent
         "font": {
             "color": Colors.TEXT_PRIMARY,
             "family": Typography.FONT_DISPLAY,
             "size": 13
         },
         "title": {
-            "text": f"<b>{title}</b>",
+            "text": f"<b>{title}</b>" if title else "",
             "font": {
-                "size": 24,
+                "size": 32,
                 "color": Colors.TEXT_PRIMARY,
-                "family": Typography.FONT_DISPLAY
+                "family": Typography.FONT_DISPLAY,
+                "weight": 700
             },
             "x": 0.02,
             "xanchor": "left",
@@ -46,6 +47,7 @@ def get_premium_layout(title: str = "", height: int = 600) -> dict:
         "hovermode": "x unified",
         "showlegend": True,
         "height": height,
+        "margin": dict(l=70, r=40, t=100, b=60)
     }
 
 
@@ -57,6 +59,17 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
     """
     Premium stock performance heatmap with vibrant colors
     """
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No data available",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=20, color=Colors.TEXT_MUTED, family=Typography.FONT_DISPLAY)
+        )
+        fig.update_layout(get_premium_layout())
+        return fig
 
     # Calculate color range
     max_abs_change = max(1.0, df["Change"].abs().max())
@@ -78,12 +91,16 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
     )
 
     # Prepare custom data
-    customdata = np.column_stack([df["Change"].values, df["Last"].values])
+    customdata = np.column_stack([
+        df["Ticker"].values,
+        df["Change"].values,
+        df["Last"].values
+    ])
 
     # Update traces with premium styling
     fig.update_traces(
         customdata=customdata,
-        texttemplate="<b>%{label}</b><br><span style='font-family: JetBrains Mono'>%{customdata[0]:+.2f}%</span>",
+        texttemplate="<b>%{label}</b><br><span style='font-family: JetBrains Mono'>%{customdata[1]:+.2f}%</span>",
         textfont=dict(
             size=14,
             color=Colors.TEXT_PRIMARY,
@@ -91,10 +108,10 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
         ),
         textposition="middle center",
         hovertemplate=(
-            "<b style='font-size:16px'>%{label}</b><br>"
+            "<b style='font-size:16px'>%{customdata[0]}</b><br>"
             "<span style='font-family: JetBrains Mono; font-size:18px; font-weight:700'>"
-            "%{customdata[0]:+.2f}%</span><br>"
-            "<span style='font-family: JetBrains Mono'>$%{customdata[1]:.2f}</span>"
+            "%{customdata[1]:+.2f}%</span><br>"
+            "<span style='font-family: JetBrains Mono'>$%{customdata[2]:.2f}</span>"
             "<extra></extra>"
         ),
         marker=dict(
@@ -105,10 +122,8 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
 
     # Update layout
     fig.update_layout(
-        get_premium_layout(),
-        margin=dict(t=20, l=5, r=5, b=5),
-        uirevision="keep",
-        coloraxis_showscale=False
+        **get_premium_layout(),
+
     )
 
     return fig
@@ -144,7 +159,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     # PANEL 1: CANDLESTICK CHART WITH INDICATORS
     # =========================================================================
 
-    # Candlestick
+    # Candlestick with semi-transparent colors
     fig.add_trace(
         go.Candlestick(
             x=hist_df.index,
@@ -153,75 +168,77 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             low=hist_df["Low"],
             close=hist_df["Close"],
             increasing_line_color=Colors.SUCCESS,
-            increasing_fillcolor=Colors.SUCCESS,
+            increasing_fillcolor=f"{Colors.SUCCESS}",  # 80% opacity
             decreasing_line_color=Colors.DANGER,
-            decreasing_fillcolor=Colors.DANGER,
+            decreasing_fillcolor=f"{Colors.DANGER}",  # 80% opacity
             name="Price",
             showlegend=False,
-            increasing=dict(line=dict(width=1)),
-            decreasing=dict(line=dict(width=1))
+            increasing=dict(line=dict(width=1.5)),
+            decreasing=dict(line=dict(width=1.5))
         ),
         row=1, col=1
     )
 
-    # Bollinger Bands - Upper
+    # Bollinger Bands - Upper with glow effect
     fig.add_trace(
         go.Scatter(
             x=hist_df.index,
             y=hist_df["BB_up"],
             mode="lines",
-            line=dict(width=1.5, color=Colors.CHART_PURPLE, dash="dot"),
+            line=dict(width=2, color=Colors.CHART_PURPLE),
             name="BB Upper",
-            opacity=0.6,
+            opacity=0.8,
             showlegend=True
         ),
         row=1, col=1
     )
 
-    # Bollinger Bands - Lower with fill
+    # Bollinger Bands - Lower with transparent fill
     fig.add_trace(
         go.Scatter(
             x=hist_df.index,
             y=hist_df["BB_low"],
             mode="lines",
-            line=dict(width=1.5, color=Colors.CHART_PURPLE, dash="dot"),
+            line=dict(width=2, color=Colors.CHART_PURPLE, dash = "dash"),
             name="BB Lower",
-            opacity=0.6,
+            opacity=0.8,
             fill="tonexty",
-            fillcolor=f"{Colors.CHART_PURPLE}15",
+            fillcolor=f"{Colors.CHART_PURPLE}",  # 12% opacity - very glassy
             showlegend=True
         ),
         row=1, col=1
     )
 
-    # SMA 20
+    # SMA 20 - Electric cyan with glow
     fig.add_trace(
         go.Scatter(
             x=hist_df.index,
             y=hist_df["SMA20"],
             mode="lines",
-            line=dict(width=2, color=Colors.ACCENT_PRIMARY),
+            line=dict(width=3, color=Colors.ACCENT_PRIMARY),
             name="SMA 20",
-            showlegend=True
+            showlegend=True,
+            opacity=0.9
         ),
         row=1, col=1
     )
 
-    # SMA 50
+    # SMA 50 - Orange with glow
     fig.add_trace(
         go.Scatter(
             x=hist_df.index,
             y=hist_df["SMA50"],
             mode="lines",
-            line=dict(width=2, color=Colors.CHART_ORANGE),
+            line=dict(width=3, color=Colors.CHART_ORANGE),
             name="SMA 50",
-            showlegend=True
+            showlegend=True,
+            opacity=0.9
         ),
         row=1, col=1
     )
 
     # =========================================================================
-    # PANEL 2: VOLUME
+    # PANEL 2: VOLUME with gradient effect
     # =========================================================================
 
     volume_colors = calculate_volume_colors(hist_df)
@@ -230,17 +247,19 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
         go.Bar(
             x=hist_df.index,
             y=hist_df["Volume"],
-            marker_color=volume_colors,
-            marker_line_width=0,
+            marker=dict(
+                color=volume_colors,
+                line=dict(width=0),
+                opacity=0.6  # Semi-transparent bars
+            ),
             name="Volume",
-            showlegend=False,
-            opacity=0.7
+            showlegend=False
         ),
         row=2, col=1
     )
 
     # =========================================================================
-    # PANEL 3: RSI
+    # PANEL 3: RSI with glow effect
     # =========================================================================
 
     fig.add_trace(
@@ -248,35 +267,46 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             x=hist_df.index,
             y=hist_df["RSI"],
             mode="lines",
-            line=dict(width=2.5, color=Colors.CHART_YELLOW),
+            line=dict(width=3, color=Colors.CHART_YELLOW),
             name="RSI",
             showlegend=False,
             fill="tozeroy",
-            fillcolor=f"{Colors.CHART_YELLOW}15"
+            fillcolor=f"{Colors.CHART_YELLOW}",  # Transparent yellow glow
+            opacity=0.95
         ),
         row=3, col=1
     )
 
-    # RSI levels
+    # RSI levels with subtle lines
     fig.add_hline(
         y=70,
         line_dash="dash",
         line_color=Colors.DANGER,
-        line_width=1,
-        opacity=0.5,
+        line_width=1.5,
+        opacity=0.4,
         row=3, col=1
     )
     fig.add_hline(
         y=30,
         line_dash="dash",
         line_color=Colors.SUCCESS,
+        line_width=1.5,
+        opacity=0.4,
+        row=3, col=1
+    )
+
+    # Add subtle middle line at 50
+    fig.add_hline(
+        y=50,
+        line_dash="dot",
+        line_color=Colors.TEXT_DIM,
         line_width=1,
-        opacity=0.5,
+        opacity=0.3,
         row=3, col=1
     )
 
     # =========================================================================
-    # AXIS STYLING
+    # AXIS STYLING - Premium glassmorphism
     # =========================================================================
 
     # Price axis
@@ -285,45 +315,72 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     price_padding = (high_max - low_min) * 0.05
 
     fig.update_yaxes(
-        title_text="<b>PRICE</b>",
-        title_font=dict(size=11, family=Typography.FONT_DISPLAY),
+        title_text="<b>PRICE ($)</b>",
+        title_font=dict(
+            size=12,
+            family=Typography.FONT_DISPLAY,
+            color=Colors.TEXT_SECONDARY
+        ),
         range=[low_min - price_padding, high_max + price_padding],
         fixedrange=True,
-        gridcolor=Colors.BORDER,
+        gridcolor="rgba(160, 160, 184, 0.08)",  # Very subtle grid
         gridwidth=1,
         zeroline=False,
         showline=True,
-        linewidth=1,
+        linewidth=2,
         linecolor=Colors.BORDER_BRIGHT,
+        tickfont=dict(
+            family=Typography.FONT_MONO,
+            size=11,
+            color=Colors.TEXT_SECONDARY
+        ),
         row=1, col=1
     )
 
     # Volume axis
     fig.update_yaxes(
         title_text="<b>VOLUME</b>",
-        title_font=dict(size=11, family=Typography.FONT_DISPLAY),
+        title_font=dict(
+            size=12,
+            family=Typography.FONT_DISPLAY,
+            color=Colors.TEXT_SECONDARY
+        ),
         fixedrange=True,
-        gridcolor=Colors.BORDER,
+        gridcolor="rgba(160, 160, 184, 0.06)",
         gridwidth=1,
         zeroline=False,
         showline=True,
-        linewidth=1,
+        linewidth=2,
         linecolor=Colors.BORDER_BRIGHT,
+        tickfont=dict(
+            family=Typography.FONT_MONO,
+            size=10,
+            color=Colors.TEXT_SECONDARY
+        ),
         row=2, col=1
     )
 
     # RSI axis
     fig.update_yaxes(
         title_text="<b>RSI</b>",
-        title_font=dict(size=11, family=Typography.FONT_DISPLAY),
+        title_font=dict(
+            size=12,
+            family=Typography.FONT_DISPLAY,
+            color=Colors.TEXT_SECONDARY
+        ),
         range=[0, 100],
         fixedrange=True,
-        gridcolor=Colors.BORDER,
+        gridcolor="rgba(160, 160, 184, 0.06)",
         gridwidth=1,
         zeroline=False,
         showline=True,
-        linewidth=1,
+        linewidth=2,
         linecolor=Colors.BORDER_BRIGHT,
+        tickfont=dict(
+            family=Typography.FONT_MONO,
+            size=10,
+            color=Colors.TEXT_SECONDARY
+        ),
         row=3, col=1
     )
 
@@ -335,43 +392,26 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
         range=[x_min, x_max],
         rangeslider_visible=False,
         showgrid=True,
-        gridcolor=Colors.BORDER,
+        gridcolor="rgba(160, 160, 184, 0.08)",
         gridwidth=1,
         showline=True,
-        linewidth=1,
+        linewidth=2,
         linecolor=Colors.BORDER_BRIGHT,
+        tickfont=dict(
+            family=Typography.FONT_MONO,
+            size=11,
+            color=Colors.TEXT_SECONDARY
+        ),
         row=3, col=1,
         rangebreaks=[dict(bounds=["sat", "mon"])]
     )
 
     # =========================================================================
-    # LAYOUT
+    # LAYOUT - Premium glassmorphism
     # =========================================================================
 
     fig.update_layout(
-        **get_premium_layout(title=ticker, height=700),
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=1.08,
-            xanchor="left",
-            x=0,
-            bgcolor=Colors.BG_ELEVATED,
-            bordercolor=Colors.BORDER_BRIGHT,
-            borderwidth=1,
-            font=dict(size=11, family=Typography.FONT_DISPLAY)
-        ),
-        dragmode="zoom",
-        hovermode="x unified",
-        hoverlabel=dict(
-            bgcolor=Colors.BG_ELEVATED,
-            bordercolor=Colors.BORDER_BRIGHT,
-            font=dict(
-                family=Typography.FONT_MONO,
-                size=12,
-                color=Colors.TEXT_PRIMARY
-            )
-        )
+        **get_premium_layout(title=ticker, height=750),
     )
 
     return fig
