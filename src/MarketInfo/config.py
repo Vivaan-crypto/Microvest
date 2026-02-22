@@ -14,17 +14,19 @@ TICKERS = [
     # ("ADBE", "Technology"),
     # ("META", "Communication Services"), ("NFLX", "Communication Services"),
     # ("DIS", "Communication Services"),
-    ("AMZN", "Consumer Discretionary"), ("TSLA", "Consumer Discretionary"),
+  #  ("AMZN", "Consumer Discretionary"), ("TSLA", "Consumer Discretionary")
+    ("SOFI", "Technology"),
     # ("HD", "Consumer Discretionary"), ("LOW", "Consumer Discretionary"),
     # ("NKE", "Consumer Discretionary"), ("SBUX", "Consumer Discretionary"),
     # ("MCD", "Consumer Discretionary"), ("TGT", "Consumer Discretionary"),
     # ("JPM", "Financials"), ("BAC", "Financials"), ("WFC", "Financials"),
     # ("GS", "Financials"), ("MS", "Financials"), ("V", "Financials"),
     # ("MA", "Financials"), ("BLK", "Financials"),
-    # ("XOM", "Energy"), ("CVX", "Energy"), ("COP", "Energy"),
-    # ("SLB", "Energy"),
+  #  ("XOM", "Energy"), ("CVX", "Energy"), ("COP", "Energy"),
+    ("SLB", "Energy"),
     # ("UNH", "Health Care"), ("ABBV", "Health Care"),
-    # ("LLY", "Health Care"), ("JNJ", "Health Care"), ("PFE", "Health Care"),
+    ("LLY", "Health Care"),
+    # ("JNJ", "Health Care"), ("PFE", "Health Care"),
     # ("KO", "Consumer Staples"), ("PEP", "Consumer Staples"),
     # ("COST", "Consumer Staples"), ("WMT", "Consumer Staples"),
     # ("CAT", "Industrials"), ("BA", "Industrials"), ("UPS", "Industrials"),
@@ -42,7 +44,7 @@ SECTORS = {t: s for t, s in TICKERS}
 SNAPSHOT_REFRESH_MS = 5000  # Milliseconds between data refreshes
 APP_HOST = "127.0.0.1"
 APP_PORT = 8050
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 
 # =============================================================================
@@ -82,14 +84,15 @@ class Colors:
 
     # Chart colors
     CHART_BLUE = "#3b82f6"
-    CHART_PURPLE = "rgba(67, 34, 98, 0.6)"
+    CHART_PURPLE_TRANSPARENT = "rgba(67, 34, 98, 0.6)"
+    CHART_PURPLE = "rgba(168,85,247, 1)"
     CHART_ORANGE = "#fb923c"
-    CHART_YELLOW = "#fbbf24"
+    CHART_YELLOW = "rgba(217, 203, 17,1)"
 
     # UI elements
     BORDER = "#2a2a38"
     BORDER_BRIGHT = "#3a3a48"
-    OVERLAY = "rgba(10, 10, 15, 0.95)"
+    OVERLAY = "rgba(10, 10, 15, 0.75)"
 
     # Gradients
     GRADIENT_PRIMARY = "linear-gradient(135deg, #00f5ff 0%, #00ff88 100%)"

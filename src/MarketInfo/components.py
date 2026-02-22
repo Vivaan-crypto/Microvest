@@ -5,6 +5,7 @@ Beautiful, modern components for financial dashboard
 
 from dash import html, dcc
 from config import Colors, Typography, Spacing, Effects
+from datetime import time, datetime
 from styles import (
     flexbox, grid, text, card, button, badge,
     overlay, merge_styles, glass_card
@@ -90,22 +91,23 @@ def Header(title="STOCK MARKET"):
         ]),
 
         # Live indicator
+
         html.Div([
             html.Div(style={
                 "width": "8px",
                 "height": "8px",
                 "borderRadius": "50%",
-                "background": Colors.SUCCESS,
+                "background": isMarketLive(Colors.SUCCESS, Colors.DANGER),
                 "boxShadow": Effects.GLOW_SUCCESS,
-                "animation": "pulse 2s ease-in-out infinite"
+                "animation": "pulse 1s ease-in-out infinite"
             }),
             html.Span(
-                "LIVE",
+                isMarketLive("Live", "Closed"),
                 style={
                     **text(
                         size=Typography.SIZE_XS,
                         weight=Typography.WEIGHT_BOLD,
-                        color=Colors.SUCCESS,
+                        color=isMarketLive(Colors.SUCCESS, Colors.DANGER),
                         font=Typography.FONT_MONO
                     ),
                     "letterSpacing": "0.1em"
@@ -114,8 +116,8 @@ def Header(title="STOCK MARKET"):
         ], style={
             **flexbox(gap=Spacing.SM),
             "padding": f"{Spacing.SM} {Spacing.MD}",
-            "background": f"{Colors.SUCCESS}10",
-            "border": f"1px solid {Colors.SUCCESS}30",
+            "background": f"{isMarketLive(Colors.SUCCESS, Colors.DANGER)}10",
+            "border": f"1px solid {isMarketLive(Colors.SUCCESS, Colors.DANGER)}20",
             "borderRadius": Effects.RADIUS_FULL
         })
     ], style=flexbox(justify="space-between", align="flex-start"))
@@ -123,24 +125,37 @@ def Header(title="STOCK MARKET"):
 
 def BackButton(id="nav_back"):
     """
-    Floating back button with glow effect
+    Sleek floating back button with glassmorphic style
     """
     return html.Button(
-        [
-            html.Span("←", style={"fontSize": Typography.SIZE_XL}),
-            html.Span("BACK", style={"marginLeft": Spacing.SM})
-        ],
+        html.Span("←", style={
+            "fontSize": "24px",
+            "fontWeight": "300",
+            "lineHeight": "1"
+        }),
         id=id,
+        className="btn-hidden",
         n_clicks=0,
         style={
-            **button("primary"),
-            "display": "none",
             "position": "fixed",
-            "top": Spacing.XXL,
-            "left": Spacing.XXL,
+            "top": Spacing.XS,
+            "left": "0px",
             "zIndex": "2000",
-            "boxShadow": Effects.GLOW_ACCENT
-        }
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "background": "rgba(205, 0, 0, 0.8)",
+            "backdropFilter": "blur(12px)",
+            "WebkitBackdropFilter": "blur(12px)",
+            "border": f"3px solid {Colors.BORDER_BRIGHT}",
+            "borderRadius": "50%",
+            "color": Colors.TEXT_PRIMARY,
+            "cursor": "pointer",
+            "transition": "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+            "boxShadow": "0 4px 16px rgba(0, 0, 0, 0.6)",
+            "alignItems": "center",
+            "justifyContent": "center"
+        },
     )
 
 
@@ -175,7 +190,8 @@ def ChartContainer(figure, id="chart", config=None):
         "boxShadow": "0 8px 32px rgba(0, 0, 0, 0.4)",
         "padding": "0",
         "overflow": "hidden",
-        "minHeight": "600px"
+        "minHeight": "100%",
+        "height": "100%"
     })
 
 
@@ -187,10 +203,8 @@ def ChartOverlay(id="chart_overlay", content_id="chart_content", visible=False):
         html.Div(
             id=content_id,
             style={
-                "width": "100%",
-                "maxWidth": "1600px",
-                "height": "90vh",
-                "maxHeight": "900px"
+                "width": "100vw",
+                "height": "100vh",
             }
         ),
         id=id,
@@ -413,3 +427,13 @@ def LoadingSpinner():
         **flexbox(direction="column", align="center", justify="center"),
         "padding": Spacing.XXXL
     })
+
+
+def isMarketLive(a, b):
+    start_time = time(9, 30)
+    end_time = time(16, 0)
+    now = datetime.now().time()
+    if start_time <= now <= end_time:
+        return a
+    else:
+        return b

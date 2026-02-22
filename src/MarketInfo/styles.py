@@ -67,10 +67,10 @@ def grid(columns="1fr", rows="auto", gap=Spacing.LG):
 
 
 def text(
-    size=Typography.SIZE_BASE,
-    weight=Typography.WEIGHT_NORMAL,
-    color=Colors.TEXT_PRIMARY,
-    font=Typography.FONT_BODY
+        size=Typography.SIZE_BASE,
+        weight=Typography.WEIGHT_NORMAL,
+        color=Colors.TEXT_PRIMARY,
+        font=Typography.FONT_BODY
 ):
     """Text styling helper"""
     return {
@@ -120,7 +120,7 @@ def button(variant="primary"):
 
     variants = {
         "primary": {
-            "background": Colors.OVERLAY,
+            "background": Colors.GRADIENT_PRIMARY,
             "color": Colors.BG_PRIMARY,
             "boxShadow": Effects.GLOW_ACCENT
         },
@@ -130,14 +130,15 @@ def button(variant="primary"):
             "boxShadow": Effects.GLOW_DANGER
         },
         "ghost": {
-            "background": "transparent",
+            "background": "rgba(32, 32, 46, 0.6)",
+            "backdropFilter": "blur(12px)",
+            "WebkitBackdropFilter": "blur(12px)",
             "color": Colors.TEXT_PRIMARY,
             "border": f"1px solid {Colors.BORDER_BRIGHT}"
         }
     }
 
     return {**base, **variants.get(variant, variants["primary"])}
-
 
 def badge(color=Colors.SUCCESS):
     """
@@ -198,8 +199,8 @@ def overlay(visible=False):
         "opacity": "1" if visible else "0",
         "pointerEvents": "all" if visible else "none",
         "zIndex": "1000",
-        "transition": "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        "padding": Spacing.XXL,
+        "transition": "opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+        "padding": f"{Spacing.XXXL}",  # top right bottom left,
         "display": "flex",
         "alignItems": "center",
         "justifyContent": "center"

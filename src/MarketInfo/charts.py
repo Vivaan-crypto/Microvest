@@ -44,10 +44,22 @@ def get_premium_layout(title: str = "", height: int = 600) -> dict:
             "y": 0.98,
             "yanchor": "top"
         },
-        "hovermode": "x unified",
         "showlegend": True,
         "height": height,
-        "margin": dict(l=70, r=40, t=100, b=60)
+        "margin": dict(l=70, r=40, t=100, b=60),
+        #"scrollZoom": True,
+        "dragmode": "pan",
+        "hovermode": "x unified",
+        "hoverlabel": dict(
+            bgcolor="rgba(32, 32, 46, 0.95)",  # Glassmorphic background
+            bordercolor=Colors.SUCCESS,  # Green border
+            font=dict(
+                family=Typography.FONT_MONO,
+                size=13,
+                color=Colors.TEXT_PRIMARY
+            ),
+            align="left"
+        )
     }
 
 
@@ -159,6 +171,8 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     # PANEL 1: CANDLESTICK CHART WITH INDICATORS
     # =========================================================================
 
+    hist_df['Daily_Change'] = ((hist_df['Close'] - hist_df['Open']) / hist_df['Open'] * 100)
+    print(hist_df['Daily_Change'].head())
     # Candlestick with semi-transparent colors
     fig.add_trace(
         go.Candlestick(
@@ -167,14 +181,23 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             high=hist_df["High"],
             low=hist_df["Low"],
             close=hist_df["Close"],
+            customdata=hist_df['Daily_Change'],
             increasing_line_color=Colors.SUCCESS,
             increasing_fillcolor=f"{Colors.SUCCESS}",  # 80% opacity
             decreasing_line_color=Colors.DANGER,
             decreasing_fillcolor=f"{Colors.DANGER}",  # 80% opacity
-            name="Price",
             showlegend=False,
             increasing=dict(line=dict(width=1.5)),
-            decreasing=dict(line=dict(width=1.5))
+            decreasing=dict(line=dict(width=1.5)),
+            hovertemplate=(
+                "<b>%{x|%Y-%m-%d}</b><br>"
+                "Open: $%{open:.2f}<br>"
+                "High: $%{high:.2f}<br>"
+                "Low: $%{low:.2f}<br>"
+                "Close: $%{close:.2f}<br>"
+                "Change: $%{customdata:+.2f}%<extra></extra>"
+                "<span style='font-family: JetBrains Mono; font-size:14px; font-weight:700'>"
+            )
         ),
         row=1, col=1
     )
@@ -185,7 +208,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             x=hist_df.index,
             y=hist_df["BB_up"],
             mode="lines",
-            line=dict(width=2, color=Colors.CHART_PURPLE),
+            line=dict(width=2, color=Colors.CHART_PURPLE_TRANSPARENT),
             name="BB Upper",
             opacity=0.8,
             showlegend=True
@@ -199,11 +222,11 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             x=hist_df.index,
             y=hist_df["BB_low"],
             mode="lines",
-            line=dict(width=2, color=Colors.CHART_PURPLE, dash = "dash"),
+            line=dict(width=2, color=Colors.CHART_PURPLE_TRANSPARENT, dash="dash"),
             name="BB Lower",
-            opacity=0.8,
+            opacity= 0.8,
             fill="tonexty",
-            fillcolor=f"{Colors.CHART_PURPLE}",  # 12% opacity - very glassy
+            fillcolor=f"{Colors.CHART_PURPLE_TRANSPARENT}",  # 12% opacity - very glassy
             showlegend=True
         ),
         row=1, col=1
@@ -265,14 +288,24 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     fig.add_trace(
         go.Scatter(
             x=hist_df.index,
-            y=hist_df["RSI"],
+            y=hist_df["RSI_14"],
             mode="lines",
-            line=dict(width=3, color=Colors.CHART_YELLOW),
+            line=dict(width=2, color=Colors.CHART_PURPLE),
             name="RSI",
             showlegend=False,
-            fill="tozeroy",
-            fillcolor=f"{Colors.CHART_YELLOW}",  # Transparent yellow glow
-            opacity=0.95
+            opacity=1
+        ),
+        row=3, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=hist_df.index,
+            y=hist_df["RSI_29"],
+            mode="lines",
+            line=dict(width=2, color=Colors.CHART_YELLOW),
+            name="RSI",
+            showlegend=False,
+            opacity=1
         ),
         row=3, col=1
     )
@@ -317,12 +350,11 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     fig.update_yaxes(
         title_text="<b>PRICE ($)</b>",
         title_font=dict(
-            size=12,
+            size=18,
             family=Typography.FONT_DISPLAY,
             color=Colors.TEXT_SECONDARY
         ),
         range=[low_min - price_padding, high_max + price_padding],
-        fixedrange=True,
         gridcolor="rgba(160, 160, 184, 0.08)",  # Very subtle grid
         gridwidth=1,
         zeroline=False,
@@ -331,7 +363,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
         linecolor=Colors.BORDER_BRIGHT,
         tickfont=dict(
             family=Typography.FONT_MONO,
-            size=11,
+            size=12,
             color=Colors.TEXT_SECONDARY
         ),
         row=1, col=1
@@ -341,7 +373,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     fig.update_yaxes(
         title_text="<b>VOLUME</b>",
         title_font=dict(
-            size=12,
+            size=16,
             family=Typography.FONT_DISPLAY,
             color=Colors.TEXT_SECONDARY
         ),
@@ -412,6 +444,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
 
     fig.update_layout(
         **get_premium_layout(title=ticker, height=750),
+        xaxis_rangeslider_visible=False
     )
 
     return fig

@@ -14,6 +14,7 @@ import numpy as np
 import yfinance as yf
 from typing import Dict, Tuple, Optional
 from config import SYMBOLS, SECTORS
+import talib as ta
 
 
 # =============================================================================
@@ -111,45 +112,47 @@ def single_stock_data(ticker: str, period_days: int = 365) -> pd.DataFrame:
 def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate technical indicators (SMA, Bollinger Bands, RSI)
-
-    Args:
-        df: DataFrame with OHLCV data
-
-    Returns:
-        DataFrame with added indicator columns
-
-    Industry note: These calculations are "pure functions" -
-    they don't modify the original data, making them easy to test
     """
     # Make a copy to avoid modifying original
     df = df.copy()
 
+    # Flatten multi-level columns if present
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
+    # Ensure Close column exists and is a Series
+    if "Close" not in df.columns:
+        return df
+
+    close_series = df["Close"]
+    if isinstance(close_series, pd.DataFrame):
+        close_series = close_series.iloc[:, 0]  # Take first column if it's a DataFrame
+
     # Simple Moving Averages
-    df["SMA20"] = df["Close"].rolling(window=20).mean()
-    df["SMA50"] = df["Close"].rolling(window=50).mean()
+    df["SMA20"] = close_series.rolling(window=20).mean()
+    df["SMA50"] = close_series.rolling(window=50).mean()
 
     # Bollinger Bands
-    df["BB_mid"] = df["Close"].rolling(window=20).mean()
-    df["BB_std"] = df["Close"].rolling(window=20).std()
+    df["BB_mid"] = close_series.rolling(window=20).mean()
+    df["BB_std"] = close_series.rolling(window=20).std()
     df["BB_up"] = df["BB_mid"] + 2 * df["BB_std"]
     df["BB_low"] = df["BB_mid"] - 2 * df["BB_std"]
 
     # RSI (Relative Strength Index)
-    delta = df["Close"].diff()
+    delta = close_series.diff()
     gain = delta.where(delta > 0, 0).rolling(window=14).mean()
     loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
     rs = gain / loss
-    df["RSI"] = 100 - (100 / (1 + rs))
-
+    df["RSI_14"] = ta.RSI(df["Close"], timeperiod=14)
+    df["RSI_29"] = ta.RSI(df["Close"], timeperiod=29)
     return df
-
 
 def calculate_market_stats(df: pd.DataFrame) -> Dict[str, any]:
     """
     Calculate overall market statistics
 
     Args:
-        df: DataFrame with stock data including 'Change' column
+        df: DataFrame with stock data including 'Change' column;
 
     Returns:
         Dictionary with keys: gainers, losers, avg_change
