@@ -5,7 +5,6 @@ Handles nav + page routing only
 
 from dash import Dash, html, dcc, page_container, page_registry, clientside_callback, Input, Output
 from config import Colors, Typography, Effects, APP_HOST, APP_PORT, DEBUG_MODE
-
 app = Dash(__name__, use_pages=True)
 app.title = "Stock Dashboard"
 
@@ -102,7 +101,7 @@ nav = html.Div([
         # Logo
         html.Div([
             html.Span("◈", style={"color": "#00f5ff", "fontSize": "18px"}),
-            html.Span("STOCKDASH", style={
+            html.Span("Dashboard", style={
                 "color": "#ffffff",
                 "fontWeight": "800",
                 "fontSize": "13px",
