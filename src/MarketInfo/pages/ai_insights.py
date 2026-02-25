@@ -13,16 +13,18 @@ Note: Using gemini-2.5-pro-preview-03-25 — the latest available Gemini Pro.
 import dash
 from dash import html, dcc, Input, Output, State, callback
 from google import genai
-import json
+import yaml
 from datetime import datetime
-
+import json
 dash.register_page(__name__, path="/ai", name="AI Insights")
 
 # =============================================================================
 # GEMINI SETUP
 # =============================================================================
+with open("../ConfigurationFiles/config.yaml", "r") as f:
+    config = yaml.safe_load(f)
 
-genai.Client(api_key="AIzaSyCnoxXxZ8liX4IYZzJvJv3QGLw545IKpd4")
+client = genai.Client(api_key=config["api_keys"]["gemini"])
 MODEL_NAME = "gemini-3-flash-preview"
 
 # =============================================================================
@@ -499,9 +501,9 @@ layout = html.Div([
 
 def call_gemini(messages: list[dict]) -> str:
     try:
-        model = genai.GenerativeModel(
-            model_name=MODEL_NAME,
-            system_instruction=(
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=(
                 "You are an expert financial analyst and stock market strategist. "
                 "Provide clear, insightful, data-driven analysis. "
                 "Use well-structured formatting with sections and bullet points where helpful. "
@@ -515,8 +517,7 @@ def call_gemini(messages: list[dict]) -> str:
                 "role": m["role"],
                 "parts": [m["content"]]
             })
-        chat = model.start_chat(history=gemini_history)
-        response = chat.send_message(messages[-1]["content"])
+  #      chat = client.chats.start_chat(history=gemini_history)
         return response.text
     except Exception as e:
         return f"⚠️ Gemini API error: {str(e)}\n\nMake sure GEMINI_API_KEY is set correctly."
