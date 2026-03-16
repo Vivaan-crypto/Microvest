@@ -17,7 +17,7 @@ PRICE_COLS = ["Open", "High", "Low", "Close", "Volume"]
 INDICATOR_COLS = ["SMA20", "EMA12", "RSI14", "MACD", "MACD_signal", "MACD_hist"]  # 6 features
 PRICE_INPUT_SIZE = 5
 INDICATOR_INPUT_SIZE = 6
-PATH = "C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src/PredictionApp/LightningLogs/version_17/checkpoints/epoch=54-step=75625.ckpt"
+PATH = "LightningLogs/version_17/checkpoints/epoch=54-step=75625.ckpt"  # Update this to your actual checkpoint path
 
 
 # ----------------------

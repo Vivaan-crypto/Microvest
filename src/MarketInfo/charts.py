@@ -355,12 +355,14 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             color=Colors.TEXT_SECONDARY
         ),
         range=[low_min - price_padding, high_max + price_padding],
-        gridcolor="rgba(160, 160, 184, 0.08)",  # Very subtle grid
+        gridcolor="rgba(160, 160, 184, 0.16)",  # Very subtle grid
         gridwidth=1,
         zeroline=False,
         showline=True,
         linewidth=2,
         linecolor=Colors.BORDER_BRIGHT,
+        nticks = 30,
+        automargin = False,
         tickfont=dict(
             family=Typography.FONT_MONO,
             size=12,
@@ -378,11 +380,13 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
             color=Colors.TEXT_SECONDARY
         ),
         fixedrange=True,
-        gridcolor="rgba(160, 160, 184, 0.06)",
+        gridcolor="rgba(160, 160, 184, 0.16)",
         gridwidth=1,
         zeroline=False,
         showline=True,
         linewidth=2,
+        nticks=13,
+        automargin=False,
         linecolor=Colors.BORDER_BRIGHT,
         tickfont=dict(
             family=Typography.FONT_MONO,
@@ -402,11 +406,13 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
         ),
         range=[0, 100],
         fixedrange=True,
-        gridcolor="rgba(160, 160, 184, 0.06)",
+        gridcolor="rgba(160, 160, 184, 0.16)",
         gridwidth=1,
         zeroline=False,
         showline=True,
         linewidth=2,
+        nticks=10,
+        automargin=False,
         linecolor=Colors.BORDER_BRIGHT,
         tickfont=dict(
             family=Typography.FONT_MONO,
@@ -444,7 +450,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
 
     fig.update_layout(
         **get_premium_layout(title=ticker, height=750),
-        xaxis_rangeslider_visible=False
+        xaxis_rangeslider_visible=False,
     )
 
     return fig

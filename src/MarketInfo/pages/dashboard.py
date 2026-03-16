@@ -28,7 +28,7 @@ layout = html.Div([
 
     dcc.Store(id="snapshot_data"),
     dcc.Store(id="selected_ticker"),
-
+    
     dcc.Interval(
         id="refresh_interval",
         interval=SNAPSHOT_REFRESH_MS,

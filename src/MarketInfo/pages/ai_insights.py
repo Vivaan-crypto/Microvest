@@ -16,6 +16,10 @@ from google import genai
 import yaml
 from datetime import datetime
 import json
+import markdown
+from bs4 import BeautifulSoup
+from src.MarketInfo.response_agent import get_response
+import langchain
 dash.register_page(__name__, path="/ai", name="AI Insights")
 
 # =============================================================================
@@ -32,19 +36,19 @@ MODEL_NAME = "gemini-3-flash-preview"
 # =============================================================================
 
 C = {
-    "bg":          "#0a0a0f",
-    "bg2":         "#0f0f1a",
-    "surface":     "#13131a",
-    "surface2":    "#1a1a24",
-    "border":      "rgba(255,255,255,0.07)",
-    "accent":      "#00f5ff",   # your existing electric cyan
-    "accent2":     "#00ff88",   # your existing neon green
-    "accent3":     "#ff00e5",   # your existing hot magenta
-    "green":       "#00ff88",
-    "red":         "#ff0055",
-    "text":        "#ffffff",
-    "muted":       "#606078",
-    "dim":         "#a0a0b8",
+    "bg": "#0a0a0f",
+    "bg2": "#0f0f1a",
+    "surface": "#13131a",
+    "surface2": "#1a1a24",
+    "border": "rgba(255,255,255,0.07)",
+    "accent": "#00f5ff",  # your existing electric cyan
+    "accent2": "#00ff88",  # your existing neon green
+    "accent3": "#ff00e5",  # your existing hot magenta
+    "green": "#00ff88",
+    "red": "#ff0055",
+    "text": "#ffffff",
+    "muted": "#606078",
+    "dim": "#a0a0b8",
 }
 
 # =============================================================================
@@ -52,12 +56,12 @@ C = {
 # =============================================================================
 
 QUICK_PROMPTS = [
-    ("📊 Analyze",       "Give me a detailed technical and fundamental analysis of {ticker}."),
-    ("🔮 Outlook",       "What is the 3–6 month price outlook for {ticker}? Include key risks and catalysts."),
-    ("📰 News Impact",   "Summarize recent news for {ticker} and how it might affect the stock price."),
+    ("📊 Analyze", "Give me a detailed technical and fundamental analysis of {ticker}."),
+    ("🔮 Outlook", "What is the 3–6 month price outlook for {ticker}? Include key risks and catalysts."),
+    ("📰 News Impact", "Summarize recent news for {ticker} and how it might affect the stock price."),
     ("💡 Buy/Sell/Hold", "Would you recommend buying, holding, or selling {ticker} right now? Explain your reasoning."),
-    ("📈 Competitors",   "Who are {ticker}'s main competitors and how does it compare to them?"),
-    ("🌍 Macro Risks",   "What macroeconomic risks could negatively impact {ticker} in the near term?"),
+    ("📈 Competitors", "Who are {ticker}'s main competitors and how does it compare to them?"),
+    ("🌍 Macro Risks", "What macroeconomic risks could negatively impact {ticker} in the near term?"),
 ]
 
 MARKET_SUMMARY_PROMPT = (
@@ -65,6 +69,7 @@ MARKET_SUMMARY_PROMPT = (
     "Cover: major index trends, sector rotation, volatility, and 2-3 key themes traders should watch. "
     "Use clear sections."
 )
+
 
 # =============================================================================
 # COMPONENT HELPERS
@@ -79,9 +84,9 @@ def message_bubble(role: str, content: str, timestamp: str = ""):
                 "width": "30px", "height": "30px",
                 "borderRadius": "50%",
                 "background": f"linear-gradient(135deg, {C['accent']}, {C['accent2']})" if is_user
-                              else f"linear-gradient(135deg, {C['accent3']}, {C['accent']})",
+                else f"linear-gradient(135deg, {C['accent3']}, {C['accent']})",
                 "display": "flex", "alignItems": "center", "justifyContent": "center",
-                "fontSize": "9px", "fontWeight": "800", "color": "#000",
+                "fontSize": "11px", "fontWeight": "800", "color": "#000",
                 "flexShrink": "0",
                 "boxShadow": f"0 0 12px {'rgba(0,245,255,0.4)' if is_user else 'rgba(255,0,229,0.4)'}",
                 "fontFamily": "'Outfit', sans-serif",
@@ -91,12 +96,12 @@ def message_bubble(role: str, content: str, timestamp: str = ""):
             html.Div(content, style={
                 "whiteSpace": "pre-wrap",
                 "lineHeight": "1.75",
-                "fontSize": "13px",
+                "fontSize": "18px",
                 "color": C["text"],
                 "fontFamily": "'Outfit', sans-serif",
             }),
             html.Div(timestamp, style={
-                "fontSize": "10px", "color": C["muted"],
+                "fontSize": "8px", "color": C["muted"],
                 "marginTop": "6px", "textAlign": "right",
                 "fontFamily": "'JetBrains Mono', monospace",
             }) if timestamp else None
@@ -174,7 +179,7 @@ layout = html.Div([
                     color: #00f5ff;
                     padding: 5px 13px;
                     border-radius: 20px;
-                    font-size: 11px;
+                    font-size: 13px;
                     font-weight: 700;
                     cursor: pointer;
                     transition: all 0.2s ease;
@@ -193,7 +198,7 @@ layout = html.Div([
                     border: none;
                     border-radius: 9px;
                     color: #0a0a0f;
-                    font-size: 16px;
+                    font-size: 20px;
                     font-weight: 900;
                     cursor: pointer;
                     height: 42px;
@@ -210,7 +215,7 @@ layout = html.Div([
                     border: 1px solid rgba(255,255,255,0.09) !important;
                     border-radius: 9px !important;
                     color: #ffffff !important;
-                    font-size: 13px !important;
+                    font-size: 18px !important;
                     padding: 10px 13px !important;
                     outline: none !important;
                     transition: border-color 0.2s ease !important;
@@ -243,9 +248,9 @@ layout = html.Div([
                     background: linear-gradient(135deg, rgba(0,245,255,0.12), rgba(0,255,136,0.12));
                     border: 1px solid rgba(0,245,255,0.3);
                     color: #00f5ff;
-                    padding: 8px 18px;
+                    padding: 4px 4px;
                     border-radius: 9px;
-                    font-size: 12px;
+                    font-size: 16px;
                     font-weight: 700;
                     cursor: pointer;
                     transition: all 0.2s ease;
@@ -278,7 +283,9 @@ layout = html.Div([
 
     # Stores
     dcc.Store(id="ai-chat-history", data=[]),
-
+    # Add this store to track if AI is thinking
+    dcc.Store(id="ai-is-thinking", data=[]),
+    dcc.Store(id="recent-text", data=""),
     # Page wrapper
     html.Div([
 
@@ -343,12 +350,12 @@ layout = html.Div([
                 id="ai-chat-messages",
                 children=[
                     message_bubble("assistant",
-                        "👋 Hey! I'm your AI market analyst, powered by Gemini.\n\n"
-                        "Enter a ticker above, then:\n"
-                        "• Tap a quick chip for instant analysis\n"
-                        "• Ask me anything about stocks or strategy\n"
-                        "• Hit 'Market Summary' on the right for a broad overview\n\n"
-                        "What would you like to explore?", "")
+                                   "👋 Hey! I'm your AI market analyst, powered by Gemini.\n\n"
+                                   "Enter a ticker above, then:\n"
+                                   "• Tap a quick chip for instant analysis\n"
+                                   "• Ask me anything about stocks or strategy\n"
+                                   "• Hit 'Market Summary' on the right for a broad overview\n\n"
+                                   "What would you like to explore?", "")
                 ],
                 style={
                     "flex": "1", "overflowY": "auto",
@@ -414,7 +421,7 @@ layout = html.Div([
                 html.Div([
                     html.Span("🌍", style={"fontSize": "16px"}),
                     html.Span("Market Intelligence", style={
-                        "fontWeight": "700", "fontSize": "13px", "color": C["text"],
+                        "fontWeight": "700", "fontSize": "15px", "color": C["text"],
                         "fontFamily": "'Outfit', sans-serif", "letterSpacing": "0.05em"
                     })
                 ], style={"display": "flex", "alignItems": "center", "gap": "8px"}),
@@ -432,7 +439,7 @@ layout = html.Div([
                     html.Div("🔍", style={"fontSize": "28px", "marginBottom": "10px"}),
                     html.Div(
                         "Click 'Generate Summary' for an AI-powered snapshot of current market conditions.",
-                        style={"color": C["muted"], "fontSize": "12px", "lineHeight": "1.7",
+                        style={"color": C["muted"], "fontSize": "15px", "lineHeight": "1.7",
                                "textAlign": "center", "fontFamily": "'Outfit', sans-serif"}
                     )
                 ], style={"padding": "36px 18px", "display": "flex",
@@ -499,34 +506,26 @@ layout = html.Div([
 # GEMINI HELPER
 # =============================================================================
 
-def call_gemini(messages: list[dict]) -> str:
+def call_gemini(messages: list[dict]) -> str:  # ← Only takes messages, not user_input
     try:
+        # Get the last user message
+        user_message = messages[-1]["content"]
+
         response = client.models.generate_content(
             model=MODEL_NAME,
-            contents=(
-                "You are an expert financial analyst and stock market strategist. "
-                "Provide clear, insightful, data-driven analysis. "
-                "Use well-structured formatting with sections and bullet points where helpful. "
-                "Be direct and confident in your assessments. "
-                "Always note at the end that this is not financial advice."
-            )
+            contents=user_message
         )
-        gemini_history = []
-        for m in messages[:-1]:
-            gemini_history.append({
-                "role": m["role"],
-                "parts": [m["content"]]
-            })
-  #      chat = client.chats.start_chat(history=gemini_history)
         return response.text
     except Exception as e:
-        return f"⚠️ Gemini API error: {str(e)}\n\nMake sure GEMINI_API_KEY is set correctly."
-
+        return f"⚠️ Gemini API error: {str(e)}"
 
 def extract_sentiment(text: str) -> float:
     t = text.lower()
-    bull = sum(t.count(w) for w in ["bullish","buy","strong","growth","upside","positive","outperform","opportunity","rally"])
-    bear = sum(t.count(w) for w in ["bearish","sell","weak","decline","downside","negative","underperform","risk","caution","fall"])
+    bull = sum(t.count(w) for w in
+               ["bullish", "buy", "strong", "growth", "upside", "positive", "outperform", "opportunity", "rally"])
+    bear = sum(t.count(w) for w in
+               ["bearish", "sell", "weak", "decline", "downside", "negative", "underperform", "risk", "caution",
+                "fall"])
     total = bull + bear
     return bull / total if total > 0 else 0.5
 
@@ -535,12 +534,14 @@ def extract_sentiment(text: str) -> float:
 # CALLBACKS
 # =============================================================================
 
+
+# Callback 1: Show user message and mark as "thinking"
 @callback(
     Output("ai-chat-messages", "children"),
-    Output("ai-chat-history", "data"),
     Output("ai-user-input", "value"),
-    Output("ai-sentiment-bar", "children"),
-    Output("ai-sentiment-label", "children"),
+    Output("ai-chat-history", "data"),
+    Output("ai-is-thinking", "data"),  # Add this
+    Output("recent-text", "data"),
     Input("ai-send-btn", "n_clicks"),
     Input("ai-user-input", "n_submit"),
     State("ai-user-input", "value"),
@@ -549,9 +550,9 @@ def extract_sentiment(text: str) -> float:
     State("ai-chat-messages", "children"),
     prevent_initial_call=True
 )
-def send_message(send_clicks, n_submit, user_text, ticker, history, current_messages):
+def show_user_message_immediately(send_clicks, n_submit, user_text, ticker, history, current_messages):
     if not user_text or not user_text.strip():
-        return current_messages, history, "", dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
     ticker_str = (ticker or "").upper().strip()
     context = f"[Ticker context: {ticker_str}] " if ticker_str else ""
@@ -560,13 +561,58 @@ def send_message(send_clicks, n_submit, user_text, ticker, history, current_mess
     history = history or []
     history.append({"role": "user", "content": full_prompt})
 
-    ai_response = call_gemini(history)
-    history.append({"role": "model", "content": ai_response})
-
     ts = datetime.now().strftime("%H:%M")
     new_messages = list(current_messages) + [
         message_bubble("user", user_text.strip(), ts),
-        message_bubble("assistant", ai_response, ts),
+    ]
+
+    return new_messages, "", history, True, user_text
+
+
+# Callback 2: Show/hide typing indicator based on thinking state
+@callback(
+    Output("ai-typing-indicator", "style"),
+    Input("ai-is-thinking", "data"),
+)
+def toggle_typing_indicator(is_thinking):
+    if is_thinking:
+        return {
+            "display": "flex",
+            "alignItems": "flex-start",
+            "gap": "10px",
+            "padding": "0 14px 10px",
+        }
+    return {"display": "none"}
+
+
+@callback(
+    Output("ai-chat-messages", "children", allow_duplicate=True),
+    Output("ai-chat-history", "data", allow_duplicate=True),
+    Output("ai-is-thinking", "data", allow_duplicate=True),
+    Output("ai-sentiment-bar", "children"),
+    Output("ai-sentiment-label", "children"),
+    Input("ai-chat-history", "data"),
+    State("ai-chat-messages", "children"),
+    State("recent-text", "data"),  # ← Changed to State
+    prevent_initial_call=True
+)
+def get_ai_response(history, current_messages, user_text):  # ← Fixed parameter order
+    if not history or history[-1]["role"] != "user":
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+    # Get AI response (slow)
+    #ai_response = call_gemini(history)  # ← Only pass history
+    message = history[-1]
+    ai_response = get_response(message)
+    history.append({"role": "model", "content": ai_response})
+
+    # Convert markdown to plain text
+    message_html = markdown.markdown(ai_response)
+    message = BeautifulSoup(message_html, "html.parser").get_text()
+
+    ts = datetime.now().strftime("%H:%M")
+    new_messages = list(current_messages) + [
+        message_bubble("assistant", message, ts),
     ]
 
     score = extract_sentiment(ai_response)
@@ -575,13 +621,12 @@ def send_message(send_clicks, n_submit, user_text, ticker, history, current_mess
     label_color = C["green"] if score > 0.55 else C["red"] if score < 0.45 else C["dim"]
 
     return (
-        new_messages,
+        new_messages,  # ← Was returning user_text, should return new_messages
         history,
-        "",
+        False,  # Set thinking to False
         sentiment_bar,
         html.Span(label_text, style={"color": label_color, "fontWeight": "700"})
     )
-
 
 @callback(
     Output("ai-user-input", "value", allow_duplicate=True),
@@ -612,12 +657,12 @@ def generate_market_summary(n_clicks):
     return html.Div([
         html.Div([
             html.Div("🌐  Market Summary", style={
-                "fontWeight": "800", "fontSize": "12px", "color": C["accent"],
+                "fontWeight": "800", "fontSize": "15px", "color": C["accent"],
                 "marginBottom": "10px", "letterSpacing": "0.08em",
                 "fontFamily": "'JetBrains Mono', monospace",
             }),
             html.Div(response, style={
-                "whiteSpace": "pre-wrap", "fontSize": "12px",
+                "whiteSpace": "pre-wrap", "fontSize": "15px",
                 "lineHeight": "1.8", "color": C["dim"],
                 "fontFamily": "'Outfit', sans-serif",
             }),
