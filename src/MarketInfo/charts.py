@@ -11,8 +11,9 @@ from plotly.subplots import make_subplots
 from datetime import timedelta
 from typing import Optional
 
-from config import Colors, Typography, Effects
-from data import calculate_technical_indicators, calculate_volume_colors
+from config import Colors, Typography
+from data import calculate_volume_colors
+from indicators import compute_indicators, normalize_indicator_selection, INDICATOR_SPECS
 
 
 # =============================================================================
@@ -145,24 +146,28 @@ def create_heatmap(df: pd.DataFrame) -> go.Figure:
 # DETAILED STOCK CHART
 # =============================================================================
 
-def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure]:
+def create_stock_chart(
+    ticker: str,
+    hist_df: pd.DataFrame,
+    selected_indicators: Optional[list[str]] = None,
+) -> Optional[go.Figure]:
     """
     Premium stock chart with technical indicators
 
     Modern design with vibrant colors and smooth animations
     """
-    if hist_df.empty:
+    if hist_df.empty or len(hist_df) < 2:
         return None
 
-    # Calculate technical indicators
-    hist_df = calculate_technical_indicators(hist_df)
+    selected_indicators = normalize_indicator_selection(selected_indicators)
+    hist_df = compute_indicators(hist_df, selected_indicators)
 
-    # Create 3-panel layout
+    # Create a TradingView-style 3 panel layout
     fig = make_subplots(
         rows=3,
         cols=1,
         shared_xaxes=True,
-        row_heights=[0.6, 0.25, 0.15],
+        row_heights=[0.64, 0.18, 0.18],
         vertical_spacing=0.04,
         subplot_titles=("", "", "")
     )
@@ -171,8 +176,7 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     # PANEL 1: CANDLESTICK CHART WITH INDICATORS
     # =========================================================================
 
-    hist_df['Daily_Change'] = ((hist_df['Close'] - hist_df['Open']) / hist_df['Open'] * 100)
-    print(hist_df['Daily_Change'].head())
+    hist_df["Daily_Change"] = ((hist_df["Close"] - hist_df["Open"]) / hist_df["Open"] * 100)
     # Candlestick with semi-transparent colors
     fig.add_trace(
         go.Candlestick(
@@ -195,70 +199,81 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
                 "High: $%{high:.2f}<br>"
                 "Low: $%{low:.2f}<br>"
                 "Close: $%{close:.2f}<br>"
-                "Change: $%{customdata:+.2f}%<extra></extra>"
-                "<span style='font-family: JetBrains Mono; font-size:14px; font-weight:700'>"
+                "Change: %{customdata:+.2f}%<extra></extra>"
             )
         ),
         row=1, col=1
     )
 
-    # Bollinger Bands - Upper with glow effect
-    fig.add_trace(
-        go.Scatter(
-            x=hist_df.index,
-            y=hist_df["BB_up"],
-            mode="lines",
-            line=dict(width=2, color=Colors.CHART_PURPLE_TRANSPARENT),
-            name="BB Upper",
-            opacity=0.8,
-            showlegend=True
-        ),
-        row=1, col=1
-    )
+    overlay_traces = [
+        ("sma20", "SMA20"),
+        ("sma50", "SMA50"),
+        ("sma100", "SMA100"),
+        ("sma200", "SMA200"),
+        ("ema9", "EMA9"),
+        ("ema21", "EMA21"),
+        ("ema50", "EMA50"),
+        ("vwap", "VWAP"),
+        ("psar", "PSAR"),
+        ("supertrend", "SUPERTREND"),
+    ]
 
-    # Bollinger Bands - Lower with transparent fill
-    fig.add_trace(
-        go.Scatter(
-            x=hist_df.index,
-            y=hist_df["BB_low"],
-            mode="lines",
-            line=dict(width=2, color=Colors.CHART_PURPLE_TRANSPARENT, dash="dash"),
-            name="BB Lower",
-            opacity= 0.8,
-            fill="tonexty",
-            fillcolor=f"{Colors.CHART_PURPLE_TRANSPARENT}",  # 12% opacity - very glassy
-            showlegend=True
-        ),
-        row=1, col=1
-    )
+    for indicator_key, column_name in overlay_traces:
+        if indicator_key in selected_indicators and column_name in hist_df.columns:
+            spec = INDICATOR_SPECS[indicator_key]
+            fig.add_trace(
+                go.Scatter(
+                    x=hist_df.index,
+                    y=hist_df[column_name],
+                    mode="lines",
+                    line=dict(width=2 if "sma" in indicator_key or "ema" in indicator_key else 1.8, color=spec["color"]),
+                    name=spec["label"],
+                    opacity=0.95,
+                    showlegend=True,
+                ),
+                row=1,
+                col=1,
+            )
 
-    # SMA 20 - Electric cyan with glow
-    fig.add_trace(
-        go.Scatter(
-            x=hist_df.index,
-            y=hist_df["SMA20"],
-            mode="lines",
-            line=dict(width=3, color=Colors.ACCENT_PRIMARY),
-            name="SMA 20",
-            showlegend=True,
-            opacity=0.9
-        ),
-        row=1, col=1
-    )
+    if "bbands" in selected_indicators and {"BB_MID", "BB_UP", "BB_LOW"}.issubset(hist_df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=hist_df.index,
+                y=hist_df["BB_UP"],
+                mode="lines",
+                line=dict(width=1.4, color=Colors.CHART_PURPLE_TRANSPARENT),
+                name="BB Upper",
+                opacity=0.8,
+                showlegend=True,
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=hist_df.index,
+                y=hist_df["BB_LOW"],
+                mode="lines",
+                line=dict(width=1.4, color=Colors.CHART_PURPLE_TRANSPARENT, dash="dash"),
+                name="BB Lower",
+                opacity=0.8,
+                fill="tonexty",
+                fillcolor="rgba(168,85,247,0.08)",
+                showlegend=True,
+            ),
+            row=1,
+            col=1,
+        )
 
-    # SMA 50 - Orange with glow
-    fig.add_trace(
-        go.Scatter(
-            x=hist_df.index,
-            y=hist_df["SMA50"],
-            mode="lines",
-            line=dict(width=3, color=Colors.CHART_ORANGE),
-            name="SMA 50",
-            showlegend=True,
-            opacity=0.9
-        ),
-        row=1, col=1
-    )
+    if "ichimoku" in selected_indicators and {"TENKAN", "KIJUN", "SENKOU_A", "SENKOU_B"}.issubset(hist_df.columns):
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["TENKAN"], mode="lines", line=dict(width=1.4, color="#60a5fa"), name="Tenkan", showlegend=True), row=1, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["KIJUN"], mode="lines", line=dict(width=1.4, color="#22c55e"), name="Kijun", showlegend=True), row=1, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["SENKOU_A"], mode="lines", line=dict(width=1, color="rgba(96,165,250,0.35)"), name="Senkou A", showlegend=True), row=1, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["SENKOU_B"], mode="lines", line=dict(width=1, color="rgba(34,197,94,0.35)"), name="Senkou B", showlegend=True), row=1, col=1)
+
+    if "donchian" in selected_indicators and {"DONCHIAN_HIGH", "DONCHIAN_LOW"}.issubset(hist_df.columns):
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["DONCHIAN_HIGH"], mode="lines", line=dict(width=1.2, color="#38bdf8", dash="dot"), name="Donchian High", showlegend=True), row=1, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["DONCHIAN_LOW"], mode="lines", line=dict(width=1.2, color="#38bdf8", dash="dot"), name="Donchian Low", showlegend=True), row=1, col=1)
 
     # =========================================================================
     # PANEL 2: VOLUME with gradient effect
@@ -281,34 +296,58 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
         row=2, col=1
     )
 
+    if "volume_ma" in selected_indicators and "VOLUME_MA" in hist_df.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=hist_df.index,
+                y=hist_df["VOLUME_MA"],
+                mode="lines",
+                line=dict(width=1.6, color=INDICATOR_SPECS["volume_ma"]["color"]),
+                name="Volume MA",
+                showlegend=True,
+            ),
+            row=2,
+            col=1,
+        )
+
     # =========================================================================
     # PANEL 3: RSI with glow effect
     # =========================================================================
 
-    fig.add_trace(
-        go.Scatter(
-            x=hist_df.index,
-            y=hist_df["RSI_14"],
-            mode="lines",
-            line=dict(width=2, color=Colors.CHART_PURPLE),
-            name="RSI",
-            showlegend=False,
-            opacity=1
-        ),
-        row=3, col=1
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=hist_df.index,
-            y=hist_df["RSI_29"],
-            mode="lines",
-            line=dict(width=2, color=Colors.CHART_YELLOW),
-            name="RSI",
-            showlegend=False,
-            opacity=1
-        ),
-        row=3, col=1
-    )
+    lower_added = False
+    if "rsi14" in selected_indicators and "RSI14" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["RSI14"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["rsi14"]["color"]), name="RSI 14", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "rsi29" in selected_indicators and "RSI29" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["RSI29"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["rsi29"]["color"]), name="RSI 29", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "macd" in selected_indicators and {"MACD", "MACD_SIGNAL", "MACD_HIST"}.issubset(hist_df.columns):
+        fig.add_trace(go.Bar(x=hist_df.index, y=hist_df["MACD_HIST"], name="MACD Hist", marker_color="rgba(0,229,255,0.25)", showlegend=True), row=3, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["MACD"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["macd"]["color"]), name="MACD", showlegend=True), row=3, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["MACD_SIGNAL"], mode="lines", line=dict(width=2, color="#f59e0b"), name="MACD Signal", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "stochastic" in selected_indicators and {"STOCH_K", "STOCH_D"}.issubset(hist_df.columns):
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["STOCH_K"], mode="lines", line=dict(width=2, color="#f97316"), name="Stoch %K", showlegend=True), row=3, col=1)
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["STOCH_D"], mode="lines", line=dict(width=2, color="#22c55e"), name="Stoch %D", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "adx" in selected_indicators and "ADX" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["ADX"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["adx"]["color"]), name="ADX", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "cci" in selected_indicators and "CCI" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["CCI"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["cci"]["color"]), name="CCI", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "atr" in selected_indicators and "ATR" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["ATR"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["atr"]["color"]), name="ATR", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "roc" in selected_indicators and "ROC" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["ROC"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["roc"]["color"]), name="ROC", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "mfi" in selected_indicators and "MFI" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["MFI"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["mfi"]["color"]), name="MFI", showlegend=True), row=3, col=1)
+        lower_added = True
+    if "obv" in selected_indicators and "OBV" in hist_df.columns:
+        fig.add_trace(go.Scatter(x=hist_df.index, y=hist_df["OBV"], mode="lines", line=dict(width=2, color=INDICATOR_SPECS["obv"]["color"]), name="OBV", showlegend=True), row=3, col=1)
+        lower_added = True
 
     # RSI levels with subtle lines
     fig.add_hline(
@@ -451,6 +490,14 @@ def create_stock_chart(ticker: str, hist_df: pd.DataFrame) -> Optional[go.Figure
     fig.update_layout(
         **get_premium_layout(title=ticker, height=750),
         xaxis_rangeslider_visible=False,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0.01,
+            font=dict(size=11, color=Colors.TEXT_SECONDARY),
+        ),
     )
 
     return fig

@@ -20,12 +20,15 @@
     </option>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="AI Chats and config.yaml work">
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="PRE-UI Fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MarketInfo/charts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/charts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/components.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/components.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MarketInfo/pages/ai_insights.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/pages/ai_insights.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MarketInfo/pages/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/pages/dashboard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MarketInfo/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/MarketInfo/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -240,7 +243,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-4762d8aabb82-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.30387.173" />
+        <option value="bundled-python-sdk-1cd77e80b48f-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.32098.74" />
       </set>
     </attachedChunks>
   </component>
@@ -359,7 +362,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771995159492</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="PRE-UI Fixes">
+      <option name="closed" value="true" />
+      <created>1773676749915</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1773676749915</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -388,7 +399,8 @@
     <MESSAGE value="Overlay is decent" />
     <MESSAGE value="AI insights page" />
     <MESSAGE value="AI Chats and config.yaml work" />
-    <option name="LAST_COMMIT_MESSAGE" value="AI Chats and config.yaml work" />
+    <MESSAGE value="PRE-UI Fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="PRE-UI Fixes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

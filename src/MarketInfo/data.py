@@ -9,12 +9,13 @@ Industry pattern: "Repository Pattern" / "Data Access Layer"
 - Easy to add caching
 """
 
-import pandas as pd
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
+import pandas as pd
 import yfinance as yf
-from typing import Dict, Tuple, Optional
-from config import SYMBOLS, SECTORS
-import talib as ta
+
+from config import SECTORS, SYMBOLS
 
 
 # =============================================================================
@@ -43,13 +44,20 @@ def all_stock_data() -> pd.DataFrame:
             group_by="ticker",
         )
 
+        if data.empty:
+            return pd.DataFrame()
+
         rows = []
         for symbol in SYMBOLS:
             try:
                 # Handle both multi-index and single ticker DataFrames
                 cols = data[symbol] if isinstance(data.columns, pd.MultiIndex) else data
-                closes = cols["Close"]
-                volumes = cols["Volume"]
+                if cols.empty or len(cols) < 2:
+                    continue
+
+                closes = cols["Close"].dropna()
+                volumes = cols["Volume"].dropna()
+                latest = cols.iloc[-1]
 
                 last_price = float(closes.iloc[-1])
                 prev_price = float(closes.iloc[-2])
@@ -64,17 +72,18 @@ def all_stock_data() -> pd.DataFrame:
                     "Last": round(last_price, 2),
                     "Change": round(pct_change, 2),
                     "Size": market_weight,
-                    "Open": cols["Open"],
-                    "High": cols["High"],
-                    "Low": cols["Low"],
+                    "Open": float(latest["Open"]),
+                    "High": float(latest["High"]),
+                    "Low": float(latest["Low"]),
+                    "Volume": float(volumes.iloc[-1]),
                 })
-            except Exception as e:
+            except Exception:
                 # Skip stocks that fail to fetch
                 continue
 
         return pd.DataFrame(rows)
 
-    except Exception as e:
+    except Exception:
         # Return empty DataFrame on complete failure
         return pd.DataFrame()
 
@@ -138,16 +147,20 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["BB_up"] = df["BB_mid"] + 2 * df["BB_std"]
     df["BB_low"] = df["BB_mid"] - 2 * df["BB_std"]
 
-    # RSI (Relative Strength Index)
-    delta = close_series.diff()
-    gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-    loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
-    rs = gain / loss
-    df["RSI_14"] = ta.RSI(df["Close"], timeperiod=14)
-    df["RSI_29"] = ta.RSI(df["Close"], timeperiod=29)
+    def _rsi(series: pd.Series, period: int) -> pd.Series:
+        delta = series.diff()
+        gain = delta.clip(lower=0)
+        loss = -delta.clip(upper=0)
+        avg_gain = gain.ewm(alpha=1 / period, adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1 / period, adjust=False).mean()
+        rs = avg_gain / avg_loss.replace(0, np.nan)
+        return (100 - (100 / (1 + rs))).fillna(50)
+
+    df["RSI_14"] = _rsi(close_series, 14)
+    df["RSI_29"] = _rsi(close_series, 29)
     return df
 
-def calculate_market_stats(df: pd.DataFrame) -> Dict[str, any]:
+def calculate_market_stats(df: pd.DataFrame) -> Dict[str, Any]:
     """
     Calculate overall market statistics
 
@@ -171,7 +184,7 @@ def calculate_market_stats(df: pd.DataFrame) -> Dict[str, any]:
     }
 
 
-def calculate_watchlist_stats(df: pd.DataFrame, watchlist_tickers: list) -> Dict[str, any]:
+def calculate_watchlist_stats(df: pd.DataFrame, watchlist_tickers: list) -> Dict[str, Any]:
     """
     Calculate statistics for watchlist stocks only
 

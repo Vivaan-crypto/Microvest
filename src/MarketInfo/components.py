@@ -163,7 +163,7 @@ def BackButton(id="nav_back"):
 # CHART COMPONENTS
 # =============================================================================
 
-def ChartContainer(figure, id="chart", config=None):
+def ChartContainer(figure, id="chart", config=None, height="600px"):
     """
     Premium chart container with enhanced glass effect
     """
@@ -190,8 +190,8 @@ def ChartContainer(figure, id="chart", config=None):
         "boxShadow": "0 8px 32px rgba(0, 0, 0, 0.4)",
         "padding": "0",
         "overflow": "hidden",
-        "minHeight": "100%",
-        "height": "100%"
+        "minHeight": height,
+        "height": height
     })
 
 

@@ -3,8 +3,8 @@ Main Application Shell
 Handles nav + page routing only
 """
 
-from dash import Dash, html, dcc, page_container, page_registry, clientside_callback, Input, Output
-from config import Colors, Typography, Effects, APP_HOST, APP_PORT, DEBUG_MODE
+from dash import Dash, html, dcc, page_container, page_registry
+from config import APP_HOST, APP_PORT, DEBUG_MODE
 app = Dash(__name__, use_pages=True)
 app.title = "Stock Dashboard"
 
@@ -144,23 +144,6 @@ app.layout = html.Div([
     nav,
     html.Div(page_container, id="page-content", className="page-content")
 ], style={"background": "#0a0a0f", "minHeight": "100vh"})
-
-# Re-trigger page transition animation on URL change
-clientside_callback(
-    """
-    function(pathname) {
-        const el = document.getElementById('page-content');
-        if (el) {
-            el.style.animation = 'none';
-            el.offsetHeight;
-            el.style.animation = 'slideInRight 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both';
-        }
-        return pathname;
-    }
-    """,
-    Output("page-content", "data-pathname"),
-    Input("_pages_location", "pathname"),
-)
 
 if __name__ == "__main__":
     app.run(host=APP_HOST, port=APP_PORT, debug=DEBUG_MODE)
