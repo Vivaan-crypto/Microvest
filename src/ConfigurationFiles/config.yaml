@@ -244,6 +244,3 @@ download:
 #------------------------------------------------------------
 # API Keys
 #------------------------------------------------------------
-api_keys:
-  gemini: "AIzaSyAaBz3EwRU1qdaXU8z82JV8jp7L413HTBc"
-  gpt: "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"
