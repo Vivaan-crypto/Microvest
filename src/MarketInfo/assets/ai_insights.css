@@ -1,0 +1,319 @@
+/* ═══════════════════════════════════════════════════════════════
+   AI INSIGHTS  —  terminal stylesheet
+   ═══════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+/* ── scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar              { width: 4px; height: 4px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: #1e293b; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover  { background: #334155; }
+
+/* ── focus rings ───────────────────────────────────────────────── */
+input, textarea { outline: none !important; }
+input:focus, textarea:focus {
+    border-color: rgba(14,165,233,0.55) !important;
+    box-shadow: 0 0 0 2px rgba(14,165,233,0.08),
+                0 0 12px rgba(14,165,233,0.06) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ════════════════════════════════════════════════════════════════ */
+
+@keyframes dot-bounce {
+    0%, 80%, 100% { transform: translateY(0);   opacity: 0.3; }
+    40%            { transform: translateY(-6px); opacity: 1;   }
+}
+
+@keyframes scan-line {
+    0%   { top: 0%;   opacity: 0.6; }
+    100% { top: 100%; opacity: 0;   }
+}
+
+@keyframes border-pulse {
+    0%, 100% { box-shadow: -3px 0 0 0 rgba(139,92,246,0.35); }
+    50%       { box-shadow: -3px 0 0 6px rgba(139,92,246,0.0); }
+}
+
+@keyframes bubble-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes context-breathe {
+    0%, 100% { border-color: rgba(255,255,255,0.07); }
+    50%       { border-color: rgba(14,165,233,0.22); }
+}
+
+@keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg);   }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes live-pulse {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(16,185,129,0.7); }
+    50%       { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CHAT BUBBLES
+   ════════════════════════════════════════════════════════════════ */
+
+.chat-bubble {
+    animation: bubble-in 0.28s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.chat-bubble-ai {
+    animation: bubble-in 0.28s cubic-bezier(0.22,1,0.36,1) both,
+               border-pulse 3s ease-in-out 0.5s infinite;
+}
+
+/* ── thinking indicator ──────────────────────────────────────── */
+.thinking-bubble {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(139,92,246,0.28);
+    border-left: 3px solid #8b5cf6;
+    background: rgba(139,92,246,0.05);
+    margin-bottom: 10px;
+    animation: bubble-in 0.2s ease both;
+    position: relative;
+    overflow: hidden;
+}
+
+.thinking-bubble::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(139,92,246,0.5) 50%,
+        transparent 100%);
+    animation: scan-line 1.6s linear infinite;
+}
+
+.thinking-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #8b5cf6;
+    text-transform: uppercase;
+}
+
+.thinking-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.thinking-dots span {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #8b5cf6;
+    animation: dot-bounce 1.2s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.16s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.32s; }
+
+/* ── empty state blinking cursor ───────────────────────────────── */
+.chat-empty {
+    font-size: 12px;
+    color: #64748b;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 20px;
+    text-align: center;
+    border: 1px dashed rgba(255,255,255,0.07);
+    border-radius: 3px;
+}
+
+.chat-empty::after {
+    content: 'â–ˆ';
+    animation: cursor-blink 1.1s step-end infinite;
+    color: #0ea5e9;
+    font-size: 11px;
+    margin-left: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LIVE CONTEXT PANEL
+   ════════════════════════════════════════════════════════════════ */
+
+.context-panel {
+    animation: context-breathe 4s ease-in-out infinite;
+    transition: border-color 0.3s;
+}
+
+.context-panel:hover {
+    border-color: rgba(14,165,233,0.35) !important;
+}
+
+/* ── live dot pulse ─────────────────────────────────────────────── */
+.live-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: live-pulse 2s ease-in-out infinite;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* ── section icon slow spin ─────────────────────────────────────── */
+.section-icon-spin {
+    display: inline-block;
+    animation: spin-slow 8s linear infinite;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DROPDOWN OVERRIDES
+   ════════════════════════════════════════════════════════════════ */
+
+.dash-dropdown .Select-control,
+.Select.is-focused .Select-control,
+.Select.is-open .Select-control {
+    background: #080c14 !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+    min-height: 36px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.Select.is-focused .Select-control {
+    border-color: rgba(14,165,233,0.55) !important;
+    box-shadow: 0 0 0 2px rgba(14,165,233,0.08) !important;
+}
+
+.Select.is-open .Select-control {
+    border-color: rgba(14,165,233,0.45) !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.Select-value,
+.Select-single-value { color: #e2e8f0 !important; }
+
+.Select-value-label {
+    color: #e2e8f0 !important;
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    font-size: 13px !important;
+    line-height: 36px !important;
+}
+
+.Select-placeholder {
+    color: #475569 !important;
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    font-size: 13px !important;
+    line-height: 36px !important;
+}
+
+.Select-arrow-zone { padding-right: 10px !important; }
+.Select-arrow {
+    border-top-color: #475569 !important;
+    border-width: 5px 4px 2.5px !important;
+    transition: transform 0.2s ease;
+}
+.Select.is-open .Select-arrow {
+    border-top-color: #0ea5e9 !important;
+    transform: rotate(180deg);
+}
+
+.Select-menu-outer {
+    background: #0d1321 !important;
+    border: 1px solid rgba(14,165,233,0.25) !important;
+    border-top: none !important;
+    border-radius: 0 0 4px 4px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(14,165,233,0.08) !important;
+    z-index: 9999 !important;
+    animation: bubble-in 0.15s ease both;
+}
+
+.Select-menu { max-height: 220px !important; }
+
+.Select-option {
+    background: transparent !important;
+    color: #94a3b8 !important;
+    font-size: 13px !important;
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    padding: 9px 12px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    transition: background 0.12s ease, color 0.12s ease, padding-left 0.12s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.Select-option::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: #0ea5e9;
+    transform: scaleY(0);
+    transition: transform 0.15s ease;
+}
+
+.Select-option:hover,
+.Select-option.is-focused {
+    background: rgba(14,165,233,0.07) !important;
+    color: #e2e8f0 !important;
+    padding-left: 16px !important;
+}
+
+.Select-option:hover::before,
+.Select-option.is-focused::before { transform: scaleY(1); }
+
+.Select-option.is-selected {
+    background: rgba(14,165,233,0.12) !important;
+    color: #38bdf8 !important;
+    font-weight: 600 !important;
+}
+
+.Select-option.is-selected::before {
+    transform: scaleY(1);
+    background: #38bdf8;
+}
+
+.Select-option:last-child { border-bottom: none !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   BUTTONS
+   ════════════════════════════════════════════════════════════════ */
+
+#ai-send-btn {
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+#ai-send-btn:hover {
+    background: #38bdf8 !important;
+    box-shadow: 0 0 16px rgba(14,165,233,0.35);
+    transform: translateY(-1px);
+}
+#ai-send-btn:active { transform: translateY(0); }
+
+#ai-summary-btn {
+    transition: background 0.15s ease, color 0.15s ease,
+                box-shadow 0.15s ease, transform 0.1s ease;
+}
+#ai-summary-btn:hover {
+    background: rgba(14,165,233,0.08) !important;
+    box-shadow: 0 0 12px rgba(14,165,233,0.15);
+    transform: translateY(-1px);
+}
+#ai-summary-btn:active { transform: translateY(0); }
