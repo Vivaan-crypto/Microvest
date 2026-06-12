@@ -1,0 +1,246 @@
+# ============================================================
+# Stock Prediction Model Configuration
+# ============================================================
+
+# ------------------------------------------------------------
+# Data Configuration
+# ------------------------------------------------------------
+data:
+  # Data paths
+  paths:
+    stock_data: "Data/stock_data.pt"
+    stock_dict: "Data/stock_dict.json"
+    train_features: "Data/X_train.pt"
+    train_targets: "Data/y_train.pt"
+    test_features: "Data/X_test.pt"
+    test_targets: "Data/y_test.pt"
+  
+  # Date ranges
+  dates:
+    start_date: "2020-01-01"
+    end_date: "2025-01-01"
+    train_end: "2023-12-31"
+  
+  # Ticker lists
+  tickers:
+    # Main tickers for training
+    main:
+      - "AAPL"
+      - "MSFT"
+      - "GOOGL"
+      - "NVDA"
+      - "AVGO"
+      - "AMD"
+      - "INTC"
+      - "ASML"
+      - "CRM"
+      - "ADBE"
+      - "META"
+      - "NFLX"
+      - "DIS"
+      - "AMZN"
+      - "TSLA"
+      - "HD"
+      - "JPM"
+      - "BAC"
+      - "WFC"
+      - "GS"
+      - "MS"
+      - "C"
+      - "XOM"
+      - "CVX"
+      - "COP"
+      - "EOG"
+      - "SLB"
+      - "JNJ"
+      - "PFE"
+      - "MRK"
+      - "UNH"
+      - "ABBV"
+      - "CAT"
+      - "BA"
+      - "GE"
+      - "HON"
+      - "MMM"
+      - "PG"
+      - "KO"
+      - "PEP"
+      - "COST"
+      - "WMT"
+      - "NEE"
+      - "DUK"
+      - "SO"
+      - "EXC"
+      - "LIN"
+      - "SHW"
+      - "APD"
+      - "FCX"
+    
+    # Cache tickers (smaller set for quick testing)
+    cache:
+      - "MSFT"
+      - "AAPL"
+      - "GOOGL"
+      - "AMZN"
+      - "TSLA"
+      - "META"
+      - "NVDA"
+      - "JPM"
+      - "V"
+      - "DIS"
+
+# ------------------------------------------------------------
+# Feature Engineering Configuration
+# ------------------------------------------------------------
+features:
+  # Window size for sequential data
+  window_size: 20
+  
+  # Target horizon (days ahead to predict)
+  target_horizon: 5
+  
+  # Target scaling factor
+  target_scale: 100.0
+  
+  # Technical indicators parameters
+  indicators:
+    sma:
+      periods: [20, 50]
+    
+    ema:
+      periods: [12, 20, 50]
+    
+    rsi:
+      period: 14
+    
+    macd:
+      fast: 12
+      slow: 26
+      signal: 9
+    
+    returns:
+      periods: [1, 5, 20]
+    
+    volatility:
+      windows: [20, 60]
+    
+    volume_zscore:
+      window: 20
+
+# ------------------------------------------------------------
+# Model Architecture Configuration
+# ------------------------------------------------------------
+model:
+  # Input dimensions
+  price_input_size: 5  # OHLCV
+  indicator_input_size: 6  # Will be inferred automatically
+  
+  # LSTM parameters
+  lstm:
+    hidden_size: 128
+    num_layers: 2
+  
+  # Feedforward network for indicators
+  indicator_mlp:
+    hidden_sizes: [64, 32, 32]
+  
+  # Combined feedforward network
+  combined_mlp:
+    hidden_sizes: [128, 64]
+  
+  # Regularization
+  dropout: 0.2
+
+# ------------------------------------------------------------
+# Training Configuration
+# ------------------------------------------------------------
+training:
+  # Hyperparameters
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  max_epochs: 200
+  
+  # Loss function
+  loss:
+    type: "SmoothL1Loss"
+    beta: 1.0
+  
+  # Gradient clipping
+  gradient_clip:
+    value: 1.0
+    algorithm: "norm"
+  
+  # Hardware
+  accelerator: "cpu"  # or "gpu", "cuda", "mps"
+  
+  # Logging
+  log_every_n_steps: 10
+  enable_progress_bar: true
+  
+  # Checkpoint
+  checkpoint_path: "model_final.pth"
+
+# ------------------------------------------------------------
+# Lightning/TensorBoard Configuration
+# ------------------------------------------------------------
+logging:
+  # TensorBoard
+  tensorboard:
+    save_dir: "lightning_logs"
+    name: "stock_prediction_model"
+  
+  # Validation visualizations
+  validation:
+    plot_predictions: true
+    num_sample_predictions: 15
+    create_histograms: true
+    create_scatter_plots: true
+
+# ------------------------------------------------------------
+# Testing/Inference Configuration
+# ------------------------------------------------------------
+testing:
+  # Model checkpoint path
+  checkpoint_path: "C:/Users/shahv/OneDrive/Documents/GitHub/Microvest/src/PredictionApp/Model/model.ckpt"
+  
+  # Test parameters
+  window_size: 20
+  time_delta: 5  # Days to look back for current return calculation
+  
+  # Price columns
+  price_columns:
+    - "Open"
+    - "High"
+    - "Low"
+    - "Close"
+    - "Volume"
+  
+  # Indicator columns
+  indicator_columns:
+    - "SMA20"
+    - "EMA12"
+    - "RSI14"
+    - "MACD"
+    - "MACD_signal"
+    - "MACD_hist"
+  
+  # Test date range
+  test_start_date: "2020-01-01"
+  
+  # Z-score normalization
+  zscore_epsilon: 0.000001
+
+# ----------------------------------------------------- -------
+# Data Download Configuration
+# ------------------------------------------------------------
+download:
+  # yfinance parameters
+  interval: "1d"
+  auto_adjust: true
+  progress: false
+  multi_level_index: false
+
+#------------------------------------------------------------
+# API Keys
+#------------------------------------------------------------

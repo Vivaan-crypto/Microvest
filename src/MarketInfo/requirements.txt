@@ -1,0 +1,11 @@
+numpy
+pandas
+plotly
+yfinance
+dash
+openai
+PyYAML
+feedparser
+beautifulsoup4
+markdown
+requests

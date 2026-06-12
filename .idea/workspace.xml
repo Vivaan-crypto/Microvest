@@ -1,0 +1,602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="Cadence.History.Table.Properties">
+    <option name="COLUMN_ID_VISIBILITY">
+      <map>
+        <entry key="Author" value="true" />
+        <entry key="Cost" value="true" />
+        <entry key="Description" value="true" />
+        <entry key="Duration" value="true" />
+        <entry key="Id" value="true" />
+        <entry key="Name" value="true" />
+        <entry key="Price" value="true" />
+        <entry key="Resources" value="true" />
+        <entry key="Start Time" value="true" />
+        <entry key="Status" value="true" />
+      </map>
+    </option>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotChats">
+    <option name="panelChat">
+      <chat>
+        <option name="activeSessionId" value="db675a13-65d7-43e6-80c3-5806067c5930" />
+        <option name="sessions">
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="db675a13-65d7-43e6-80c3-5806067c5930" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+        </option>
+        <option name="type" value="PANEL" />
+      </chat>
+    </option>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/GitHub/Microvest" value="393FMfQpOsg9klmgBr8m8AmdkRT" />
+      <entry key="_C:/Users/shahv/OneDrive/Documents/GitHub/Microvest" value="2zQvGxede9A8i8o6ribiPLdyyXj" />
+    </persistenceIdMap>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Vivaan-crypto&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Vivaan-crypto/Microvest.git&quot;,
+    &quot;accountId&quot;: &quot;912bb80f-d04d-4473-8944-fce5025f0d04&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0000000000103682" />
+      <entry key="MS500" value="1.0120558931420256" />
+      <entry key="S2" value="2.1899689472152994" />
+      <entry key="S5" value="6.101759276661108" />
+      <entry key="S10" value="11.690072326358122" />
+      <entry key="S30" value="21.081632626750558" />
+      <entry key="S60" value="25.017092050273362" />
+      <entry key="M2" value="27.35869831552316" />
+      <entry key="M5" value="28.91669129469958" />
+      <entry key="M10" value="29.715494055379718" />
+      <entry key="M15" value="30.415284201146054" />
+      <entry key="M30" value="32.505914090191496" />
+      <entry key="H1" value="35.951843415299805" />
+      <entry key="H2" value="39.789483606775875" />
+      <entry key="H4" value="42.81195061179841" />
+      <entry key="D1" value="46.201924251706785" />
+      <entry key="W1" value="46.8832406215209" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="9.017196880868152E-74" />
+      <entry key="MS500" value="2.4604486874095964E-15" />
+      <entry key="S2" value="2.2451345760349426E-4" />
+      <entry key="S5" value="0.03963420090428971" />
+      <entry key="S10" value="0.25695405616168787" />
+      <entry key="S30" value="0.9848042692678913" />
+      <entry key="S60" value="1.398939713306925" />
+      <entry key="M2" value="1.6713399629491106" />
+      <entry key="M5" value="1.861057998873094" />
+      <entry key="M10" value="1.9296412017125266" />
+      <entry key="M15" value="1.9581661036306557" />
+      <entry key="M30" value="2.0512875899806913" />
+      <entry key="H1" value="2.2622062215737184" />
+      <entry key="H2" value="2.5176303236629525" />
+      <entry key="H4" value="2.720620966640336" />
+      <entry key="D1" value="2.947012859249468" />
+      <entry key="W1" value="2.9922560442734287" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9395227492237662" />
+      <entry key="MS500" value="0.999519919391731" />
+      <entry key="S2" value="2.1833482459647295" />
+      <entry key="S5" value="6.11849531898121" />
+      <entry key="S10" value="11.887736638100876" />
+      <entry key="S30" value="21.99290913622644" />
+      <entry key="S60" value="26.36360396869618" />
+      <entry key="M2" value="28.998605819371615" />
+      <entry key="M5" value="30.763702313910134" />
+      <entry key="M10" value="31.63775472730536" />
+      <entry key="M15" value="32.36833995296308" />
+      <entry key="M30" value="34.5543526146711" />
+      <entry key="H1" value="38.21237948452146" />
+      <entry key="H2" value="42.306146479141596" />
+      <entry key="H4" value="45.53203725058459" />
+      <entry key="D1" value="49.14883880965358" />
+      <entry key="W1" value="49.87548236059246" />
+    </decayedShown>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2zQvGxede9A8i8o6ribiPLdyyXj" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="claude-haiku-4.5" />
+          </model>
+        </option>
+        <option name="targetType" value="LOCAL" />
+      </template>
+    </option>
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.AWS.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ai_insights.executor&quot;: &quot;Run&quot;,
+    &quot;Python.app (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.app.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.auto_label.executor&quot;: &quot;Run&quot;,
+    &quot;Python.gpu_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.marketmap.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pred.executor&quot;: &quot;Run&quot;,
+    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
+    &quot;Python.response_agent.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_10.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_3.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_4.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_5.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_6.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_7.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_8.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_9.executor&quot;: &quot;Run&quot;,
+    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
+    &quot;Python.stock dashboard.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tempCodeRunnerFile.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;v2&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/GitHub/Microvest/src/PredictionApp/Data&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.appearance&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;Python&quot;,
+      &quot;PLAIN_TEXT&quot;
+    ]
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\GitHub\Microvest\src\PredictionApp\Data" />
+      <recent name="C:\GitHub\Microvest\src\PredictionApp\Data\CSV" />
+      <recent name="C:\GitHub\Microvest\src\MarketInfo" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp\LightningLogs" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\GitHub\Microvest\src\PredictionApp\Helpers" />
+      <recent name="C:\GitHub\Microvest\src\MarketInfo\pages\dashboard" />
+      <recent name="C:\GitHub\Microvest\src\MarketInfo\pages" />
+      <recent name="C:\GitHub\Microvest\src\MarketInfo" />
+      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.lightning_train">
+    <configuration name="AWS" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/AWS.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="auto_label" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="lightning_train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="plot (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/plot.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.lightning_train" />
+        <item itemvalue="Python.auto_label" />
+        <item itemvalue="Python.AWS" />
+        <item itemvalue="Python.scratch_1" />
+        <item itemvalue="Python.plot (1)" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="" />
+      <created>1751676019483</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1751676019483</updated>
+      <workItem from="1752207408221" duration="850000" />
+      <workItem from="1752208336878" duration="617000" />
+      <workItem from="1752209053258" duration="24266000" />
+      <workItem from="1752585217530" duration="28316000" />
+      <workItem from="1753236299395" duration="2436000" />
+      <workItem from="1753240929578" duration="2253000" />
+      <workItem from="1753243733232" duration="3923000" />
+      <workItem from="1753324958669" duration="29125000" />
+      <workItem from="1753841027977" duration="3310000" />
+      <workItem from="1754018359875" duration="2518000" />
+      <workItem from="1754078133635" duration="3000" />
+      <workItem from="1754108778008" duration="1211000" />
+      <workItem from="1754162310427" duration="5892000" />
+      <workItem from="1754764399919" duration="1018000" />
+      <workItem from="1754861443666" duration="432000" />
+      <workItem from="1755037339346" duration="2889000" />
+      <workItem from="1755256856446" duration="11000" />
+      <workItem from="1769692168792" duration="160000" />
+    </task>
+    <task id="LOCAL-00001" summary="changing the app a bit">
+      <option name="closed" value="true" />
+      <created>1752855344395</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1752855344396</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Model is training, but it is really bad at it LOL.">
+      <option name="closed" value="true" />
+      <created>1759007897058</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1759007897058</updated>
+    </task>
+    <task id="LOCAL-00003" summary="New VENV and some small tweaks.">
+      <option name="closed" value="true" />
+      <created>1759009438135</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1759009438135</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Pushing current model">
+      <option name="closed" value="true" />
+      <created>1762394323258</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1762394323258</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Model is actually training. It does not seems the best. (r^2 is hovering around 0 after a couple epochs).">
+      <option name="closed" value="true" />
+      <created>1763269953454</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1763269953454</updated>
+    </task>
+    <task id="LOCAL-00006" summary="changing model names">
+      <option name="closed" value="true" />
+      <created>1769118379570</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1769118379570</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Test Class">
+      <option name="closed" value="true" />
+      <created>1769475676529</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1769475676529</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Heatmap is present, but the overlay is not">
+      <option name="closed" value="true" />
+      <created>1771339682581</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1771339682581</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Overlay is decent">
+      <option name="closed" value="true" />
+      <created>1771422475176</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1771422475176</updated>
+    </task>
+    <task id="LOCAL-00010" summary="AI insights page">
+      <option name="closed" value="true" />
+      <created>1771742656757</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1771742656757</updated>
+    </task>
+    <task id="LOCAL-00011" summary="AI Chats and config.yaml work">
+      <option name="closed" value="true" />
+      <created>1771995159492</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1771995159492</updated>
+    </task>
+    <task id="LOCAL-00012" summary="PRE-UI Fixes">
+      <option name="closed" value="true" />
+      <created>1773676749915</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1773676749915</updated>
+    </task>
+    <task id="LOCAL-00013" summary="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction">
+      <option name="closed" value="true" />
+      <created>1781292896296</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1781292896296</updated>
+    </task>
+    <task id="LOCAL-00014" summary="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction">
+      <option name="closed" value="true" />
+      <created>1781293141722</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1781293141722</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="changing the app a bit" />
+    <MESSAGE value="Model is training, but it is really bad at it LOL." />
+    <MESSAGE value="New VENV and some small tweaks." />
+    <MESSAGE value="Pushing current model" />
+    <MESSAGE value="Model is actually training. It does not seems the best. (r^2 is hovering around 0 after a couple epochs)." />
+    <MESSAGE value="changing model names" />
+    <MESSAGE value="Test Class" />
+    <MESSAGE value="Heatmap is present, but the overlay is not" />
+    <MESSAGE value="Overlay is decent" />
+    <MESSAGE value="AI insights page" />
+    <MESSAGE value="AI Chats and config.yaml work" />
+    <MESSAGE value="PRE-UI Fixes" />
+    <MESSAGE value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
+    <option name="LAST_COMMIT_MESSAGE" value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py</url>
+          <line>20</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="for i in range(len(train[0])): print(i)" language="Python" />
+        <watch expression="x_tensor" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Microvest$preprocessing.coverage" NAME="preprocessing Coverage Results" MODIFIED="1754157028196" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
+    <SUITE FILE_PATH="coverage/Microvest$scratch_1.coverage" NAME="scratch_1 Coverage Results" MODIFIED="1771111414827" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
+    <SUITE FILE_PATH="coverage/Microvest$app.coverage" NAME="app Coverage Results" MODIFIED="1771994870030" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/PredictionApp" />
+    <SUITE FILE_PATH="coverage/Microvest$lightning_train.coverage" NAME="lightning_train Coverage Results" MODIFIED="1754020523363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src2" />
+    <SUITE FILE_PATH="coverage/Microvest$ai_insights.coverage" NAME="ai_insights Coverage Results" MODIFIED="1771995011936" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo/pages" />
+    <SUITE FILE_PATH="coverage/Microvest$train.coverage" NAME="train Coverage Results" MODIFIED="1753625439453" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/Microvest$marketmap.coverage" NAME="app Coverage Results" MODIFIED="1770513632967" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
+    <SUITE FILE_PATH="coverage/Microvest$test.coverage" NAME="test Coverage Results" MODIFIED="1771995003926" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo/pages" />
+    <SUITE FILE_PATH="coverage/Microvest$stock_dashboard.coverage" NAME="stock dashboard Coverage Results" MODIFIED="1772162338781" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
+    <SUITE FILE_PATH="coverage/Microvest$app__1_.coverage" NAME="app (1) Coverage Results" MODIFIED="1770513644153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/MarketInfo" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

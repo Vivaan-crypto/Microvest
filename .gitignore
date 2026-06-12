@@ -1,0 +1,10 @@
+.idea/workspace.xml
+.idea/workspace.xml
+src/PredictionApp/__pycache__/model.cpython-312.pyc
+/.idea
+/src/PredictionApp/ConfiguationFiles/
+/src/PredictionApp/Data/
+/src/PredictionApp/lightning_logs/
+/src/PredictionApp/LightningLogs/
+/src/PredictionApp/Model/
+/src/PredictionApp/tb_logs/
