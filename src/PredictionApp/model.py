@@ -27,7 +27,7 @@ class StockLSTMModel(nn.Module):
             logits: [B, num_classes] - class logits for each sample
         """
         lstm_out, _ = self.LSTM(price_seq)  # [B, T, hidden_size]
-        #lstm_feat = lstm_out[:, -1, :]  # [B, hidden_size] - use last token
+        lstm_feat = lstm_out[:, -1, :]  # [B, hidden_size] - use last token
 
         output = self.classification_head(lstm_out)  # [B, num_classes]
         return output

@@ -6,7 +6,7 @@ OUTPUT = "C:/GitHub/Microvest/src/PredictionApp/Data/CSV/test.csv"
 df = pd.read_csv(INPUT)
 df["Date"] = pd.to_datetime(df["Date"])
 df = df.sort_values(["ticker", "Date"]).reset_index(drop=True)
-percent = 0.03
+percent = 0.07
 # 1 = long (>=+5%), -1 = short (<=-5%), 0 = no trade, -2 = insufficient data
 def label_ticker(group):
     group = group.copy()

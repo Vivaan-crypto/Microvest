@@ -231,15 +231,7 @@ def get_data_new(
 if __name__ == "__main__":
     TICKERS = [
         "AAPL", "MSFT", "GOOGL", "NVDA", "AVGO", "AMD", "INTC", "ASML", "CRM", "ADBE",
-        "META", "NFLX", "DIS",
-        "AMZN", "TSLA", "HD",
-        "JPM", "BAC", "WFC", "GS", "MS", "C",
-        "XOM", "CVX", "COP", "EOG", "SLB",
-        "JNJ", "PFE", "MRK", "UNH", "ABBV",
-        "CAT", "BA", "GE", "HON", "MMM",
-        "PG", "KO", "PEP", "COST", "WMT",
-        "NEE", "DUK", "SO", "EXC",
-        "LIN", "SHW", "APD", "FCX"
+
     ]
 
     # X_train, y_train, X_test, y_test = get_data(
@@ -259,6 +251,6 @@ if __name__ == "__main__":
     )
 
     os.makedirs("data/CSV", exist_ok=True)
-    train.to_csv("data/CSV/train.csv")
-    test.to_csv("data/CSV/test.csv")
+    train.to_csv("data/CSV1/train.csv")
+    test.to_csv("data/CSV1/test.csv")
     print("Saved train/test tensors")
