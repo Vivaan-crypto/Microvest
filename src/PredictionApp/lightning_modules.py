@@ -1,5 +1,6 @@
 import lightning as L
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -10,6 +11,24 @@ from model import StockTransformerModel, StockLSTMModel
 from dataset import StockDataset
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
+
+
+class FocalLoss(nn.Module):
+    """
+    Focal Loss: down-weights easy examples so the model focuses on hard ones.
+    Handles class imbalance without the NaN instability of extreme weight amplification.
+    gamma=0 → standard weighted CrossEntropy. gamma=2 → strong focus on hard examples.
+    """
+    def __init__(self, alpha=None, gamma=2.0):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, inputs, targets):
+        ce = F.cross_entropy(inputs, targets, weight=self.alpha, reduction='none')
+        pt = torch.exp(-ce)
+        loss = ((1 - pt) ** self.gamma) * ce
+        return loss.mean()
 
 # ==================================================
 # DataModule
@@ -66,20 +85,20 @@ class LightningModule(L.LightningModule):
 
         self.confusion_matrix = MulticlassConfusionMatrix(num_classes=3)
 
-        # === Loss with AGGRESSIVE class weighting for imbalance ===
-        # Use compute_class_weight with more power to strongly penalize minority classes
+        # === Focal Loss — handles class imbalance without weight explosion ===
+        # ^10 power on class weights causes NaN gradients; Focal Loss is the correct tool.
         unique_classes = np.unique(y)
-        base_weights = compute_class_weight('balanced', classes=unique_classes, y=y)
+        class_counts = np.bincount(y.astype(int), minlength=len(unique_classes))
+        class_weights = 1.0 / (class_counts.astype(float) + 1.0)
+        class_weights = (class_weights / class_weights.sum() * len(unique_classes)).astype(np.float32)
 
-        # Amplify imbalance: square the weights for even more penalty on minority classes
-        # This makes the model care much more about getting minority classes right
-        amplified_weights = np.power(base_weights, 10)  # Increased from 1.0 (default) to 1.5
-        amplified_weights = amplified_weights / amplified_weights.sum()  # Re-normalize
+        print(f"Class counts: {class_counts}")
+        print(f"Class weights: {class_weights}")
 
-        print(f"Base class weights (balanced): {base_weights}")
-        print(f"Amplified class weights (^1.5): {amplified_weights}")
-
-        self.criterion = nn.CrossEntropyLoss(weight=torch.tensor(amplified_weights, dtype=torch.float32))
+        self.criterion = FocalLoss(
+            alpha=torch.tensor(class_weights, dtype=torch.float32),
+            gamma=2.0,
+        )
 
         # === Buffering for epoch aggregation ===
         self.val_preds = []
