@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Microvest.iml" filepath="$PROJECT_DIR$/.idea/Microvest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/microvest.iml" filepath="$PROJECT_DIR$/.idea/microvest.iml" />
     </modules>
   </component>
 </project>

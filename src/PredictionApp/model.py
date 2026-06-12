@@ -4,65 +4,77 @@ import torch.nn as nn
 
 
 class StockLSTMModel(nn.Module):
-    """
-    Two-branch model:
-      - LSTM over sequential OHLCV:   price_seq  [B, T, 5]
-      - MLP over last-step features:  indicators [B, K]   (K inferred automatically)
-
-    Output:
-      - scalar regression prediction [B]
-    """
-
-    def __init__(
-        self,
-        price_input_size: int = 5,
-        lstm_hidden_size: int = 128,
-        lstm_layers: int = 2,
-        dropout_prob: float = 0.2,
-    ):
+    def __init__(self, input_size=17, lstm_hidden_size=128, lstm_layers=2, dropout_prob=0.2, num_classes=3):
         super().__init__()
-
-        self.lstm = nn.LSTM(
-            input_size=price_input_size,
+        self.LSTM = nn.LSTM(
+            input_size=input_size,
             hidden_size=lstm_hidden_size,
             num_layers=lstm_layers,
             batch_first=True,
         )
-
-        # LazyLinear infers indicator_input_size on first forward pass
-        self.ff = nn.Sequential(
-            nn.LazyLinear(64),
-            nn.ReLU(),
+        # Classification head (outputs raw logits, NOT softmax)
+        self.classification_head = nn.Sequential(
+            nn.LayerNorm(lstm_hidden_size),
             nn.Dropout(dropout_prob),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Dropout(dropout_prob),
-            nn.Linear(32, 32),
-            nn.ReLU(),
+            nn.Linear(lstm_hidden_size, num_classes),
         )
 
-        combined_input_size = lstm_hidden_size + 32
+    def forward(self, price_seq: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            price_seq: [B, T, F] - batch of sequences
+        Returns:
+            logits: [B, num_classes] - class logits for each sample
+        """
+        lstm_out, _ = self.LSTM(price_seq)  # [B, T, hidden_size]
+        #lstm_feat = lstm_out[:, -1, :]  # [B, hidden_size] - use last token
 
-        self.combined_ff = nn.Sequential(
-            nn.Linear(combined_input_size, 128),
-            nn.ReLU(),
+        output = self.classification_head(lstm_out)  # [B, num_classes]
+        return output
+
+
+class StockTransformerModel(nn.Module):
+    def __init__(self, input_size=17, d_model=512, transformer_layers=3, dropout_prob=0.2, num_classes=3):
+        super().__init__()
+        self.input_to_transformer_linear = nn.Linear(input_size, d_model)
+        self.LayerNorm = nn.LayerNorm(d_model)
+        self.TransformerEncoderLayer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=8,
+            dim_feedforward=d_model * 4,
+            dropout=dropout_prob,
+            batch_first=True,
+            norm_first=True
+        )
+        self.Transformer = nn.TransformerEncoder(
+            self.TransformerEncoderLayer,
+            num_layers=transformer_layers,
+            norm=self.LayerNorm,
+            enable_nested_tensor=True
+        )
+        # Classification head (outputs raw logits, NOT softmax)
+        self.classification_head = nn.Sequential(
+            nn.LayerNorm(d_model),
             nn.Dropout(dropout_prob),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout_prob),
-            nn.Linear(64, 1),
+            nn.Linear(d_model, num_classes),
         )
 
-    def forward(self, price_seq: torch.Tensor, indicators: torch.Tensor) -> torch.Tensor:
+    def forward(self, price_seq: torch.Tensor) -> torch.Tensor:
         """
-        price_seq:  [B, T, 5]
-        indicators: [B, K]  (K inferred)
+        Args:
+            price_seq: [B, T, F] - batch of sequences
+        Returns:
+            logits: [B, num_classes] - class logits for each sample
         """
-        lstm_out, _ = self.lstm(price_seq)
-        lstm_feat = lstm_out[:, -1]          # [B, hidden]
+        # Project input to d_model dimension
+        x = self.input_to_transformer_linear(price_seq)  # [B, T, d_model]
 
-        ff_feat = self.ff(indicators)        # [B, 32]
-        combined = torch.cat([lstm_feat, ff_feat], dim=1)
+        # Apply transformer encoder
+        x = self.Transformer(x)  # [B, T, d_model]
 
-        output = self.combined_ff(combined)  # [B, 1]
-        return output.squeeze(-1)            # [B]
+        # Pool the sequence: use last token
+        x = x[:, -1, :]  # [B, d_model]
+
+        # Classification head
+        output = self.classification_head(x)  # [B, num_classes]
+        return output

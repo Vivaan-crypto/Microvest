@@ -1,12 +1,13 @@
 """
-Main Application Shell
-Handles nav + page routing only
+Main Dash application shell.
 """
 
-from dash import Dash, html, dcc, page_container, page_registry
+from dash import Dash, dcc, html, page_container, page_registry
+
 from config import APP_HOST, APP_PORT, DEBUG_MODE
+
 app = Dash(__name__, use_pages=True)
-app.title = "Stock Dashboard"
+app.title = "Microvest"
 
 app.index_string = '''
 <!DOCTYPE html>

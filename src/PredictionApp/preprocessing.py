@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 import yfinance as yf
 from sklearn.preprocessing import StandardScaler
-#ta-lib backtrader
+# ta-lib backtrader
 from indicators import (
     sma,
     ema,
@@ -17,6 +17,7 @@ from indicators import (
     realized_vol,
     volume_zscore,
 )
+
 
 # ============================================================
 # DATA DOWNLOAD
@@ -49,10 +50,9 @@ def download_panel(tickers: List[str], start_date: str, end_date: str) -> pd.Dat
 # ============================================================
 
 def add_features_for_ticker(
-    df_ticker: pd.DataFrame,
-    target_horizon: int = 5,
+        df_ticker: pd.DataFrame,
+        target_horizon: int = 5,
 ) -> Tuple[pd.DataFrame, List[str]]:
-
     df = df_ticker.sort_values("Date").copy()
     close = df["Close"].squeeze()
     volume = df["Volume"].squeeze()
@@ -72,15 +72,9 @@ def add_features_for_ticker(
     df["sma_20"] = sma(close, 20)
     df["sma_50"] = sma(close, 50)
 
-    df["ema_12"] = ema(close, 12)
     df["ema_20"] = ema(close, 20)
     df["ema_50"] = ema(close, 50)
-
-    df["rsi_14"] = rsi(close, 14)
-
-    df["macd"] = macd_line
-    df["macd_signal"] = signal_line
-    df["macd_hist"] = hist
+    df["ema_100"] = ema(close, 100)
 
     # ---------- TARGET ----------
     df["target"] = forward_return(close, horizon=target_horizon)
@@ -101,10 +95,9 @@ def add_features_for_ticker(
 # ============================================================
 
 def build_feature_panel(
-    panel: pd.DataFrame,
-    target_horizon: int = 5,
+        panel: pd.DataFrame,
+        target_horizon: int = 5,
 ) -> Tuple[pd.DataFrame, List[str]]:
-
     out = []
     feature_cols = None
 
@@ -125,10 +118,9 @@ def build_feature_panel(
 # ============================================================
 
 def time_split_train_test(
-    df: pd.DataFrame,
-    train_end: str,
+        df: pd.DataFrame,
+        train_end: str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-
     df = df.copy()
     df["Date"] = pd.to_datetime(df["Date"])
 
@@ -142,11 +134,10 @@ def time_split_train_test(
 # ============================================================
 
 def scale_features_by_ticker_train_test(
-    train: pd.DataFrame,
-    test: pd.DataFrame,
-    feature_cols: List[str],
+        train: pd.DataFrame,
+        test: pd.DataFrame,
+        feature_cols: List[str],
 ) -> Tuple[Dict[str, pd.DataFrame], Dict[str, StandardScaler]]:
-
     scalers = {}
     out = {"train": [], "test": []}
 
@@ -175,11 +166,10 @@ def scale_features_by_ticker_train_test(
 # ============================================================
 
 def build_windows_for_split(
-    df_split: pd.DataFrame,
-    feature_cols: List[str],
-    window: int,
+        df_split: pd.DataFrame,
+        feature_cols: List[str],
+        window: int,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-
     X, y = [], []
 
     df_split = df_split.sort_values(["ticker", "Date"])
@@ -189,7 +179,7 @@ def build_windows_for_split(
         tgt = grp["target"].values
 
         for i in range(window - 1, len(grp)):
-            X.append(feat[i - window + 1 : i + 1])
+            X.append(feat[i - window + 1: i + 1])
             y.append([tgt[i]])
 
     return (
@@ -203,14 +193,13 @@ def build_windows_for_split(
 # ============================================================
 
 def get_data(
-    tickers: List[str],
-    start_date: str,
-    end_date: str,
-    target_horizon: int = 5,
-    window: int = 20,
-    train_end: str = "2023-12-31",
+        tickers: List[str],
+        start_date: str,
+        end_date: str,
+        target_horizon: int = 5,
+        window: int = 20,
+        train_end: str = "2023-12-31",
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-
     panel = download_panel(tickers, start_date, end_date)
     df_feat, feature_cols = build_feature_panel(panel, target_horizon)
 
@@ -221,6 +210,22 @@ def get_data(
     X_test, y_test = build_windows_for_split(scaled["test"], feature_cols, window)
 
     return X_train, y_train, X_test, y_test
+
+
+def get_data_new(
+        tickers: List[str],
+        start_date: str,
+        end_date: str,
+        target_horizon: int = 5,
+        train_end: str = "2023-12-31",
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    panel = download_panel(tickers, start_date, end_date)
+    df_feat, feature_cols = build_feature_panel(panel, target_horizon)
+
+    train_df, test_df = time_split_train_test(df_feat, train_end)
+    scaled, _ = scale_features_by_ticker_train_test(train_df, test_df, feature_cols)
+
+    return train_df, test_df
 
 
 if __name__ == "__main__":
@@ -237,18 +242,23 @@ if __name__ == "__main__":
         "LIN", "SHW", "APD", "FCX"
     ]
 
-    X_train, y_train, X_test, y_test = get_data(
+    # X_train, y_train, X_test, y_test = get_data(
+    #     tickers=TICKERS,
+    #     start_date="2021-01-01",
+    #     end_date="2026-01-01",
+    #     target_horizon=5,
+    #     window=20,
+    #     train_end="2024-12-31",
+    # )
+    train, test = get_data_new(
         tickers=TICKERS,
-        start_date="2020-01-01",
-        end_date="2025-01-01",
+        start_date="2021-01-01",
+        end_date="2026-01-01",
         target_horizon=5,
-        window=20,
-        train_end="2023-12-31",
+        train_end="2024-12-31",
     )
 
-    os.makedirs("data", exist_ok=True)
-    torch.save(X_train, "data/X_train.pt")
-    torch.save(y_train, "data/y_train.pt")
-    torch.save(X_test, "data/X_test.pt")
-    torch.save(y_test, "data/y_test.pt")
+    os.makedirs("data/CSV", exist_ok=True)
+    train.to_csv("data/CSV/train.csv")
+    test.to_csv("data/CSV/test.csv")
     print("Saved train/test tensors")
