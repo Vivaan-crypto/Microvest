@@ -4,13 +4,14 @@ import torch.nn as nn
 
 
 class StockLSTMModel(nn.Module):
-    def __init__(self, input_size=17, lstm_hidden_size=128, lstm_layers=2, dropout_prob=0.2, num_classes=3):
+    def __init__(self, input_size=15, lstm_hidden_size=128, lstm_layers=2, dropout_prob=0.2, num_classes=3):
         super().__init__()
         self.LSTM = nn.LSTM(
             input_size=input_size,
             hidden_size=lstm_hidden_size,
             num_layers=lstm_layers,
             batch_first=True,
+            dropout=dropout_prob if lstm_layers > 1 else 0.0,
         )
         # Classification head (outputs raw logits, NOT softmax)
         self.classification_head = nn.Sequential(
@@ -26,10 +27,9 @@ class StockLSTMModel(nn.Module):
         Returns:
             logits: [B, num_classes] - class logits for each sample
         """
-        lstm_out, _ = self.LSTM(price_seq)  # [B, T, hidden_size]
-        lstm_feat = lstm_out[:, -1, :]  # [B, hidden_size] - use last token
-
-        output = self.classification_head(lstm_out)  # [B, num_classes]
+        lstm_out, _ = self.LSTM(price_seq)   # [B, T, hidden_size]
+        last_hidden = lstm_out[:, -1, :]     # [B, hidden_size] — take final timestep
+        output = self.classification_head(last_hidden)  # [B, num_classes]
         return output
 
 

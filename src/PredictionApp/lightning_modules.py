@@ -1,7 +1,7 @@
 import lightning as L
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 import matplotlib.pyplot as plt
 from torchmetrics import F1Score, Accuracy
 from torchmetrics.classification import MulticlassConfusionMatrix, MulticlassPrecision, MulticlassRecall
@@ -22,14 +22,21 @@ class LightningDateModule(L.LightningDataModule):
         self.batch_size = batch_size
 
     def train_dataloader(self):
-        # Use standard shuffle - weighted sampler has too much overhead
-        # Class balance handled by amplified class weights in loss function
+        labels = self.train_dataset.targets.long().view(-1)
+        class_counts = torch.bincount(labels)
+        # Weight each sample inversely proportional to its class frequency
+        sample_weights = (1.0 / class_counts.float())[labels]
+        sampler = WeightedRandomSampler(
+            weights=sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
+        )
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
-            shuffle=True,
+            sampler=sampler,
             drop_last=True,
-            num_workers=0,  # Disable multiprocessing (CPU only)
+            num_workers=0,
             pin_memory=False,
         )
 
@@ -52,8 +59,10 @@ class LightningModule(L.LightningModule):
         self.model = StockLSTMModel()
 
         # === Classification Metrics ===
-        self.train_f1 = F1Score(task="multiclass", num_classes=3)
-        self.val_f1 = F1Score(task="multiclass", num_classes=3)
+        # macro-averaged F1: every class weighted equally, so majority-class
+        # collapse scores poorly (micro F1 == accuracy and hides collapse).
+        self.train_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
+        self.val_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
 
         self.train_acc = Accuracy(task="multiclass", num_classes=3)
         self.val_acc = Accuracy(task="multiclass", num_classes=3)
@@ -66,20 +75,14 @@ class LightningModule(L.LightningModule):
 
         self.confusion_matrix = MulticlassConfusionMatrix(num_classes=3)
 
-        # === Loss with AGGRESSIVE class weighting for imbalance ===
-        # Use compute_class_weight with more power to strongly penalize minority classes
+        # WeightedRandomSampler balances batches; use plain balanced weights here
+        # so the loss still corrects for any residual imbalance without blowing up gradients.
         unique_classes = np.unique(y)
-        base_weights = compute_class_weight('balanced', classes=unique_classes, y=y)
+        class_weights = compute_class_weight('balanced', classes=unique_classes, y=y).astype(np.float32)
 
-        # Amplify imbalance: square the weights for even more penalty on minority classes
-        # This makes the model care much more about getting minority classes right
-        amplified_weights = np.power(base_weights, 10)  # Increased from 1.0 (default) to 1.5
-        amplified_weights = amplified_weights / amplified_weights.sum()  # Re-normalize
+        print(f"Class weights: {class_weights}")
 
-        print(f"Base class weights (balanced): {base_weights}")
-        print(f"Amplified class weights (^1.5): {amplified_weights}")
-
-        self.criterion = nn.CrossEntropyLoss(weight=torch.tensor(amplified_weights, dtype=torch.float32))
+        self.criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float32))
 
         # === Buffering for epoch aggregation ===
         self.val_preds = []
@@ -174,7 +177,7 @@ class LightningModule(L.LightningModule):
         fig_metrics = self._plot_per_class_metrics(
             val_preds.cpu().numpy(),
             val_targets.cpu().numpy(),
-            ["Down", "Flat", "Up"]
+            ["Short", "NoTrade", "Long"]
         )
         self.logger.experiment.add_figure("val/per_class_metrics", fig_metrics, global_step=self.current_epoch)
         plt.close(fig_metrics)
@@ -185,11 +188,15 @@ class LightningModule(L.LightningModule):
 
     # --------------------------------------------------
     def configure_optimizers(self):
-        return torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             self.parameters(),
             lr=self.hparams.lr,
             weight_decay=self.hparams.weight_decay,
         )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=self.trainer.max_epochs, eta_min=self.hparams.lr * 0.01
+        )
+        return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
     # --------------------------------------------------
     def on_after_backward(self):

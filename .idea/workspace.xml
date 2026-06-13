@@ -22,7 +22,10 @@
   <component name="ChangeListManager">
     <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/preprocessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -184,67 +187,67 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.AWS.executor": "Run",
-    "Python.ai_insights.executor": "Run",
-    "Python.app (1).executor": "Run",
-    "Python.app.executor": "Debug",
-    "Python.auto_label.executor": "Run",
-    "Python.gpu_test.executor": "Run",
-    "Python.lightning_modules.executor": "Run",
-    "Python.lightning_train.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.marketmap.executor": "Debug",
-    "Python.model.executor": "Run",
-    "Python.plot (1).executor": "Run",
-    "Python.plot.executor": "Run",
-    "Python.pred.executor": "Run",
-    "Python.preprocessing.executor": "Run",
-    "Python.response_agent.executor": "Debug",
-    "Python.scratch_1.executor": "Run",
-    "Python.scratch_10.executor": "Run",
-    "Python.scratch_2.executor": "Run",
-    "Python.scratch_3.executor": "Run",
-    "Python.scratch_4.executor": "Run",
-    "Python.scratch_5.executor": "Run",
-    "Python.scratch_6.executor": "Run",
-    "Python.scratch_7.executor": "Run",
-    "Python.scratch_8.executor": "Run",
-    "Python.scratch_9.executor": "Run",
-    "Python.squeeze_pro.executor": "Run",
-    "Python.stock dashboard.executor": "Run",
-    "Python.tempCodeRunnerFile.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.train.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "ai.playground.ignore.import.keys.banner.in.settings": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "dart.analysis.tool.window.visible": "false",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "develop",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/GitHub/Microvest/src/PredictionApp/Data",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "run.code.analysis.last.selected.profile": "aDefault",
-    "settings.editor.selected.configurable": "editor.preferences.appearance",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.AWS.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ai_insights.executor&quot;: &quot;Run&quot;,
+    &quot;Python.app (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.app.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.auto_label.executor&quot;: &quot;Run&quot;,
+    &quot;Python.gpu_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.marketmap.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pred.executor&quot;: &quot;Run&quot;,
+    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
+    &quot;Python.response_agent.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_10.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_3.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_4.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_5.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_6.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_7.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_8.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_9.executor&quot;: &quot;Run&quot;,
+    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
+    &quot;Python.stock dashboard.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tempCodeRunnerFile.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/GitHub/Microvest/src/PredictionApp/Data&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.appearance&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
-      "Python",
-      "PLAIN_TEXT"
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;Python&quot;,
+      &quot;PLAIN_TEXT&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\GitHub\Microvest\src\PredictionApp\Data" />
