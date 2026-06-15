@@ -20,12 +20,17 @@
     </option>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction">
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="LSTM Model proves to be more accurate, with some other changes.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/AWS.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/csv_to_pt.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/data_to_csv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/plot.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/config.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model_final.pth" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,6 +80,7 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="main" />
@@ -101,61 +107,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0041359487016117" />
-      <entry key="MS500" value="1.426596120867351" />
-      <entry key="S2" value="2.3122532280227865" />
-      <entry key="S5" value="2.6846380548980715" />
-      <entry key="S10" value="2.836935627168452" />
-      <entry key="S30" value="3.4667896873609925" />
-      <entry key="S60" value="5.137419575833703" />
-      <entry key="M2" value="7.685897353454471" />
-      <entry key="M5" value="13.765003124409903" />
-      <entry key="M10" value="21.973870964293134" />
-      <entry key="M15" value="27.28310979166677" />
-      <entry key="M30" value="35.84213928736411" />
-      <entry key="H1" value="43.581940510753164" />
-      <entry key="H2" value="50.12979748374997" />
-      <entry key="H4" value="54.80674785199145" />
-      <entry key="D1" value="59.83580658665348" />
-      <entry key="W1" value="60.83003111784051" />
+      <entry key="MS100" value="1.000007369582672" />
+      <entry key="MS500" value="1.1062267009242799" />
+      <entry key="S2" value="2.0942427986670666" />
+      <entry key="S5" value="2.9711521422592044" />
+      <entry key="S10" value="3.425538467757462" />
+      <entry key="S30" value="3.911531499090708" />
+      <entry key="S60" value="4.3813494903203924" />
+      <entry key="M2" value="4.9402735014838814" />
+      <entry key="M5" value="6.355127321357824" />
+      <entry key="M10" value="11.896796322957552" />
+      <entry key="M15" value="18.629466921972963" />
+      <entry key="M30" value="33.71752494714554" />
+      <entry key="H1" value="47.59601893867188" />
+      <entry key="H2" value="57.28119107997188" />
+      <entry key="H4" value="65.916275807047" />
+      <entry key="D1" value="122.61512826042073" />
+      <entry key="W1" value="161.28861661176225" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="2.314209530677881E-147" />
-      <entry key="S5" value="2.531245254170673E-59" />
-      <entry key="S10" value="6.493629973121681E-30" />
-      <entry key="S30" value="2.8899740468237806E-10" />
-      <entry key="S60" value="2.3964645507206833E-5" />
-      <entry key="M2" value="0.006917526039022203" />
-      <entry key="M5" value="0.2072594349916143" />
-      <entry key="M10" value="0.6439523977313099" />
-      <entry key="M15" value="0.942108659928005" />
-      <entry key="M30" value="1.4228276171623728" />
-      <entry key="H1" value="1.8840614317010458" />
-      <entry key="H2" value="2.2975945596671554" />
-      <entry key="H4" value="2.5990148286023196" />
-      <entry key="D1" value="2.924638214373626" />
-      <entry key="W1" value="2.988999984839039" />
+      <entry key="MS500" value="1.6825845727116044E-74" />
+      <entry key="S2" value="3.601589617213751E-19" />
+      <entry key="S5" value="4.1937031929611844E-8" />
+      <entry key="S10" value="2.0478533133408706E-4" />
+      <entry key="S30" value="0.05894309665747777" />
+      <entry key="S60" value="0.2427819940978439" />
+      <entry key="M2" value="0.4927320572918709" />
+      <entry key="M5" value="0.772903302400854" />
+      <entry key="M10" value="1.2366122676903522" />
+      <entry key="M15" value="1.8930264493993159" />
+      <entry key="M30" value="3.5767283689564744" />
+      <entry key="H1" value="5.261322784376623" />
+      <entry key="H2" value="6.4652847084032175" />
+      <entry key="H4" value="7.225220156279392" />
+      <entry key="D1" value="9.313254573763793" />
+      <entry key="W1" value="10.684959294143267" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9632041353382981" />
-      <entry key="MS500" value="1.4140655110383706" />
-      <entry key="S2" value="2.306805346856828" />
-      <entry key="S5" value="2.6820633534559915" />
-      <entry key="S10" value="2.8354759153833227" />
-      <entry key="S30" value="3.459114944533234" />
-      <entry key="S60" value="5.122392971258345" />
-      <entry key="M2" value="7.677182318852096" />
-      <entry key="M5" value="13.96086297621316" />
-      <entry key="M10" value="22.609573676839187" />
-      <entry key="M15" value="28.218681191353927" />
-      <entry key="M30" value="37.260832974163094" />
-      <entry key="H1" value="45.46350084676141" />
-      <entry key="H2" value="52.425946055178976" />
-      <entry key="H4" value="57.404968655786234" />
-      <entry key="D1" value="62.76029969760391" />
-      <entry key="W1" value="63.81901001339471" />
+      <entry key="MS100" value="0.014782157779044866" />
+      <entry key="MS500" value="0.4587717477349154" />
+      <entry key="S2" value="1.6430417346183872" />
+      <entry key="S5" value="2.698917472698783" />
+      <entry key="S10" value="3.266413360841603" />
+      <entry key="S30" value="3.908911041582906" />
+      <entry key="S60" value="4.588962767869293" />
+      <entry key="M2" value="5.412781470584968" />
+      <entry key="M5" value="7.118393610946904" />
+      <entry key="M10" value="13.126302615312689" />
+      <entry key="M15" value="20.515592252304895" />
+      <entry key="M30" value="37.28808593370686" />
+      <entry key="H1" value="52.8529146931311" />
+      <entry key="H2" value="63.743783882127985" />
+      <entry key="H4" value="73.13999209274932" />
+      <entry key="D1" value="131.9280344345359" />
+      <entry key="W1" value="171.9735163677763" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -170,6 +176,18 @@
     <ConfirmationsSetting value="1" id="Add" />
   </component>
   <component name="ProjectSessionTemplates">
+    <option name="inlineTemplate">
+      <template>
+        <option name="modeId" value="InlineAgent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="LOCAL" />
+      </template>
+    </option>
     <option name="panelTemplate">
       <template>
         <option name="modeId" value="Agent" />
@@ -187,67 +205,68 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.AWS.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ai_insights.executor&quot;: &quot;Run&quot;,
-    &quot;Python.app (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.app.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.auto_label.executor&quot;: &quot;Run&quot;,
-    &quot;Python.gpu_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lightning_modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.marketmap.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot.executor&quot;: &quot;Run&quot;,
-    &quot;Python.pred.executor&quot;: &quot;Run&quot;,
-    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
-    &quot;Python.response_agent.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_10.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_3.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_4.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_5.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_6.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_7.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_8.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_9.executor&quot;: &quot;Run&quot;,
-    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
-    &quot;Python.stock dashboard.executor&quot;: &quot;Run&quot;,
-    &quot;Python.tempCodeRunnerFile.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/GitHub/Microvest/src/PredictionApp/Data&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.appearance&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.AWS.executor": "Run",
+    "Python.ai_insights.executor": "Run",
+    "Python.app (1).executor": "Run",
+    "Python.app.executor": "Debug",
+    "Python.auto_label.executor": "Run",
+    "Python.gpu_test.executor": "Run",
+    "Python.lightning_modules.executor": "Run",
+    "Python.lightning_train.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.marketmap.executor": "Debug",
+    "Python.model.executor": "Run",
+    "Python.plot (1).executor": "Run",
+    "Python.plot.executor": "Run",
+    "Python.pred.executor": "Run",
+    "Python.preprocess.executor": "Debug",
+    "Python.preprocessing.executor": "Run",
+    "Python.response_agent.executor": "Debug",
+    "Python.scratch_1.executor": "Run",
+    "Python.scratch_10.executor": "Run",
+    "Python.scratch_2.executor": "Run",
+    "Python.scratch_3.executor": "Run",
+    "Python.scratch_4.executor": "Run",
+    "Python.scratch_5.executor": "Run",
+    "Python.scratch_6.executor": "Run",
+    "Python.scratch_7.executor": "Run",
+    "Python.scratch_8.executor": "Run",
+    "Python.scratch_9.executor": "Run",
+    "Python.squeeze_pro.executor": "Run",
+    "Python.stock dashboard.executor": "Run",
+    "Python.tempCodeRunnerFile.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.train.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "ai.playground.ignore.import.keys.banner.in.settings": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "dart.analysis.tool.window.visible": "false",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "develop",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/GitHub/Microvest/src/PredictionApp/Data",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "aDefault",
+    "settings.editor.selected.configurable": "editor.preferences.appearance",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
-      &quot;Python&quot;,
-      &quot;PLAIN_TEXT&quot;
+  "keyToStringList": {
+    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
+      "Python",
+      "PLAIN_TEXT"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\GitHub\Microvest\src\PredictionApp\Data" />
@@ -257,14 +276,14 @@
       <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\GitHub\Microvest\src\PredictionApp" />
       <recent name="C:\GitHub\Microvest\src\PredictionApp\Helpers" />
       <recent name="C:\GitHub\Microvest\src\MarketInfo\pages\dashboard" />
       <recent name="C:\GitHub\Microvest\src\MarketInfo\pages" />
       <recent name="C:\GitHub\Microvest\src\MarketInfo" />
-      <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.lightning_train">
+  <component name="RunManager" selected="Python.preprocess">
     <configuration name="AWS" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
@@ -337,6 +356,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="preprocess" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/preprocess.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="preprocessing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
@@ -361,37 +404,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="microvest" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.preprocess" />
         <item itemvalue="Python.lightning_train" />
         <item itemvalue="Python.auto_label" />
         <item itemvalue="Python.preprocessing" />
         <item itemvalue="Python.AWS" />
-        <item itemvalue="Python.scratch_1" />
       </list>
     </recent_temporary>
   </component>
@@ -541,7 +560,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781293141722</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="LSTM Model proves to be more accurate, with some other changes.">
+      <option name="closed" value="true" />
+      <created>1781324431666</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1781324431666</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -572,9 +599,19 @@
     <MESSAGE value="AI Chats and config.yaml work" />
     <MESSAGE value="PRE-UI Fixes" />
     <MESSAGE value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
-    <option name="LAST_COMMIT_MESSAGE" value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
+    <MESSAGE value="LSTM Model proves to be more accurate, with some other changes." />
+    <option name="LAST_COMMIT_MESSAGE" value="LSTM Model proves to be more accurate, with some other changes." />
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/PredictionApp/preprocess.py</url>
+          <line>184</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="for i in range(len(train[0])): print(i)" language="Python" />

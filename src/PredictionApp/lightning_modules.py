@@ -11,6 +11,8 @@ from dataset import StockDataset
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
 
+CLASS_NAMES = ["Short", "NoTrade", "Long"]
+
 # ==================================================
 # DataModule
 # ==================================================
@@ -38,6 +40,7 @@ class LightningDateModule(L.LightningDataModule):
             drop_last=True,
             num_workers=0,
             pin_memory=False,
+            shuffle=False
         )
 
     def val_dataloader(self):
@@ -73,6 +76,12 @@ class LightningModule(L.LightningModule):
         self.train_recall = MulticlassRecall(num_classes=3, average='macro')
         self.val_recall = MulticlassRecall(num_classes=3, average='macro')
 
+        # Per-class metrics (average=None) — the key diagnostic for collapse:
+        # if the model ignores a class, that class's F1/recall flatlines at 0.
+        self.val_f1_per_class = F1Score(task="multiclass", num_classes=3, average=None)
+        self.val_precision_per_class = MulticlassPrecision(num_classes=3, average=None)
+        self.val_recall_per_class = MulticlassRecall(num_classes=3, average=None)
+
         self.confusion_matrix = MulticlassConfusionMatrix(num_classes=3)
 
         # WeightedRandomSampler balances batches; use plain balanced weights here
@@ -100,32 +109,18 @@ class LightningModule(L.LightningModule):
 
         loss = self.criterion(preds, y_true)
 
-        # Compute metrics
-        f1_score = self.train_f1(preds, y_true)
-        accuracy = self.train_acc(preds, y_true)
-        precision = self.train_precision(preds, y_true)
-        recall = self.train_recall(preds, y_true)
+        # Update stateful metrics; log step value + epoch aggregate so TensorBoard
+        # shows both the noisy step trace and a clean per-epoch curve.
+        self.train_f1(preds, y_true)
+        self.train_acc(preds, y_true)
+        self.train_precision(preds, y_true)
+        self.train_recall(preds, y_true)
 
-        # Log scalar metrics
-        self.log("train/loss", loss, prog_bar=True, on_step=True, on_epoch=False)
-        self.log("train/accuracy", accuracy, prog_bar=True, on_step=True, on_epoch=False)
-        self.log("train/f1", f1_score, prog_bar=True, on_step=True, on_epoch=False)
-        self.log("train/precision", precision, on_step=True, on_epoch=False)
-        self.log("train/recall", recall, on_step=True, on_epoch=False)
-
-        # Log confusion matrix every 500 steps (reduced from 100 to save time)
-        if self.global_step % 500 == 0 and self.global_step > 0:
-            cm = self.confusion_matrix(preds, y_true)
-            fig = self._plot_confusion_matrix(cm, title="Train Confusion Matrix", figsize=(6, 5))
-            self.logger.experiment.add_figure("train/confusion_matrix", fig, global_step=self.global_step)
-            plt.close(fig)
-
-            # Log confidence distribution
-            probs = torch.softmax(preds, dim=1)
-            max_probs = probs.max(dim=1)[0]
-            fig_conf = self._plot_confidence_distribution(max_probs.cpu().detach().numpy(), "Training", figsize=(8, 5))
-            self.logger.experiment.add_figure("train/confidence_distribution", fig_conf, global_step=self.global_step)
-            plt.close(fig_conf)
+        self.log("train/loss", loss, prog_bar=True, on_step=True, on_epoch=True)
+        self.log("train/accuracy", self.train_acc, prog_bar=True, on_step=False, on_epoch=True)
+        self.log("train/f1", self.train_f1, prog_bar=True, on_step=False, on_epoch=True)
+        self.log("train/precision", self.train_precision, on_step=False, on_epoch=True)
+        self.log("train/recall", self.train_recall, on_step=False, on_epoch=True)
 
         return loss
 
@@ -153,34 +148,54 @@ class LightningModule(L.LightningModule):
         precision = self.val_precision(val_preds, val_targets)
         recall = self.val_recall(val_preds, val_targets)
 
-        # Log scalar metrics
+        # Macro / overall scalar metrics
         self.log("val/loss", loss, prog_bar=True, on_step=False, on_epoch=True)
         self.log("val/accuracy", accuracy, prog_bar=True, on_step=False, on_epoch=True)
         self.log("val/f1", f1_score, prog_bar=True, on_step=False, on_epoch=True)
         self.log("val/precision", precision, on_step=False, on_epoch=True)
         self.log("val/recall", recall, on_step=False, on_epoch=True)
+        # Slash-free alias for checkpoint/early-stop monitors and filenames
+        # (a "val/f1" in a filename is parsed as a directory separator).
+        self.log("val_f1", f1_score, on_step=False, on_epoch=True)
 
-        # Log confusion matrix
+        # Per-class scalar curves — flatlining at 0 means that class is being ignored.
+        f1_pc = self.val_f1_per_class(val_preds, val_targets)
+        prec_pc = self.val_precision_per_class(val_preds, val_targets)
+        rec_pc = self.val_recall_per_class(val_preds, val_targets)
+        for i, name in enumerate(CLASS_NAMES):
+            self.log(f"val/f1_{name}", f1_pc[i], on_step=False, on_epoch=True)
+            self.log(f"val/precision_{name}", prec_pc[i], on_step=False, on_epoch=True)
+            self.log(f"val/recall_{name}", rec_pc[i], on_step=False, on_epoch=True)
+
+        # Prediction-distribution curves — the most direct collapse detector.
+        # If pred_frac for one class -> 1.0, the model has collapsed to it.
+        pred_classes = val_preds.argmax(dim=1)
+        for i, name in enumerate(CLASS_NAMES):
+            frac = (pred_classes == i).float().mean()
+            self.log(f"val/pred_frac_{name}", frac, on_step=False, on_epoch=True)
+
+        # Reset before compute so the matrix reflects only this epoch's val set
+        # (the metric is stateful and shared, so it would otherwise accumulate).
+        self.confusion_matrix.reset()
         cm = self.confusion_matrix(val_preds, val_targets)
-        fig = self._plot_confusion_matrix(cm, title="Validation Confusion Matrix")
-        self.logger.experiment.add_figure("val/confusion_matrix", fig, global_step=self.current_epoch)
-        plt.close(fig)
+        self._log_figure(
+            "val/confusion_matrix",
+            self._plot_confusion_matrix(cm, title="Validation Confusion Matrix"),
+        )
 
-        # Log confidence distribution
         probs = torch.softmax(val_preds, dim=1)
         max_probs = probs.max(dim=1)[0]
-        fig_conf = self._plot_confidence_distribution(max_probs.cpu().detach().numpy(), "Validation")
-        self.logger.experiment.add_figure("val/confidence_distribution", fig_conf, global_step=self.current_epoch)
-        plt.close(fig_conf)
-
-        # Log per-class metrics visualization
-        fig_metrics = self._plot_per_class_metrics(
-            val_preds.cpu().numpy(),
-            val_targets.cpu().numpy(),
-            ["Short", "NoTrade", "Long"]
+        self._log_figure(
+            "val/confidence_distribution",
+            self._plot_confidence_distribution(max_probs.cpu().detach().numpy(), "Validation"),
         )
-        self.logger.experiment.add_figure("val/per_class_metrics", fig_metrics, global_step=self.current_epoch)
-        plt.close(fig_metrics)
+
+        self._log_figure(
+            "val/per_class_metrics",
+            self._plot_per_class_metrics(
+                val_preds.cpu().numpy(), val_targets.cpu().numpy(), CLASS_NAMES
+            ),
+        )
 
         # Clear buffers
         self.val_preds.clear()
@@ -217,6 +232,14 @@ class LightningModule(L.LightningModule):
         # Log overall gradient norm
         self.log("train/gradient_norm", total_norm, on_step=True, on_epoch=False)
 
+
+    def _log_figure(self, tag, fig):
+        """Log a matplotlib figure to TensorBoard if available, then close it.
+        Safe no-op for loggers without an `experiment.add_figure` (e.g. CSVLogger)."""
+        experiment = getattr(self.logger, "experiment", None)
+        if experiment is not None and hasattr(experiment, "add_figure"):
+            experiment.add_figure(tag, fig, global_step=self.current_epoch)
+        plt.close(fig)
 
     def _plot_confusion_matrix(self, cm, title="Confusion Matrix", figsize=(10, 8)):
         fig, ax = plt.subplots(figsize=figsize)
