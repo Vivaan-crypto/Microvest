@@ -58,48 +58,48 @@ def list_checkpoints():
 
 
 def _clean_state_dict(raw):
-    sd = raw["state_dict"] if isinstance(raw, dict) and "state_dict" in raw else raw
-    out = {}
-    for k, v in sd.items():
-        for prefix in ("model._orig_mod.", "model.", "_orig_mod."):
-            if k.startswith(prefix):
-                k = k[len(prefix):]
-                break
-        out[k] = v
-    return out
+    # A Lightning checkpoint is a dict with a "state_dict" key; a plain .pth is
+    # already the weights. Pull out the weights either way.
+    if isinstance(raw, dict) and "state_dict" in raw:
+        state_dict = raw["state_dict"]
+    else:
+        state_dict = raw
+
+    # Strip the wrapper prefixes Lightning (and torch.compile) add to every key.
+    clean = {}
+    for key in state_dict:
+        new_key = key
+        new_key = new_key.replace("model._orig_mod.", "")
+        new_key = new_key.replace("model.", "")
+        new_key = new_key.replace("_orig_mod.", "")
+        clean[new_key] = state_dict[key]
+    return clean
 
 
 def load_model(path):
-    """Load a checkpoint — auto-detects LSTM vs Transformer from weight keys."""
-    sd = _clean_state_dict(torch.load(path, map_location="cpu", weights_only=False))
-    n_classes = sd["classification_head.2.weight"].shape[0]
+    """Load a checkpoint into a StockLSTMModel sized to match its own weights."""
+    raw = torch.load(path, map_location="cpu", weights_only=False)
+    weights = _clean_state_dict(raw)
 
-    if "LSTM.weight_ih_l0" in sd:
-        # LSTM checkpoint
-        ih = sd["LSTM.weight_ih_l0"]
-        hidden, inp = ih.shape[0] // 4, ih.shape[1]
-        layers = len([k for k in sd if k.startswith("LSTM.weight_ih_l")])
-        model = StockLSTMModel(input_size=inp, lstm_hidden_size=hidden,
-                               lstm_layers=layers, num_classes=n_classes)
-        arch = f"LSTM · {layers}L · {hidden}h · {inp}f · {n_classes}c"
-        info = {"type": "LSTM", "input": inp, "hidden": hidden, "layers": layers,
-                "classes": n_classes, "path": path}
-    else:
-        # Transformer checkpoint — infer d_model and layers from projection weight
-        inp = sd["input_to_transformer_linear.weight"].shape[1]
-        d_model = sd["input_to_transformer_linear.weight"].shape[0]
-        layers = len([k for k in sd if k.startswith("Transformer.layers.") and k.endswith(".self_attn.in_proj_weight")])
-        model = StockTransformerModel(input_size=inp, d_model=d_model,
-                                      transformer_layers=layers, num_classes=n_classes)
-        arch = f"Transformer · {layers}L · d{d_model} · {inp}f · {n_classes}c"
-        info = {"type": "Transformer", "input": inp, "hidden": d_model, "layers": layers,
-                "classes": n_classes, "path": path}
+    # Read the model size straight off the weight shapes.
+    lstm_weight = weights["LSTM.weight_ih_l0"]
+    hidden = lstm_weight.shape[0] // 4   # LSTM has 4 gates
+    inp = lstm_weight.shape[1]
+    n_classes = weights["classification_head.2.weight"].shape[0]
 
-    model_keys = set(model.state_dict())
-    missing = model_keys - set(sd)
-    model.load_state_dict({k: v for k, v in sd.items() if k in model_keys}, strict=False)
+    # Count how many LSTM layers the checkpoint has.
+    layers = 0
+    for key in weights:
+        if key.startswith("LSTM.weight_ih_l"):
+            layers = layers + 1
+
+    model = StockLSTMModel(input_size=inp, lstm_hidden_size=hidden,
+                           lstm_layers=layers, num_classes=n_classes)
+    model.load_state_dict(weights)
     model.eval()
-    info["missing"] = sorted(missing)
+
+    info = {"input": inp, "hidden": hidden, "layers": layers,
+            "classes": n_classes, "missing": [], "path": path}
     return model, info
 
 
@@ -166,34 +166,59 @@ def predict(panel, model):
     rows = []
     for ticker, df in panel.groupby("ticker"):
         df = df.sort_values("Date")
-        df = df[df[FEATURE_COLS].notna().all(axis=1)].reset_index(drop=True)
+        df = df.dropna(subset=FEATURE_COLS).reset_index(drop=True)
         if len(df) < WINDOW:
             continue
 
-        scaler = StandardScaler()
+        # Standardize features using only the training period's mean and std.
         train_rows = df[df["Date"] <= TRAIN_END]
-        scaler.fit((train_rows if len(train_rows) >= WINDOW else df)[FEATURE_COLS])
+        if len(train_rows) < WINDOW:
+            train_rows = df
+        scaler = StandardScaler()
+        scaler.fit(train_rows[FEATURE_COLS])
         feats = scaler.transform(df[FEATURE_COLS]).astype(np.float32)
 
-        idxs = np.arange(WINDOW - 1, len(df))
-        windows = np.stack([feats[i - WINDOW + 1:i + 1] for i in idxs])
-        proba = torch.softmax(model(torch.from_numpy(windows)), dim=1).numpy()
+        # Build one rolling window of WINDOW days for each day we can score.
+        windows = []
+        for i in range(WINDOW - 1, len(df)):
+            windows.append(feats[i - WINDOW + 1:i + 1])
+        windows = np.stack(windows)
 
-        sub = df.iloc[idxs].reset_index(drop=True)
-        valid = sub["fwd_valid"].values
-        true_cls = sub["label_raw"].map(pp.LABEL_TO_CLASS).values
-        for j in range(len(idxs)):
+        # Run the model and turn the logits into probabilities.
+        logits = model(torch.from_numpy(windows))
+        proba = torch.softmax(logits, dim=1).numpy()
+
+        # Record one prediction row per scored day.
+        scored_days = df.iloc[WINDOW - 1:].reset_index(drop=True)
+        for j in range(len(scored_days)):
+            day = scored_days.iloc[j]
             p = proba[j]
+
+            # Forward return + true label only exist when the future is known.
+            if day["fwd_valid"]:
+                fwd_ret = float(day["fwd_ret"])
+                true_class = int(pp.LABEL_TO_CLASS[day["label_raw"]])
+            else:
+                fwd_ret = np.nan
+                true_class = np.nan
+
             rows.append({
-                "date": sub["Date"].iloc[j], "ticker": ticker,
-                "open": float(sub["Open"].iloc[j]), "high": float(sub["High"].iloc[j]),
-                "low": float(sub["Low"].iloc[j]), "close": float(sub["Close"].iloc[j]),
-                "volume": float(sub["Volume"].iloc[j]),
-                "p_short": float(p[0]), "p_notrade": float(p[1]), "p_long": float(p[2]),
-                "signal": float(p[2] - p[0]), "pred_class": int(p.argmax()),
-                "fwd_ret": float(sub["fwd_ret"].iloc[j]) if valid[j] else np.nan,
-                "true_class": int(true_cls[j]) if valid[j] else np.nan,
+                "date": day["Date"],
+                "ticker": ticker,
+                "open": float(day["Open"]),
+                "high": float(day["High"]),
+                "low": float(day["Low"]),
+                "close": float(day["Close"]),
+                "volume": float(day["Volume"]),
+                "p_short": float(p[0]),
+                "p_notrade": float(p[1]),
+                "p_long": float(p[2]),
+                "signal": float(p[2] - p[0]),
+                "pred_class": int(p.argmax()),
+                "fwd_ret": fwd_ret,
+                "true_class": true_class,
             })
+
     out = pd.DataFrame(rows)
     return out.sort_values(["date", "ticker"]).reset_index(drop=True)
 
