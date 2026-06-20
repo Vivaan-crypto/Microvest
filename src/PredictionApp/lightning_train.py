@@ -6,11 +6,12 @@ from lightning.pytorch.loggers import TensorBoardLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping
 import os
 import numpy as np
+from datetime import datetime
 from lightning_modules import LightningModule, LightningDateModule
 
 
 def main():
-    # --------------------------    ------------------------
+    # ----------------------    ----    ------------------------
     # Load pre-split tensors (already processed)
     # --------------------------------------------------
     # Try loading from CSV directory first, then fall back to Data directory
@@ -20,6 +21,16 @@ def main():
     y_train = torch.load(f"{data_dir}/y_train.pt")
     X_val = torch.load(f"{data_dir}/X_test.pt")
     y_val = torch.load(f"{data_dir}/y_test.pt")
+
+    # Ranking side-data (forward return + decision date per val row), aligned 1:1.
+    val_fwd_ret, val_dates = None, None
+    fwd_path, dates_path = f"{data_dir}/fwd_ret_test.pt", f"{data_dir}/dates_test.npy"
+    if os.path.exists(fwd_path) and os.path.exists(dates_path):
+        val_fwd_ret = torch.load(fwd_path).numpy()
+        val_dates = np.load(dates_path)
+        print(f"Loaded ranking side-data: fwd_ret {val_fwd_ret.shape}, dates {val_dates.shape}")
+    else:
+        print("Ranking side-data not found (run preprocess.py to enable IC metrics)")
 
     print(f"Loaded data from: {data_dir}")
     print(f"X_train shape: {X_train.shape}")
@@ -64,7 +75,7 @@ def main():
     print()
 
     data_module = LightningDateModule(X_train, y_train, X_val, y_val, batch_size=32)
-    model = LightningModule(y_train.numpy())
+    model = LightningModule(y_train.numpy(), val_fwd_ret=val_fwd_ret, val_dates=val_dates)
 
     # --------------------------------------------------
     # TensorBoard logger
@@ -77,22 +88,28 @@ def main():
     # --------------------------------------------------
     # Callbacks
     # --------------------------------------------------
-    # Save best model based on validation F1 score
+    # Select on val/ic_spearman (the real objective), not F1/loss: a tradeable
+    # ranking edge keeps improving even while CE loss climbs from over-confidence.
+    monitor = "val/ic_spearman" if val_fwd_ret is not None else "val/f1"
+
+    # Organize checkpoints by training start time (easier to track runs)
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    checkpoint_dir = os.path.join("checkpoints", run_timestamp)
+
     checkpoint_callback = ModelCheckpoint(
-        monitor="val/f1",
-        dirpath="checkpoints",
-        filename="best-model-{epoch:02d}-{val/f1:.3f}",
+        monitor=monitor,
+        dirpath=checkpoint_dir,
+        filename="best-model-{epoch:02d}-acc{val/accuracy:.2f}-ic{val/ic_spearman:+.3f}",
+        auto_insert_metric_name=False,
         save_top_k=3,
         mode="max",
         save_last=True,
     )
 
-    # Log learning rate
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
-    # Early stopping if validation F1 doesn't improve
     early_stopping = EarlyStopping(
-        monitor="val/f1",
+        monitor=monitor,
         patience=20,
         mode="max",
         verbose=True,
@@ -111,6 +128,7 @@ def main():
         enable_progress_bar=True,
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
+        num_sanity_val_steps=0,  # partial val batches would desync the IC side-data
     )
 
     # --------------------------------------------------

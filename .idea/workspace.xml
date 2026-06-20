@@ -22,10 +22,66 @@
   <component name="ChangeListManager">
     <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/checkpoints/best-model-epoch=00-val/f1=0.049.ckpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/checkpoints/best-model-epoch=05-val/f1=0.061.ckpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/checkpoints/best-model-epoch=06-val/f1=0.061.ckpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/checkpoints/best-model-epoch=09-val/f1=0.061.ckpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/checkpoints/last-v1.ckpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/checkpoints/last.ckpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/AAPL.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/AAPL.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/ABBV.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/ABBV.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/ADBE.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/ADBE.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/AMD.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/AMD.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/AMZN.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/AMZN.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/APD.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/APD.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/ASML.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/ASML.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/AVGO.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/AVGO.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/BA.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/BA.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/BAC.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/BAC.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/C.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/C.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/CAT.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/CAT.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/COP.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/COP.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/COST.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/COST.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/CRM.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/CRM.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/CVX.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/CVX.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/DIS.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/DIS.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/DUK.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/DUK.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/EOG.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/EOG.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/EXC.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/EXC.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/FCX.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/FCX.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/GE.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/GE.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/GOOGL.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/GOOGL.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/GS.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/GS.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/HD.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/HD.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/HON.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/HON.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/INTC.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/INTC.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/JNJ.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/JNJ.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/JPM.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/JPM.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/KO.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/KO.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/LIN.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/LIN.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/META.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/META.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/MMM.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/MMM.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/MRK.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/MRK.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/MS.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/MS.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/MSFT.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/MSFT.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/NEE.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/NEE.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/NFLX.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/NFLX.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/NVDA.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/NVDA.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/PEP.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/PEP.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/PFE.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/PFE.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/PG.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/PG.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/SHW.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/SHW.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/SLB.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/SLB.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/SO.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/SO.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/TSLA.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/TSLA.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/UNH.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/UNH.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/WFC.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/WFC.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/WMT.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/WMT.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/label_charts/XOM.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/label_charts/XOM.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model_final.pth" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model_final.pth" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,61 +157,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0041359487016117" />
-      <entry key="MS500" value="1.426596120867351" />
-      <entry key="S2" value="2.3122532280227865" />
-      <entry key="S5" value="2.6846380548980715" />
-      <entry key="S10" value="2.836935627168452" />
-      <entry key="S30" value="3.4667896873609925" />
-      <entry key="S60" value="5.137419575833703" />
-      <entry key="M2" value="7.685897353454471" />
-      <entry key="M5" value="13.765003124409903" />
-      <entry key="M10" value="21.973870964293134" />
-      <entry key="M15" value="27.28310979166677" />
-      <entry key="M30" value="35.84213928736411" />
-      <entry key="H1" value="43.581940510753164" />
-      <entry key="H2" value="50.12979748374997" />
-      <entry key="H4" value="54.80674785199145" />
-      <entry key="D1" value="59.83580658665348" />
-      <entry key="W1" value="60.83003111784051" />
+      <entry key="MS100" value="2.6838745896844756E-21" />
+      <entry key="MS500" value="1.5187851164396083E-4" />
+      <entry key="S2" value="0.46969294814679213" />
+      <entry key="S5" value="3.181699156407903" />
+      <entry key="S10" value="6.337457118650341" />
+      <entry key="S30" value="10.197123658778407" />
+      <entry key="S60" value="11.508718283424857" />
+      <entry key="M2" value="12.232089415493329" />
+      <entry key="M5" value="12.810779374063387" />
+      <entry key="M10" value="13.558550910202529" />
+      <entry key="M15" value="14.47568203934688" />
+      <entry key="M30" value="17.01671891793523" />
+      <entry key="H1" value="19.860623375677616" />
+      <entry key="H2" value="22.14840933916613" />
+      <entry key="H4" value="25.343801656877982" />
+      <entry key="D1" value="67.62447173139351" />
+      <entry key="W1" value="175.03619565322236" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="2.314209530677881E-147" />
-      <entry key="S5" value="2.531245254170673E-59" />
-      <entry key="S10" value="6.493629973121681E-30" />
-      <entry key="S30" value="2.8899740468237806E-10" />
-      <entry key="S60" value="2.3964645507206833E-5" />
-      <entry key="M2" value="0.006917526039022203" />
-      <entry key="M5" value="0.2072594349916143" />
-      <entry key="M10" value="0.6439523977313099" />
-      <entry key="M15" value="0.942108659928005" />
-      <entry key="M30" value="1.4228276171623728" />
-      <entry key="H1" value="1.8840614317010458" />
-      <entry key="H2" value="2.2975945596671554" />
-      <entry key="H4" value="2.5990148286023196" />
-      <entry key="D1" value="2.924638214373626" />
-      <entry key="W1" value="2.988999984839039" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.000000000000587" />
+      <entry key="S60" value="1.000000766187062" />
+      <entry key="M2" value="1.0008753211193322" />
+      <entry key="M5" value="1.059822831205011" />
+      <entry key="M10" value="1.2445871100613162" />
+      <entry key="M15" value="1.3911141586685458" />
+      <entry key="M30" value="1.6290006101740242" />
+      <entry key="H1" value="1.8510035829269957" />
+      <entry key="H2" value="2.146296082080698" />
+      <entry key="H4" value="2.6810803950546322" />
+      <entry key="D1" value="8.668987751988798" />
+      <entry key="W1" value="21.32408691015889" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9632041353382981" />
-      <entry key="MS500" value="1.4140655110383706" />
-      <entry key="S2" value="2.306805346856828" />
-      <entry key="S5" value="2.6820633534559915" />
-      <entry key="S10" value="2.8354759153833227" />
-      <entry key="S30" value="3.459114944533234" />
-      <entry key="S60" value="5.122392971258345" />
-      <entry key="M2" value="7.677182318852096" />
-      <entry key="M5" value="13.96086297621316" />
-      <entry key="M10" value="22.609573676839187" />
-      <entry key="M15" value="28.218681191353927" />
-      <entry key="M30" value="37.260832974163094" />
-      <entry key="H1" value="45.46350084676141" />
-      <entry key="H2" value="52.425946055178976" />
-      <entry key="H4" value="57.404968655786234" />
-      <entry key="D1" value="62.76029969760391" />
-      <entry key="W1" value="63.81901001339471" />
+      <entry key="MS100" value="1.551320380499284E-7" />
+      <entry key="MS500" value="0.043554724652816686" />
+      <entry key="S2" value="0.8639537940506938" />
+      <entry key="S5" value="3.737086512157306" />
+      <entry key="S10" value="7.016056140308601" />
+      <entry key="S30" value="11.051134139289756" />
+      <entry key="S60" value="12.42920440872097" />
+      <entry key="M2" value="13.191405136396591" />
+      <entry key="M5" value="13.853141607416037" />
+      <entry key="M10" value="14.79372247579354" />
+      <entry key="M15" value="15.860177253675301" />
+      <entry key="M30" value="18.642136147349785" />
+      <entry key="H1" value="21.709724890529458" />
+      <entry key="H2" value="24.293699381732043" />
+      <entry key="H4" value="28.02431555176755" />
+      <entry key="D1" value="76.29312973338781" />
+      <entry key="W1" value="196.36014662023888" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -187,67 +243,68 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.AWS.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ai_insights.executor&quot;: &quot;Run&quot;,
-    &quot;Python.app (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.app.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.auto_label.executor&quot;: &quot;Run&quot;,
-    &quot;Python.gpu_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lightning_modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.marketmap.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot.executor&quot;: &quot;Run&quot;,
-    &quot;Python.pred.executor&quot;: &quot;Run&quot;,
-    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
-    &quot;Python.response_agent.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_10.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_3.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_4.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_5.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_6.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_7.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_8.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_9.executor&quot;: &quot;Run&quot;,
-    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
-    &quot;Python.stock dashboard.executor&quot;: &quot;Run&quot;,
-    &quot;Python.tempCodeRunnerFile.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/GitHub/Microvest/src/PredictionApp/Data&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.appearance&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.AWS.executor": "Run",
+    "Python.ai_insights.executor": "Run",
+    "Python.app (1).executor": "Run",
+    "Python.app.executor": "Debug",
+    "Python.auto_label.executor": "Run",
+    "Python.gpu_test.executor": "Run",
+    "Python.lightning_modules.executor": "Run",
+    "Python.lightning_train.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.marketmap.executor": "Debug",
+    "Python.model.executor": "Run",
+    "Python.plot (1).executor": "Run",
+    "Python.plot.executor": "Run",
+    "Python.pred.executor": "Run",
+    "Python.preprocess.executor": "Run",
+    "Python.preprocessing.executor": "Run",
+    "Python.response_agent.executor": "Debug",
+    "Python.scratch_1.executor": "Run",
+    "Python.scratch_10.executor": "Run",
+    "Python.scratch_2.executor": "Run",
+    "Python.scratch_3.executor": "Run",
+    "Python.scratch_4.executor": "Run",
+    "Python.scratch_5.executor": "Run",
+    "Python.scratch_6.executor": "Run",
+    "Python.scratch_7.executor": "Run",
+    "Python.scratch_8.executor": "Run",
+    "Python.scratch_9.executor": "Run",
+    "Python.squeeze_pro.executor": "Run",
+    "Python.stock dashboard.executor": "Run",
+    "Python.tempCodeRunnerFile.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.train.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "ai.playground.ignore.import.keys.banner.in.settings": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "dart.analysis.tool.window.visible": "false",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "develop",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/GitHub/Microvest/src/PredictionApp/Data",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "aDefault",
+    "settings.editor.selected.configurable": "editor.preferences.appearance",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
-      &quot;Python&quot;,
-      &quot;PLAIN_TEXT&quot;
+  "keyToStringList": {
+    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
+      "Python",
+      "PLAIN_TEXT"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\GitHub\Microvest\src\PredictionApp\Data" />
@@ -265,54 +322,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.lightning_train">
-    <configuration name="AWS" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="microvest" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/AWS.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="auto_label" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="microvest" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="lightning_train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
@@ -337,7 +346,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="preprocessing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="preprocess" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -352,7 +361,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/preprocessing.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/preprocess.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -361,7 +370,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="scratch_4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -376,7 +385,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_4.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -388,10 +397,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.lightning_train" />
-        <item itemvalue="Python.auto_label" />
-        <item itemvalue="Python.preprocessing" />
-        <item itemvalue="Python.AWS" />
-        <item itemvalue="Python.scratch_1" />
+        <item itemvalue="Python.preprocess" />
+        <item itemvalue="Python.scratch_4" />
       </list>
     </recent_temporary>
   </component>

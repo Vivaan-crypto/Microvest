@@ -4,7 +4,9 @@ import torch.nn as nn
 
 
 class StockLSTMModel(nn.Module):
-    def __init__(self, input_size=15, lstm_hidden_size=128, lstm_layers=2, dropout_prob=0.2, num_classes=3):
+    # input_size must match the feature count from preprocess.FEATURE_COLS.
+    # Small on purpose: the target has a tiny edge, so a big LSTM just memorizes.
+    def __init__(self, input_size=26, lstm_hidden_size=256, lstm_layers=3, dropout_prob=0.3, num_classes=3):
         super().__init__()
         self.LSTM = nn.LSTM(
             input_size=input_size,
@@ -34,13 +36,16 @@ class StockLSTMModel(nn.Module):
 
 
 class StockTransformerModel(nn.Module):
-    def __init__(self, input_size=17, d_model=512, transformer_layers=3, dropout_prob=0.2, num_classes=3):
+    # input_size must match the feature count from preprocess.FEATURE_COLS.
+    def __init__(self, input_size=26, d_model=512, transformer_layers=3, dropout_prob=0.2, num_classes=3):
         super().__init__()
+        # nhead must divide d_model; pick the largest power-of-2 ≤ 8 that works.
+        nhead = max(1, min(8, d_model // 8))
         self.input_to_transformer_linear = nn.Linear(input_size, d_model)
         self.LayerNorm = nn.LayerNorm(d_model)
         self.TransformerEncoderLayer = nn.TransformerEncoderLayer(
             d_model=d_model,
-            nhead=8,
+            nhead=nhead,
             dim_feedforward=d_model * 4,
             dropout=dropout_prob,
             batch_first=True,

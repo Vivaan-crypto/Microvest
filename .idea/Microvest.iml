@@ -10,6 +10,8 @@
       <excludeFolder url="file://$MODULE_DIR$/src/PredictionApp/lightning_logs" />
       <excludeFolder url="file://$MODULE_DIR$/src/PredictionApp/tb_logs" />
       <excludeFolder url="file://$MODULE_DIR$/src/ConfigurationFiles" />
+      <excludeFolder url="file://$MODULE_DIR$/src/PredictionApp/checkpoints" />
+      <excludeFolder url="file://$MODULE_DIR$/src/PredictionApp/label_charts" />
     </content>
     <orderEntry type="jdk" jdkName="uv (Microvest) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
