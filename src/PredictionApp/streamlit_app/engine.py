@@ -16,6 +16,7 @@ leak-free backtest — no recompute needed.
 
 import glob
 import os
+import re
 import sys
 
 import numpy as np
@@ -55,6 +56,31 @@ def list_checkpoints():
     # if os.path.exists(final):
     #     cks.append(final)
     return cks
+
+
+# Filenames look like: best-model-23-acc0.62-ic+0.065-v37.ckpt
+#                                  ^epoch  ^acc    ^ic     ^version
+_CKPT_RE = re.compile(r"best-model-(\d+)-acc([\d.]+)-ic([+-]?[\d.]+)(?:-v(\d+))?\.ckpt$")
+
+
+def parse_checkpoint(path):
+    """Pull (epoch, accuracy, ic, version, run) out of a checkpoint path.
+    Metric fields are None for older / differently-named checkpoints that don't match."""
+    name = os.path.basename(path)
+    run = os.path.basename(os.path.dirname(path))   # the timestamp folder
+    match = _CKPT_RE.search(name)
+    if match:
+        epoch = int(match.group(1))
+        acc = float(match.group(2))
+        ic = float(match.group(3))
+        version = int(match.group(4)) if match.group(4) else 0
+    else:
+        epoch = None
+        acc = None
+        ic = None
+        version = 0
+    return {"path": path, "name": name, "run": run,
+            "epoch": epoch, "acc": acc, "ic": ic, "version": version}
 
 
 def _clean_state_dict(raw):

@@ -153,16 +153,75 @@ def get_single_prediction(ticker, ckpt_path, _mtime, end_iso):
 # ------------------------------------------------------------------
 # Shared sidebar
 # ------------------------------------------------------------------
+def _checkpoint_label(meta):
+    """Short dropdown label built from a parsed checkpoint's metrics."""
+    if meta["ic"] is None:
+        return meta["name"]   # couldn't parse metrics — show the raw filename
+    return (f"ic {meta['ic']:+.3f} · acc {meta['acc']:.2f} · "
+            f"e{meta['epoch']:02d} · v{meta['version']}")
+
+
+def _filter_checkpoints(metas):
+    """Sidebar filters (IC range / accuracy range / version). Returns the kept
+    checkpoints. Checkpoints whose metrics didn't parse bypass the numeric filters
+    so they're never hidden."""
+    ic_values = sorted(m["ic"] for m in metas if m["ic"] is not None)
+    acc_values = sorted(m["acc"] for m in metas if m["acc"] is not None)
+    versions = sorted({m["version"] for m in metas})
+
+    with st.sidebar.expander("🔎 Filter models"):
+        ic_range = None
+        if len(ic_values) >= 2 and ic_values[0] < ic_values[-1]:
+            lo, hi = float(ic_values[0]), float(ic_values[-1])
+            ic_range = st.slider("IC range", lo, hi, (lo, hi), step=0.001, format="%.3f")
+
+        acc_range = None
+        if len(acc_values) >= 2 and acc_values[0] < acc_values[-1]:
+            lo, hi = float(acc_values[0]), float(acc_values[-1])
+            acc_range = st.slider("Accuracy range", lo, hi, (lo, hi), step=0.01)
+
+        if len(versions) > 1:
+            picked_versions = st.multiselect("Version", versions, default=versions)
+        else:
+            picked_versions = versions
+
+    kept = []
+    for m in metas:
+        if ic_range is not None and m["ic"] is not None:
+            if m["ic"] < ic_range[0] or m["ic"] > ic_range[1]:
+                continue
+        if acc_range is not None and m["acc"] is not None:
+            if m["acc"] < acc_range[0] or m["acc"] > acc_range[1]:
+                continue
+        if m["version"] not in picked_versions:
+            continue
+        kept.append(m)
+    return kept
+
+
 def pick_checkpoint():
-    """Shared sidebar: model/checkpoint selector + architecture readout.
+    """Shared sidebar: model/checkpoint selector (with filters) + architecture readout.
     Used by every page so the 'change model' control is consistent."""
     inject_theme()
     st.sidebar.header("⚙️ MODEL")
-    cks = engine.list_checkpoints()
-    if not cks:
+
+    paths = engine.list_checkpoints()
+    if not paths:
         st.sidebar.error("No checkpoints found. Train first (`python lightning_train.py`).")
         st.stop()
-    ckpt = st.sidebar.selectbox("Checkpoint", cks, format_func=os.path.basename)
+
+    metas = [engine.parse_checkpoint(p) for p in paths]
+    metas = _filter_checkpoints(metas)
+    if not metas:
+        st.sidebar.warning("No checkpoints match the filters.")
+        st.stop()
+
+    # Best IC first so the strongest model is the default pick.
+    metas.sort(key=lambda m: m["ic"] if m["ic"] is not None else float("-inf"), reverse=True)
+    labels = {m["path"]: _checkpoint_label(m) for m in metas}
+    sorted_paths = [m["path"] for m in metas]
+
+    ckpt = st.sidebar.selectbox("Checkpoint", sorted_paths, format_func=lambda p: labels[p])
     mtime = os.path.getmtime(ckpt)
     _, info = get_model(ckpt, mtime)
     with st.sidebar.expander("Architecture"):

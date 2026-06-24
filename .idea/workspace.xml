@@ -20,15 +20,7 @@
     </option>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Added Backtesting">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/Home.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/Home.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" afterDir="false" />
-    </list>
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Updated UI" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -103,61 +95,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.010870294802404" />
-      <entry key="MS500" value="1.899462703674181" />
-      <entry key="S2" value="3.728975041347983" />
-      <entry key="S5" value="5.159096550602024" />
-      <entry key="S10" value="6.209573682292895" />
-      <entry key="S30" value="7.288393609687764" />
-      <entry key="S60" value="7.627127088113303" />
-      <entry key="M2" value="7.809117867748668" />
-      <entry key="M5" value="7.942791143124418" />
-      <entry key="M10" value="8.104311654528566" />
-      <entry key="M15" value="8.28285674851032" />
-      <entry key="M30" value="10.096634693292366" />
-      <entry key="H1" value="19.305647404708605" />
-      <entry key="H2" value="36.37860610396115" />
-      <entry key="H4" value="55.490242747860755" />
-      <entry key="D1" value="129.19604453033094" />
-      <entry key="W1" value="265.9557692414026" />
+      <entry key="MS100" value="1.0024691979428646" />
+      <entry key="MS500" value="1.5474994196698502" />
+      <entry key="S2" value="3.2325609703869267" />
+      <entry key="S5" value="4.136209680720888" />
+      <entry key="S10" value="4.535497470138806" />
+      <entry key="S30" value="4.837172531855483" />
+      <entry key="S60" value="4.9175359866647685" />
+      <entry key="M2" value="4.958501410203924" />
+      <entry key="M5" value="4.983336062594724" />
+      <entry key="M10" value="4.991657237257451" />
+      <entry key="M15" value="4.994435756240363" />
+      <entry key="M30" value="4.997216677044439" />
+      <entry key="H1" value="4.998769355277967" />
+      <entry key="H2" value="5.104462566151957" />
+      <entry key="H4" value="7.983083253533057" />
+      <entry key="D1" value="84.37166114135674" />
+      <entry key="W1" value="253.07511241198802" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.1239375665708845E-20" />
-      <entry key="MS500" value="1.023642803272621E-4" />
-      <entry key="S2" value="0.10058590074433992" />
-      <entry key="S5" value="0.399038540863552" />
-      <entry key="S10" value="0.6316949745435309" />
-      <entry key="S30" value="0.8580300024752281" />
-      <entry key="S60" value="0.9262990891041769" />
-      <entry key="M2" value="0.9624443303922448" />
-      <entry key="M5" value="0.9848050082523513" />
-      <entry key="M10" value="0.9925626263415681" />
-      <entry key="M15" value="1.003017057696542" />
-      <entry key="M30" value="1.3523119289398329" />
-      <entry key="H1" value="3.371090583117493" />
-      <entry key="H2" value="7.154497084767304" />
-      <entry key="H4" value="10.990030845505371" />
-      <entry key="D1" value="20.5048724744431" />
-      <entry key="W1" value="36.37553752714432" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="1.9346898063071465E-305" />
+      <entry key="M2" value="4.398510891548576E-153" />
+      <entry key="M5" value="1.1410962281579427E-61" />
+      <entry key="M10" value="3.3786556340334497E-31" />
+      <entry key="M15" value="4.889888908031707E-21" />
+      <entry key="M30" value="9.442178708685245E-11" />
+      <entry key="H1" value="2.8168783432102417E-5" />
+      <entry key="H2" value="0.020681305276330164" />
+      <entry key="H4" value="0.5908786913608238" />
+      <entry key="D1" value="12.597188909315653" />
+      <entry key="W1" value="33.92994966150155" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.727146728178613" />
-      <entry key="MS500" value="1.6103947153763958" />
-      <entry key="S2" value="3.26651783744893" />
-      <entry key="S5" value="5.051560465546064" />
-      <entry key="S10" value="6.492817285606253" />
-      <entry key="S30" value="8.000685827785015" />
-      <entry key="S60" value="8.47616537500428" />
-      <entry key="M2" value="8.731773700071516" />
-      <entry key="M5" value="8.911357453237564" />
-      <entry key="M10" value="9.088592967979606" />
-      <entry key="M15" value="9.280243135033274" />
-      <entry key="M30" value="11.445639045489177" />
-      <entry key="H1" value="22.67386313706389" />
-      <entry key="H2" value="43.53054529835677" />
-      <entry key="H4" value="66.47842544494" />
-      <entry key="D1" value="149.70031153699102" />
-      <entry key="W1" value="302.33111755430565" />
+      <entry key="MS100" value="0.9484083194914248" />
+      <entry key="MS500" value="1.529952694431105" />
+      <entry key="S2" value="3.221700671422498" />
+      <entry key="S5" value="4.13023978432905" />
+      <entry key="S10" value="4.532135330641402" />
+      <entry key="S30" value="4.835954793893618" />
+      <entry key="S60" value="4.9169140586912" />
+      <entry key="M2" value="4.958187107273195" />
+      <entry key="M5" value="4.983209530385769" />
+      <entry key="M10" value="4.991593835164506" />
+      <entry key="M15" value="4.994393457898024" />
+      <entry key="M30" value="4.997195512812064" />
+      <entry key="H1" value="4.998786914084205" />
+      <entry key="H2" value="5.1251311834801205" />
+      <entry key="H4" value="8.573859932047064" />
+      <entry key="D1" value="96.96847763970149" />
+      <entry key="W1" value="287.0048855174023" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -537,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781978816385</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Updated UI">
+      <option name="closed" value="true" />
+      <created>1782332133906</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1782332133906</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -570,7 +570,8 @@
     <MESSAGE value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
     <MESSAGE value="A decent model has been trained + streamlit app to display rankings and classification predictions." />
     <MESSAGE value="Added Backtesting" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Backtesting" />
+    <MESSAGE value="Updated UI" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated UI" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
