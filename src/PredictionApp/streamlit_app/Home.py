@@ -40,7 +40,10 @@ with left:
 with right:
     st.subheader("Predicted-direction mix (visible window)")
     counts = view["pred_class"].value_counts().sort_index()
-    counts.index = [engine.CLASS_NAMES[i] for i in counts.index]
+    labels = []
+    for i in counts.index:
+        labels.append(engine.CLASS_NAMES[i])
+    counts.index = labels
     st.bar_chart(counts)
 
 st.divider()

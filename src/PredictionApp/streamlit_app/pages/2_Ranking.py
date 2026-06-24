@@ -27,23 +27,33 @@ view = view[view["ticker"].isin(picked)]
 last_date = view["date"].max()
 today = view[view["date"] == last_date].sort_values("signal", ascending=False)
 half = max(1, len(today) // 2)
-n = st.slider("Names per side", 1, half, min(5, half)) if half > 1 else 1
+if half > 1:
+    n = st.slider("Names per side", 1, half, min(5, half))
+else:
+    n = 1
+
+def leaderboard_table(rows, cmap):
+    """Format a slice of the leaderboard: pick columns, format the numbers, and
+    shade the signal column. `cmap` is a matplotlib colormap name (Greens / Reds_r)."""
+    cols = ["ticker", "signal", "p_long", "p_short", "close"]
+    number_format = {"signal": "{:+.2f}", "p_long": "{:.0%}",
+                     "p_short": "{:.0%}", "close": "${:.2f}"}
+    return (rows[cols].style
+            .format(number_format)
+            .background_gradient(cmap=cmap, subset=["signal"]))
+
 
 st.subheader(f"Leaderboard — {last_date:%Y-%m-%d}")
 lc, rc = st.columns(2)
-cols = ["ticker", "signal", "p_long", "p_short", "close"]
 with lc:
     st.caption("🟢 Top — go long")
-    st.dataframe(today.head(n)[cols].style.format(
-        {"signal": "{:+.2f}", "p_long": "{:.0%}", "p_short": "{:.0%}", "close": "${:.2f}"})
-        .background_gradient(cmap="Greens", subset=["signal"]),
-        width="stretch", hide_index=True)
+    top = today.head(n)
+    st.dataframe(leaderboard_table(top, "Greens"), width="stretch", hide_index=True)
 with rc:
     st.caption("🔴 Bottom — go short")
-    st.dataframe(today.tail(n).iloc[::-1][cols].style.format(
-        {"signal": "{:+.2f}", "p_long": "{:.0%}", "p_short": "{:.0%}", "close": "${:.2f}"})
-        .background_gradient(cmap="Reds_r", subset=["signal"]),
-        width="stretch", hide_index=True)
+    # tail() gives the weakest names; reverse so the most-bearish is on top.
+    bottom = today.tail(n).iloc[::-1]
+    st.dataframe(leaderboard_table(bottom, "Reds_r"), width="stretch", hide_index=True)
 
 st.divider()
 

@@ -95,7 +95,17 @@ def load_model(path):
 
     model = StockLSTMModel(input_size=inp, lstm_hidden_size=hidden,
                            lstm_layers=layers, num_classes=n_classes)
-    model.load_state_dict(weights)
+
+    # Keep only the weights the model actually has. A Lightning checkpoint also
+    # stores non-model tensors (e.g. "criterion.weight", the loss class weights)
+    # that the bare model doesn't know about.
+    model_keys = model.state_dict().keys()
+    model_weights = {}
+    for key in weights:
+        if key in model_keys:
+            model_weights[key] = weights[key]
+
+    model.load_state_dict(model_weights)
     model.eval()
 
     info = {"input": inp, "hidden": hidden, "layers": layers,

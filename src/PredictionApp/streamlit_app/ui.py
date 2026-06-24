@@ -77,14 +77,53 @@ hr{ border-color:var(--line) !important; }
 """
 
 
+# Named theme colors — use these instead of raw hex so a color change is one edit.
+CYAN = "#00e5ff"     # up candles, primary accent
+RED = "#ff3b6b"      # down candles, sells/shorts
+GREEN = "#2ecc71"    # buys/longs
+AMBER = "#f1c40f"    # benchmark line (S&P 500)
+GRAY = "#8a93a6"     # muted reference lines
+GRID = "rgba(0,229,255,.07)"   # chart grid lines
+MONO = "JetBrains Mono"        # chart font
+
+
 def inject_theme():
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
 def banner(text):
     st.markdown(
-        f"<div class='tk-banner'><span class='tk-dot' style='color:#2ecc71'></span>"
+        f"<div class='tk-banner'><span class='tk-dot' style='color:{GREEN}'></span>"
         f"{text}</div>", unsafe_allow_html=True)
+
+
+def style_chart(fig, height=420):
+    """Apply the app's dark theme to any plotly figure (the part every chart shares)."""
+    fig.update_layout(template="plotly_dark", height=height,
+                      margin=dict(l=0, r=0, t=10, b=0),
+                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                      font=dict(family=MONO))
+    fig.update_xaxes(gridcolor=GRID)
+    fig.update_yaxes(gridcolor=GRID)
+    return fig
+
+
+def hide_nontrading_days(fig, dates):
+    """Collapse weekends and holidays so candles sit flush with no empty gaps."""
+    dates = pd.to_datetime(pd.Series(dates))
+    all_business_days = pd.date_range(dates.min(), dates.max(), freq="B")
+    traded_days = set(dates.dt.normalize())
+
+    holidays = []
+    for day in all_business_days:
+        if day not in traded_days:
+            holidays.append(day)
+
+    breaks = [dict(bounds=["sat", "mon"])]
+    if holidays:
+        breaks.append(dict(values=holidays))
+    fig.update_xaxes(rangebreaks=breaks)
+    return fig
 
 
 # ------------------------------------------------------------------
@@ -144,7 +183,14 @@ def controls():
         value="AAPL, MSFT, NVDA, AMZN, GOOGL, TSLA", height=78,
         help="Type ANY symbols. These are the names the model ranks across; bigger "
              "= richer cross-sectional ranks but slower on first load.")
-    universe = sorted({t.strip().upper() for t in raw.replace("\n", ",").replace(" ", ",").split(",") if t.strip()})
+    # Split the text box on commas/spaces/newlines into a clean ticker list.
+    text = raw.replace("\n", ",").replace(" ", ",")
+    universe = []
+    for part in text.split(","):
+        symbol = part.strip().upper()
+        if symbol and symbol not in universe:
+            universe.append(symbol)
+    universe = sorted(universe)
     if not universe:
         st.sidebar.warning("Enter at least one ticker.")
         st.stop()
