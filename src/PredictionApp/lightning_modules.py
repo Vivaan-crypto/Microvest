@@ -33,16 +33,18 @@ class LightningDateModule(L.LightningDataModule):
 
 
 class LightningModule(L.LightningModule):
-    def __init__(self, y, lr=1e-3, weight_decay=1e-3, val_fwd_ret=None, val_dates=None):
+    def __init__(self, y, lr=1e-3, weight_decay=1e-3, val_fwd_ret=None, val_dates=None,
+                 input_size=26):
         super().__init__()
         self.save_hyperparameters(ignore=["y", "val_fwd_ret", "val_dates"])
 
-        # Ranking side-data, aligned 1:1 with the val set.
+        # Ranking side-data, aligned 1:1 with the val set. Pass fwd_z here (v2)
+        # so the IC grades the model on the vol-normalized target it's trained on.
         self.val_fwd_ret = None if val_fwd_ret is None else np.asarray(val_fwd_ret, dtype=float)
         self.val_dates = None if val_dates is None else np.asarray(val_dates)
 
         #self.model = StockTransformerModel(d_model=64, transformer_layers=1)
-        self.model = torch.compile(StockLSTMModel())
+        self.model = torch.compile(StockLSTMModel(input_size=input_size))
         # Macro-F1 (collapse-sensitive) + per-class recall = per-class accuracy.
         self.train_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
         self.val_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
@@ -135,7 +137,11 @@ class LightningModule(L.LightningModule):
         return out
 
     def _log_figure(self, name, fig):
-        self.logger.experiment.add_figure(f"val/{name}", fig, global_step=self.current_epoch)
+        # Only TensorBoard-style loggers expose add_figure; skip cleanly when
+        # there's no logger (e.g. quick eval runs) or it doesn't support figures.
+        exp = getattr(self.logger, "experiment", None) if self.logger else None
+        if exp is not None and hasattr(exp, "add_figure"):
+            exp.add_figure(f"val/{name}", fig, global_step=self.current_epoch)
         plt.close(fig)
 
     def _plot_confusion(self, cm):

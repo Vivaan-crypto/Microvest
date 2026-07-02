@@ -194,6 +194,7 @@ def build_panel(tickers, start, end):
     panel = panel.merge(_market_features(start, end), on="Date", how="left")
     panel = pp.add_relative_features(panel)
     panel = pp.add_cross_sectional_features(panel)
+    panel = pp.add_labels(panel)   # v2: beta-adjusted vol-normalized z labels
     return panel.replace([np.inf, -np.inf], np.nan)
 
 
@@ -233,9 +234,11 @@ def predict(panel, model):
             # Forward return + true label only exist when the future is known.
             if day["fwd_valid"]:
                 fwd_ret = float(day["fwd_ret"])
+                fwd_z = float(day["fwd_z"])
                 true_class = int(pp.LABEL_TO_CLASS[day["label_raw"]])
             else:
                 fwd_ret = np.nan
+                fwd_z = np.nan
                 true_class = np.nan
 
             rows.append({
@@ -252,6 +255,7 @@ def predict(panel, model):
                 "signal": float(p[2] - p[0]),
                 "pred_class": int(p.argmax()),
                 "fwd_ret": fwd_ret,
+                "fwd_z": fwd_z,
                 "true_class": true_class,
             })
 
