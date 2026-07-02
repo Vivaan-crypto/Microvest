@@ -9,13 +9,11 @@ import streamlit as st
 import yfinance as yf
 from plotly.subplots import make_subplots
 
-import engine
-import ui
+from src.PredictionApp.streamlit_app import engine, ui
 
 st.set_page_config(page_title="Chart", page_icon="📈", layout="wide")
 ckpt, mtime, info = ui.pick_checkpoint()
-st.title("📈 CHART + PREDICTION")
-ui.banner("ANY US TICKER · candlestick + model directionality")
+ui.page_header("CHART + PREDICTION", "ANY US TICKER · candlestick + model directionality")
 
 # How many trading days each range button shows.
 SPAN = {"1mo": 21, "3mo": 63, "6mo": 126, "1y": 252, "2y": 504, "5y": 1260, "max": 10 ** 6}
@@ -104,8 +102,8 @@ def show_headline(ticker, row):
     confidence = max(row["p_short"], row["p_notrade"], row["p_long"])
     m = st.columns(4)
     m[0].metric("Close", f"${row['close']:.2f}")
-    m[1].metric("Signal P(Long)−P(Short)", f"{row['signal']:+.2f}")
-    m[2].metric("Confidence", f"{confidence:.0%}")
+    m[1].metric("Signal P(Long)−P(Short)", f"{row['signal']:+.2f}", help=ui.HELP["signal"])
+    m[2].metric("Confidence", f"{confidence:.0%}", help=ui.HELP["confidence"])
     m[3].metric("As of", f"{row['date']:%Y-%m-%d}")
 
 
@@ -157,7 +155,7 @@ if prediction is not None and not prediction.empty:
     hover, customdata = build_hover(window)
     chart = candle_chart(window, hover=hover, customdata=customdata,
                          pred_class=list(window["pred_class"]))
-    st.plotly_chart(chart, width="stretch")
+    ui.show_chart(chart, key="pred_candles")
     st.caption("ℹ️ Single-ticker scoring neutralizes the 3 cross-sectional peer-rank "
                "features; the other 23 are fully active. Read prediction as the hover/ribbon.")
 else:
@@ -169,4 +167,4 @@ else:
     price = price.rename(columns={"Date": "date", "Open": "open", "High": "high",
                                   "Low": "low", "Close": "close", "Volume": "volume"})
     st.info(f"Showing price only — not enough history to run the model on **{ticker}**.")
-    st.plotly_chart(candle_chart(price), width="stretch")
+    ui.show_chart(candle_chart(price), key="price_candles")

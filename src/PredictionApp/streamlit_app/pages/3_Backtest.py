@@ -3,6 +3,13 @@ prediction and compare them: overlaid equity curves, a summary table, and a
 buy/sell chart per strategy, all vs. buy-and-hold and the S&P 500.
 
 No lookahead: a position decided at the close of day t earns the t -> t+1 return.
+
+Performance notes:
+- The heavy work (scoring the ticker) is cached in ui.get_single_prediction.
+- Everything below the config lives in a @st.fragment, so moving a slider reruns
+  only this section — not the whole page.
+- The per-strategy candlestick charts render lazily (behind a toggle), so seven
+  heavy charts aren't rebuilt on every interaction.
 """
 
 import datetime as dt
@@ -13,13 +20,11 @@ import plotly.graph_objects as go
 import streamlit as st
 import yfinance as yf
 
-import engine
-import ui
+from src.PredictionApp.streamlit_app import engine, ui
 
 st.set_page_config(page_title="Backtest", page_icon="🧪", layout="wide")
 ckpt, mtime, info = ui.pick_checkpoint()
-st.title("🧪 STRATEGY BACKTEST")
-ui.banner("ONE PREDICTION RUN · EVERY STRATEGY OVERLAID")
+ui.page_header("STRATEGY BACKTEST", "ONE PREDICTION RUN · EVERY STRATEGY OVERLAID")
 
 # Strategies we run for everyone (Custom lives in its own section below).
 BUILTIN_STRATEGIES = ["Candle color", "Model dots", "Candle + dot", "Signal threshold",
@@ -227,139 +232,154 @@ if preds is None or preds.empty:
     st.stop()
 
 preds = preds.sort_values("date").reset_index(drop=True)
-min_d, max_d = preds["date"].min().date(), preds["date"].max().date()
 
-d1, d2 = st.columns(2)
-default_start = max(min_d, (pd.Timestamp(max_d) - pd.DateOffset(years=1)).date())
-start_date = d1.date_input("Start date", value=default_start, min_value=min_d, max_value=max_d)
-end_date = d2.date_input("End date", value=max_d, min_value=min_d, max_value=max_d)
-
-# Each slider has a `key`, so Streamlit keeps its value in session state and the
-# settings stick when you search a different ticker (within this session).
-with st.expander("⚙️ Threshold configuration — saved across searches"):
-    a, b = st.columns(2)
-    signal_thr = a.slider("Signal threshold", 0.0, 1.0, 0.2, 0.05, key="cfg_signal_thr")
-    prob_thr = b.slider("Probability threshold", 0.34, 0.95, 0.45, 0.01, key="cfg_prob_thr")
-    ma_window = a.slider("MA window (days)", 5, 200, 50, 5, key="cfg_ma_window")
-    rsi_period = b.slider("RSI period", 2, 30, 14, key="cfg_rsi_period")
-    rsi_low = a.slider("RSI oversold (buy below)", 5, 45, 30, key="cfg_rsi_low")
-    rsi_high = b.slider("RSI overbought (sell above)", 55, 95, 70, key="cfg_rsi_high")
-params = {"signal_thr": signal_thr, "prob_thr": prob_thr, "ma_window": ma_window,
-          "rsi_period": rsi_period, "rsi_low": rsi_low, "rsi_high": rsi_high}
 
 # ------------------------------------------------------------------
-# Run every strategy off the single prediction
+# Strategy lab — a fragment: date/slider changes rerun ONLY this section
 # ------------------------------------------------------------------
-preds = add_indicators(preds, params)
-window = preds[(preds["date"] >= pd.Timestamp(start_date)) &
-               (preds["date"] <= pd.Timestamp(end_date))].reset_index(drop=True)
-if len(window) < 2:
-    st.warning("Pick a wider date range — not enough bars to simulate.")
-    st.stop()
+@st.fragment
+def strategy_lab(preds, ticker, start_cash, allow_short):
+    min_d = preds["date"].min().date()
+    max_d = preds["date"].max().date()
 
-dates = window["date"]
-ret_next = window["close"].pct_change().shift(-1).fillna(0)
-buy_hold = (1 + ret_next).cumprod() * start_cash
-bh_growth = float(buy_hold.iloc[-1]) / start_cash - 1
+    d1, d2 = st.columns(2)
+    default_start = max(min_d, (pd.Timestamp(max_d) - pd.DateOffset(years=2)).date())
+    start_date = d1.date_input("Start date", value=default_start,
+                               min_value=min_d, max_value=max_d, key="bt_start")
+    end_date = d2.date_input("End date", value=max_d,
+                             min_value=min_d, max_value=max_d, key="bt_end")
 
-sp_equity = sp500_equity(window["date"], start_cash,
-                         start_date, end_date + dt.timedelta(days=1))
-if sp_equity is not None:
-    sp_growth = float(sp_equity.iloc[-1]) / start_cash - 1
-else:
-    sp_growth = float("nan")
+    # Each slider has a `key`, so Streamlit keeps its value in session state and the
+    # settings stick when you search a different ticker (within this session).
+    with st.expander("⚙️ Threshold configuration — saved across searches"):
+        a, b = st.columns(2)
+        signal_thr = a.slider("Signal threshold", 0.0, 1.0, 0.2, 0.05,
+                              key="cfg_signal_thr", help=ui.HELP["signal_thr"])
+        prob_thr = b.slider("Probability threshold", 0.34, 0.95, 0.45, 0.01,
+                            key="cfg_prob_thr", help=ui.HELP["prob_thr"])
+        ma_window = a.slider("MA window (days)", 5, 200, 50, 5,
+                             key="cfg_ma_window", help=ui.HELP["ma_window"])
+        rsi_period = b.slider("RSI period", 2, 30, 14,
+                              key="cfg_rsi_period", help=ui.HELP["rsi_period"])
+        rsi_low = a.slider("RSI oversold (buy below)", 5, 45, 30,
+                           key="cfg_rsi_low", help=ui.HELP["rsi_band"])
+        rsi_high = b.slider("RSI overbought (sell above)", 55, 95, 70,
+                            key="cfg_rsi_high", help=ui.HELP["rsi_band"])
+    params = {"signal_thr": signal_thr, "prob_thr": prob_thr, "ma_window": ma_window,
+              "rsi_period": rsi_period, "rsi_low": rsi_low, "rsi_high": rsi_high}
 
-# ------------------------------------------------------------------
-# Stock overview (strategy-independent context)
-# ------------------------------------------------------------------
-st.subheader(f"{ticker} over this window")
-overview = period_overview(window, buy_hold)
-o = st.columns(6)
-o[0].metric(f"{ticker} return", f"{overview['growth']:+.1%}",
-            help="Buy-and-hold total return over the window.")
-o[1].metric("S&P 500 return", f"{sp_growth:+.1%}")
-o[2].metric(f"{ticker} vs S&P", f"{overview['growth'] - sp_growth:+.1%}",
-            help="Did the stock itself beat the market this window (no strategy)?")
-o[3].metric("Ann. volatility", f"{overview['volatility']:.1%}")
-o[4].metric("Buy & hold max DD", f"{overview['max_dd']:.1%}")
-o[5].metric("Trading days", f"{overview['days']}")
-st.caption(f"Price {overview['start_price']:.2f} → {overview['end_price']:.2f}  ·  "
-           f"best day {overview['best_day']:+.1%}  ·  worst day {overview['worst_day']:+.1%}")
+    # Indicators warm up on the full history, then we slice the chosen window.
+    data = add_indicators(preds, params)
+    window = data[(data["date"] >= pd.Timestamp(start_date)) &
+                  (data["date"] <= pd.Timestamp(end_date))].reset_index(drop=True)
+    if len(window) < 2:
+        st.warning("Pick a wider date range — not enough bars to simulate.")
+        return
 
-curves = {}   # name -> (equity series, positions series)
-stats = []
-for name in BUILTIN_STRATEGIES:
-    positions = build_positions(window, name, params, allow_short, "")
-    equity = equity_curve(positions, ret_next, start_cash)
-    curves[name] = (equity, positions)
-    stats.append(strategy_stats(name, equity, positions, start_cash, bh_growth, sp_growth))
+    dates = window["date"]
+    ret_next = window["close"].pct_change().shift(-1).fillna(0)
+    buy_hold = (1 + ret_next).cumprod() * start_cash
+    bh_growth = float(buy_hold.iloc[-1]) / start_cash - 1
 
-# ------------------------------------------------------------------
-# Overlay: every strategy on one equity chart
-# ------------------------------------------------------------------
-st.subheader("Equity — every strategy")
-fig = go.Figure()
-for i, name in enumerate(BUILTIN_STRATEGIES):
-    equity = curves[name][0]
-    fig.add_trace(go.Scatter(x=dates, y=equity, name=name, mode="lines",
-                             line=dict(color=PALETTE[i % len(PALETTE)], width=1.8)))
-fig.add_trace(go.Scatter(x=dates, y=buy_hold, name=f"{ticker} buy & hold", mode="lines",
-                         line=dict(color=ui.GRAY, width=1.5, dash="dot")))
-if sp_equity is not None:
-    fig.add_trace(go.Scatter(x=dates, y=sp_equity, name="S&P 500", mode="lines",
-                             line=dict(color="#ffffff", width=1.2, dash="dash")))
-fig.add_hline(y=start_cash, line=dict(color="rgba(255,255,255,.2)", dash="dash"))
-ui.style_chart(fig, height=460)
-fig.update_layout(hovermode="x unified", legend=dict(orientation="h", y=1.04, x=0))
-fig.update_yaxes(title="Portfolio value ($)")
-st.plotly_chart(fig, width="stretch")
-st.caption("Tip: click a name in the legend to hide/show that line.")
+    sp_equity = sp500_equity(window["date"], start_cash,
+                             start_date, end_date + dt.timedelta(days=1))
+    if sp_equity is not None:
+        sp_growth = float(sp_equity.iloc[-1]) / start_cash - 1
+    else:
+        sp_growth = float("nan")
 
-# ------------------------------------------------------------------
-# Comparison table
-# ------------------------------------------------------------------
-st.subheader("Comparison")
-table = pd.DataFrame(stats).sort_values("Growth", ascending=False)
-styled = (table.style
-          .format({"Growth": "{:+.1%}", "vs Buy&Hold": "{:+.1%}", "vs S&P": "{:+.1%}",
-                   "Max drawdown": "{:.1%}", "Exposure": "{:.0%}"})
-          .background_gradient(cmap="RdYlGn", subset=["Growth"]))
-st.dataframe(styled, width="stretch", hide_index=True)
-st.caption(f"Benchmarks over this window — {ticker} buy & hold {bh_growth:+.1%} · "
-           f"S&P 500 {sp_growth:+.1%}")
+    # ---- Stock overview (strategy-independent context) ----
+    st.subheader(f"{ticker} over this window")
+    overview = period_overview(window, buy_hold)
+    o = st.columns(6)
+    o[0].metric(f"{ticker} return", f"{overview['growth']:+.1%}",
+                help="Buy-and-hold total return of the stock over the window.")
+    o[1].metric("S&P 500 return", f"{sp_growth:+.1%}",
+                help="Buy-and-hold total return of the S&P 500 over the same window — the market benchmark.")
+    o[2].metric(f"{ticker} vs S&P", f"{overview['growth'] - sp_growth:+.1%}", help=ui.HELP["vs_spx"])
+    o[3].metric("Ann. volatility", f"{overview['volatility']:.1%}", help=ui.HELP["volatility"])
+    o[4].metric("Buy & hold max DD", f"{overview['max_dd']:.1%}", help=ui.HELP["max_dd"])
+    o[5].metric("Trading days", f"{overview['days']}",
+                help="Number of trading bars in the selected window.")
+    st.caption(f"Price {overview['start_price']:.2f} → {overview['end_price']:.2f}  ·  "
+               f"best day {overview['best_day']:+.1%}  ·  worst day {overview['worst_day']:+.1%}")
 
-# ------------------------------------------------------------------
-# Buy / sell markers per strategy
-# ------------------------------------------------------------------
-st.subheader("Entries / exits per strategy")
-for name in BUILTIN_STRATEGIES:
-    with st.expander(name):
-        st.plotly_chart(markers_chart(window, curves[name][1]),
-                        width="stretch", key=f"markers_{name}")
-
-# ------------------------------------------------------------------
-# Custom strategy (runs off the same prediction)
-# ------------------------------------------------------------------
-with st.expander("✏️ Custom strategy"):
-    custom_code = st.text_area("Define a function `strategy(df)`",
-                               value=DEFAULT_CUSTOM, height=260)
-    try:
-        positions = build_positions(window, "Custom", params, allow_short, custom_code)
+    # ---- Run every strategy off the single prediction ----
+    curves = {}   # name -> (equity series, positions series)
+    stats = []
+    for name in BUILTIN_STRATEGIES:
+        positions = build_positions(window, name, params, allow_short, "")
         equity = equity_curve(positions, ret_next, start_cash)
-        growth = float(equity.iloc[-1]) / start_cash - 1
-        st.metric("Custom growth", f"{growth:+.1%}", f"{growth - bh_growth:+.1%} vs B&H")
+        curves[name] = (equity, positions)
+        stats.append(strategy_stats(name, equity, positions, start_cash, bh_growth, sp_growth))
 
-        cf = go.Figure()
-        cf.add_trace(go.Scatter(x=dates, y=equity, name="Custom", mode="lines",
-                                line=dict(color=ui.CYAN, width=2)))
-        cf.add_trace(go.Scatter(x=dates, y=buy_hold, name=f"{ticker} buy & hold",
-                                mode="lines", line=dict(color=ui.GRAY, width=1.5, dash="dot")))
-        ui.style_chart(cf, height=360)
-        cf.update_layout(hovermode="x unified")
-        st.plotly_chart(cf, width="stretch")
-        st.plotly_chart(markers_chart(window, positions), width="stretch")
-    except Exception as e:
-        st.error(f"Strategy failed: {e}")
+    # ---- Overlay: every strategy on one equity chart ----
+    st.subheader("Equity — every strategy")
+    fig = go.Figure()
+    for i, name in enumerate(BUILTIN_STRATEGIES):
+        equity = curves[name][0]
+        fig.add_trace(go.Scatter(x=dates, y=equity, name=name, mode="lines",
+                                 line=dict(color=PALETTE[i % len(PALETTE)], width=1.8)))
+    fig.add_trace(go.Scatter(x=dates, y=buy_hold, name=f"{ticker} buy & hold", mode="lines",
+                             line=dict(color=ui.GRAY, width=1.5, dash="dot")))
+    if sp_equity is not None:
+        fig.add_trace(go.Scatter(x=dates, y=sp_equity, name="S&P 500", mode="lines",
+                                 line=dict(color="#ffffff", width=1.2, dash="dash")))
+    fig.add_hline(y=start_cash, line=dict(color="rgba(255,255,255,.2)", dash="dash"))
+    ui.style_chart(fig, height=460)
+    fig.update_layout(hovermode="x unified", legend=dict(orientation="h", y=1.04, x=0))
+    fig.update_yaxes(title="Portfolio value ($)")
+    ui.show_chart(fig, key="equity_overlay")
+    st.caption("Tip: click a name in the legend to hide/show that line.")
 
-st.caption("⚠️ Gross of costs/slippage. A position set at today's close earns "
-           "tomorrow's return (no lookahead). 'Sell' = cash unless shorting is on.")
+    # ---- Comparison table ----
+    st.subheader("Comparison")
+    table = pd.DataFrame(stats).sort_values("Growth", ascending=False)
+    styled = (table.style
+              .format({"Growth": "{:+.1%}", "vs Buy&Hold": "{:+.1%}", "vs S&P": "{:+.1%}",
+                       "Max drawdown": "{:.1%}", "Exposure": "{:.0%}"})
+              .background_gradient(cmap="RdYlGn", subset=["Growth"]))
+    st.dataframe(styled, width="stretch", hide_index=True)
+    st.caption(
+        "**Growth** = strategy's total return · **vs Buy&Hold / vs S&P** = edge over those "
+        "benchmarks · **Max drawdown** = worst peak-to-trough drop (less negative is better) · "
+        "**Trades** = number of position changes · **Exposure** = share of days in the market "
+        "(vs cash). A *low-exposure* strategy matching buy & hold is doing more per unit of risk.")
+    st.caption(f"Benchmarks over this window — {ticker} buy & hold {bh_growth:+.1%} · "
+               f"S&P 500 {sp_growth:+.1%}")
+
+    # ---- Buy / sell markers per strategy (lazy: chart builds only when toggled) ----
+    st.subheader("Entries / exits per strategy")
+    for name in BUILTIN_STRATEGIES:
+        with st.expander(name):
+            show = st.toggle("Render entries/exits chart", key=f"show_chart_{name}")
+            if show:
+                ui.show_chart(markers_chart(window, curves[name][1]), key=f"markers_{name}")
+
+    # ---- Custom strategy (runs off the same prediction) ----
+    with st.expander("✏️ Custom strategy"):
+        custom_code = st.text_area("Define a function `strategy(df)`",
+                                   value=DEFAULT_CUSTOM, height=260, key="custom_code")
+        try:
+            positions = build_positions(window, "Custom", params, allow_short, custom_code)
+            equity = equity_curve(positions, ret_next, start_cash)
+            growth = float(equity.iloc[-1]) / start_cash - 1
+            st.metric("Custom growth", f"{growth:+.1%}", f"{growth - bh_growth:+.1%} vs B&H")
+
+            cf = go.Figure()
+            cf.add_trace(go.Scatter(x=dates, y=equity, name="Custom", mode="lines",
+                                    line=dict(color=ui.CYAN, width=2)))
+            cf.add_trace(go.Scatter(x=dates, y=buy_hold, name=f"{ticker} buy & hold",
+                                    mode="lines", line=dict(color=ui.GRAY, width=1.5, dash="dot")))
+            ui.style_chart(cf, height=360)
+            cf.update_layout(hovermode="x unified")
+            ui.show_chart(cf, key="custom_equity")
+            ui.show_chart(markers_chart(window, positions), key="custom_markers")
+        except Exception as e:
+            st.error(f"Strategy failed: {e}")
+
+    st.caption("⚠️ Gross of costs/slippage. A position set at today's close earns "
+               "tomorrow's return (no lookahead). 'Sell' = cash unless shorting is on.")
+
+
+strategy_lab(preds, ticker, start_cash, allow_short)

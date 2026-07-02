@@ -19,6 +19,10 @@ IC   (Information Coefficient): correlation between signal and realized forward
      return. Rank IC (Spearman) is the quant standard; Pearson is also reported.
 ICIR (IC Information Ratio): mean(IC_t) / std(IC_t) over a daily cross-sectional
      IC series, optionally annualized by sqrt(periods per year).
+EDGE (discrete-signal objective): the model emits a hard class (argmax). `edge`
+     is the mean realized forward return of predicted-Long rows minus that of
+     predicted-Short rows. This grades exactly the rows you would act on and is
+     the objective the training loop checkpoints / early-stops against.
 """
 
 from typing import Dict, Optional
@@ -37,6 +41,49 @@ def signal_from_proba(proba: np.ndarray) -> np.ndarray:
     """Map class probabilities [P(Short), P(NoTrade), P(Long)] to P(Long)-P(Short)."""
     proba = np.asarray(proba)
     return proba[:, 2] - proba[:, 0]
+
+
+# ------------------------------------------------------------------
+# Discrete-signal objective: conditional returns per predicted class
+# ------------------------------------------------------------------
+def conditional_returns(
+    proba: np.ndarray, fwd_ret: np.ndarray, min_count: int = 20
+) -> Dict[str, float]:
+    """Mean realized forward return grouped by the model's HARD class (argmax).
+
+    The discrete trade-signal objective: predicted-Long should be net positive,
+    predicted-Short net negative, NoTrade ~ 0 -- each backed by enough rows to
+    mean something. `edge = long_mean_ret - short_mean_ret` is the single number
+    the training loop optimizes. A class with fewer than `min_count` predictions
+    yields NaN mean (and is treated as 0 contribution to edge) so a model that
+    fires Long three times can't post a fake-huge edge.
+
+    Class order: 0 = Short, 1 = NoTrade, 2 = Long.
+    """
+    proba = np.asarray(proba)
+    fwd_ret = np.asarray(fwd_ret, dtype=float)
+    pred = proba.argmax(1)
+
+    out: Dict[str, float] = {}
+    means: Dict[str, float] = {}
+    for cls, name in ((0, "short"), (1, "notrade"), (2, "long")):
+        mask = (pred == cls) & np.isfinite(fwd_ret)
+        n = int(mask.sum())
+        mean_ret = float(fwd_ret[mask].mean()) if n >= min_count else float("nan")
+        out[f"{name}_mean_ret"] = mean_ret
+        out[f"{name}_n"] = n
+        means[name] = mean_ret
+
+    # edge: long leg minus short leg. NaN legs (below min_count) contribute 0,
+    # so a one-sided model is scored only on the side it actually traded.
+    long_leg = means["long"] if np.isfinite(means["long"]) else 0.0
+    short_leg = means["short"] if np.isfinite(means["short"]) else 0.0
+    out["edge"] = float(long_leg - short_leg)
+
+    # coverage: fraction of rows where the model actually took a directional bet
+    n_dir = out["short_n"] + out["long_n"]
+    out["edge_coverage"] = float(n_dir / len(pred)) if len(pred) else float("nan")
+    return out
 
 
 # ------------------------------------------------------------------
@@ -201,12 +248,17 @@ def evaluate_signal(
     signal: Optional[np.ndarray] = None,
     dates: Optional[np.ndarray] = None,
     hit_threshold: float = 0.1,
+    edge_min_count: int = 20,
     verbose: bool = True,
 ) -> Dict[str, float]:
     """Compute the full signal report from either probabilities or a raw signal.
 
     Pass `proba` ([N,3]) OR `signal` ([N]); pass `dates` ([N]) to unlock the
     cross-sectional ICIR and long-short Sharpe (they need a daily cross-section).
+
+    `edge` (and the per-class conditional returns) require the hard argmax, so
+    they are only computed when `proba` is supplied. When only a raw `signal`
+    is passed they are reported as NaN.
     """
     if signal is None:
         if proba is None:
@@ -219,6 +271,16 @@ def evaluate_signal(
         "ic_pearson": information_coefficient(signal, fwd_ret, "pearson"),
         "ic_spearman": information_coefficient(signal, fwd_ret, "spearman"),
     }
+
+    # Discrete-signal objective (needs the hard class -> needs proba).
+    if proba is not None:
+        report.update(conditional_returns(proba, fwd_ret, min_count=edge_min_count))
+    else:
+        report.update({"short_mean_ret": float("nan"), "short_n": 0,
+                       "notrade_mean_ret": float("nan"), "notrade_n": 0,
+                       "long_mean_ret": float("nan"), "long_n": 0,
+                       "edge": float("nan"), "edge_coverage": float("nan")})
+
     report.update({f"hit_{k}": v for k, v in
                    directional_hit_rate(signal, fwd_ret, hit_threshold).items()})
     report.update({f"decile_{k}": v for k, v in
@@ -240,6 +302,11 @@ def _print_report(r: Dict[str, float], hit_threshold: float) -> None:
         return r.get(k, float("nan"))
 
     print("\n=== Signal metrics (P(Long) - P(Short) vs. forward return) ===")
+    print(f"  EDGE (long-short ret): {g('edge'):+.4f}  "
+          f"(long {g('long_mean_ret'):+.4f} n={int(g('long_n'))} / "
+          f"short {g('short_mean_ret'):+.4f} n={int(g('short_n'))})")
+    print(f"  NoTrade mean ret     : {g('notrade_mean_ret'):+.4f} "
+          f"(n={int(g('notrade_n'))}), edge coverage {g('edge_coverage'):.1%}")
     print(f"  IC  (Pearson)        : {g('ic_pearson'):+.4f}")
     print(f"  IC  (Spearman/rank)  : {g('ic_spearman'):+.4f}")
     if "icir" in r:

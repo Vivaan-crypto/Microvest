@@ -20,7 +20,25 @@
     </option>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Updated UI" />
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Model filtering + version labeling">
+      <change afterPath="$PROJECT_DIR$/src/PredictionApp/checkpoints/20260624_163316/best-model-01-acc0.59-ic+0.073-v38.ckpt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/PredictionApp/checkpoints/20260624_163316/best-model-03-acc0.53-ic+0.070-v38.ckpt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/app.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/metrics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model_final.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/preprocess.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/Home.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/Home.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -95,61 +113,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0024691979428646" />
-      <entry key="MS500" value="1.5474994196698502" />
-      <entry key="S2" value="3.2325609703869267" />
-      <entry key="S5" value="4.136209680720888" />
-      <entry key="S10" value="4.535497470138806" />
-      <entry key="S30" value="4.837172531855483" />
-      <entry key="S60" value="4.9175359866647685" />
-      <entry key="M2" value="4.958501410203924" />
-      <entry key="M5" value="4.983336062594724" />
-      <entry key="M10" value="4.991657237257451" />
-      <entry key="M15" value="4.994435756240363" />
-      <entry key="M30" value="4.997216677044439" />
-      <entry key="H1" value="4.998769355277967" />
-      <entry key="H2" value="5.104462566151957" />
-      <entry key="H4" value="7.983083253533057" />
-      <entry key="D1" value="84.37166114135674" />
-      <entry key="W1" value="253.07511241198802" />
+      <entry key="MS100" value="1.0067095725455849E-5" />
+      <entry key="MS500" value="0.10881427164132067" />
+      <entry key="S2" value="0.8677658705116882" />
+      <entry key="S5" value="1.4165264610395136" />
+      <entry key="S10" value="1.6800386245594456" />
+      <entry key="S30" value="1.8863092408259015" />
+      <entry key="S60" value="1.9422221479647193" />
+      <entry key="M2" value="1.9708737855273089" />
+      <entry key="M5" value="1.988292022138221" />
+      <entry key="M10" value="1.994136383437857" />
+      <entry key="M15" value="1.9960887794253688" />
+      <entry key="M30" value="1.9980433175159638" />
+      <entry key="H1" value="1.999088895999073" />
+      <entry key="H2" value="2.0603494313481083" />
+      <entry key="H4" value="4.06205367357948" />
+      <entry key="D1" value="87.70662178103946" />
+      <entry key="W1" value="355.88941109074693" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="1.9346898063071465E-305" />
-      <entry key="M2" value="4.398510891548576E-153" />
-      <entry key="M5" value="1.1410962281579427E-61" />
-      <entry key="M10" value="3.3786556340334497E-31" />
-      <entry key="M15" value="4.889888908031707E-21" />
-      <entry key="M30" value="9.442178708685245E-11" />
-      <entry key="H1" value="2.8168783432102417E-5" />
-      <entry key="H2" value="0.020681305276330164" />
-      <entry key="H4" value="0.5908786913608238" />
-      <entry key="D1" value="12.597188909315653" />
-      <entry key="W1" value="33.92994966150155" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0" />
+      <entry key="S60" value="1.0" />
+      <entry key="M2" value="1.0" />
+      <entry key="M5" value="1.0" />
+      <entry key="M10" value="1.0" />
+      <entry key="M15" value="1.0" />
+      <entry key="M30" value="1.0000000000077311" />
+      <entry key="H1" value="1.000006214657733" />
+      <entry key="H2" value="1.0055877377192788" />
+      <entry key="H4" value="1.1707208191166523" />
+      <entry key="D1" value="6.620428911473632" />
+      <entry key="W1" value="33.24315591005876" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9484083194914248" />
-      <entry key="MS500" value="1.529952694431105" />
-      <entry key="S2" value="3.221700671422498" />
-      <entry key="S5" value="4.13023978432905" />
-      <entry key="S10" value="4.532135330641402" />
-      <entry key="S30" value="4.835954793893618" />
-      <entry key="S60" value="4.9169140586912" />
-      <entry key="M2" value="4.958187107273195" />
-      <entry key="M5" value="4.983209530385769" />
-      <entry key="M10" value="4.991593835164506" />
-      <entry key="M15" value="4.994393457898024" />
-      <entry key="M30" value="4.997195512812064" />
-      <entry key="H1" value="4.998786914084205" />
-      <entry key="H2" value="5.1251311834801205" />
-      <entry key="H4" value="8.573859932047064" />
-      <entry key="D1" value="96.96847763970149" />
-      <entry key="W1" value="287.0048855174023" />
+      <entry key="MS100" value="0.02384780066669519" />
+      <entry key="MS500" value="0.4956551176833394" />
+      <entry key="S2" value="1.4731896731999243" />
+      <entry key="S5" value="2.1981283124681466" />
+      <entry key="S10" value="2.557015288250793" />
+      <entry key="S30" value="2.8417802939054204" />
+      <entry key="S60" value="2.9194863141512237" />
+      <entry key="M2" value="2.95938555893497" />
+      <entry key="M5" value="2.9836675354439173" />
+      <entry key="M10" value="2.9918192470323226" />
+      <entry key="M15" value="2.9945429324632156" />
+      <entry key="M30" value="2.997269848859517" />
+      <entry key="H1" value="2.998708237656868" />
+      <entry key="H2" value="3.0657426712196765" />
+      <entry key="H4" value="5.2326620309187435" />
+      <entry key="D1" value="94.32691337037471" />
+      <entry key="W1" value="389.1324127973343" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -191,7 +209,7 @@
     "Python.backtest.executor": "Run",
     "Python.gpu_test.executor": "Run",
     "Python.lightning_modules.executor": "Run",
-    "Python.lightning_train.executor": "Run",
+    "Python.lightning_train.executor": "Debug",
     "Python.main.executor": "Run",
     "Python.marketmap.executor": "Debug",
     "Python.model.executor": "Run",
@@ -261,7 +279,7 @@
       <recent name="C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\PredictionApp" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.backtest">
+  <component name="RunManager" selected="Python.lightning_train">
     <configuration name="backtest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
@@ -360,9 +378,9 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.backtest" />
         <item itemvalue="Python.lightning_train" />
         <item itemvalue="Python.preprocess" />
+        <item itemvalue="Python.backtest" />
         <item itemvalue="Python.scratch_4" />
       </list>
     </recent_temporary>
@@ -537,7 +555,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782332133906</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Model filtering + version labeling">
+      <option name="closed" value="true" />
+      <created>1782332721324</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1782332721324</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -571,15 +597,16 @@
     <MESSAGE value="A decent model has been trained + streamlit app to display rankings and classification predictions." />
     <MESSAGE value="Added Backtesting" />
     <MESSAGE value="Updated UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated UI" />
+    <MESSAGE value="Model filtering + version labeling" />
+    <option name="LAST_COMMIT_MESSAGE" value="Model filtering + version labeling" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py</url>
-          <line>7</line>
-          <option name="timeStamp" value="13" />
+          <url>file://$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py</url>
+          <line>4</line>
+          <option name="timeStamp" value="14" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

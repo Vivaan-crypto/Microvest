@@ -11,7 +11,7 @@ from lightning_modules import LightningModule, LightningDateModule
 
 
 def main():
-    # ----------------------    ----    ------------------------
+    # --------------------------------------------------
     # Load pre-split tensors (already processed)
     # --------------------------------------------------
     # Try loading from CSV directory first, then fall back to Data directory
@@ -22,15 +22,15 @@ def main():
     X_val = torch.load(f"{data_dir}/X_test.pt")
     y_val = torch.load(f"{data_dir}/y_test.pt")
 
-    # Ranking side-data (forward return + decision date per val row), aligned 1:1.
+    # Edge / ranking side-data (forward return + decision date per val row), aligned 1:1.
     val_fwd_ret, val_dates = None, None
     fwd_path, dates_path = f"{data_dir}/fwd_ret_test.pt", f"{data_dir}/dates_test.npy"
     if os.path.exists(fwd_path) and os.path.exists(dates_path):
         val_fwd_ret = torch.load(fwd_path).numpy()
         val_dates = np.load(dates_path)
-        print(f"Loaded ranking side-data: fwd_ret {val_fwd_ret.shape}, dates {val_dates.shape}")
+        print(f"Loaded edge side-data: fwd_ret {val_fwd_ret.shape}, dates {val_dates.shape}")
     else:
-        print("Ranking side-data not found (run preprocess.py to enable IC metrics)")
+        print("Edge side-data not found (run preprocess.py to enable edge/IC metrics)")
 
     print(f"Loaded data from: {data_dir}")
     print(f"X_train shape: {X_train.shape}")
@@ -67,11 +67,11 @@ def main():
     # Compute balanced class weights with increased imbalance handling
     class_counts = np.bincount(y_train.numpy())
     print(f"Class distribution in training data:")
-    print(f"  Class 0 (Down): {class_counts[0]} samples ({100*class_counts[0]/len(y_train):.1f}%)")
+    print(f"  Class 0 (Short): {class_counts[0]} samples ({100*class_counts[0]/len(y_train):.1f}%)")
     if len(class_counts) > 1:
-        print(f"  Class 1 (Flat): {class_counts[1]} samples ({100*class_counts[1]/len(y_train):.1f}%)")
+        print(f"  Class 1 (NoTrade): {class_counts[1]} samples ({100*class_counts[1]/len(y_train):.1f}%)")
     if len(class_counts) > 2:
-        print(f"  Class 2 (Up):   {class_counts[2]} samples ({100*class_counts[2]/len(y_train):.1f}%)")
+        print(f"  Class 2 (Long):   {class_counts[2]} samples ({100*class_counts[2]/len(y_train):.1f}%)")
     print()
 
     data_module = LightningDateModule(X_train, y_train, X_val, y_val, batch_size=32)
@@ -88,9 +88,12 @@ def main():
     # --------------------------------------------------
     # Callbacks
     # --------------------------------------------------
-    # Select on val/ic_spearman (the real objective), not F1/loss: a tradeable
-    # ranking edge keeps improving even while CE loss climbs from over-confidence.
-    monitor = "val/ic_spearman" if val_fwd_ret is not None else "val/f1"
+    # Select on val/edge (the discrete-signal objective): mean fwd_ret of
+    # predicted-Long minus predicted-Short. This grades exactly the rows we act
+    # on, unlike F1 (rewards calling the NoTrade majority) or pooled IC (a ranking
+    # metric, and inflatable by a time-series effect). Falls back to val/f1 only
+    # if no edge side-data is present.
+    monitor = "val/edge" if val_fwd_ret is not None else "val/f1"
 
     # Organize checkpoints by training start time (easier to track runs)
     run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -99,7 +102,7 @@ def main():
     checkpoint_callback = ModelCheckpoint(
         monitor=monitor,
         dirpath=checkpoint_dir,
-        filename="best-model-{epoch:02d}-acc{val/accuracy:.2f}-ic{val/ic_spearman:+.3f}",
+        filename="best-model-{epoch:02d}-acc{val/accuracy:.2f}-edge{val/edge:+.4f}",
         auto_insert_metric_name=False,
         save_top_k=3,
         mode="max",
@@ -113,7 +116,7 @@ def main():
         patience=20,
         mode="max",
         verbose=True,
-        min_delta=0.001,
+        min_delta=0.0001,  # edge lives on a smaller scale than F1
     )
 
     # --------------------------------------------------
@@ -128,7 +131,7 @@ def main():
         enable_progress_bar=True,
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
-        num_sanity_val_steps=0,  # partial val batches would desync the IC side-data
+        num_sanity_val_steps=0,  # partial val batches would desync the edge side-data
     )
 
     # --------------------------------------------------

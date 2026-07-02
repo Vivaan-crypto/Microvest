@@ -18,6 +18,7 @@ import glob
 import os
 import re
 import sys
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -58,14 +59,71 @@ def list_checkpoints():
     return cks
 
 
-# Filenames look like: best-model-23-acc0.62-ic+0.065-v37.ckpt
-#                                  ^epoch  ^acc    ^ic     ^version
-_CKPT_RE = re.compile(r"best-model-(\d+)-acc([\d.]+)-ic([+-]?[\d.]+)(?:-v(\d+))?\.ckpt$")
+# Metrics in the filename, e.g.: best-model-23-acc0.62-ic+0.065.ckpt
+#                                          ^epoch  ^acc    ^ic
+_CKPT_RE = re.compile(r"best-model-(\d+)-acc(\d+\.\d+)-ic([+-]?\d+\.\d+)")
 
 
-def parse_checkpoint(path):
-    """Pull (epoch, accuracy, ic, version, run) out of a checkpoint path.
-    Metric fields are None for older / differently-named checkpoints that don't match."""
+def _version_start_time(version_dir):
+    """When a training run started: prefer the epoch embedded in the TensorBoard
+    events file name, fall back to the folder's mtime."""
+    for events in glob.glob(os.path.join(version_dir, "events.out.tfevents.*")):
+        parts = os.path.basename(events).split(".")
+        if len(parts) > 3:
+            try:
+                return float(parts[3])
+            except ValueError:
+                pass
+    return os.path.getmtime(version_dir)
+
+
+def _version_index():
+    """[(start_time, version_number)] for every run logged under lightning_logs.
+    These version_N folders are the source of truth for the version numbers."""
+    base = os.path.join(PARENT, "lightning_logs", "stock_prediction_model")
+    index = []
+    for path in glob.glob(os.path.join(base, "version_*")):
+        try:
+            number = int(os.path.basename(path).split("_")[1])
+        except (IndexError, ValueError):
+            continue
+        index.append((_version_start_time(path), number))
+    return index
+
+
+def list_versions():
+    """Every version number available in lightning_logs, sorted."""
+    return sorted(number for _, number in _version_index())
+
+
+def _version_for_run(run, version_index):
+    """Map a checkpoints/<run> folder (named YYYYMMDD_HHMMSS) to its lightning_logs
+    version by matching the run's start time to the nearest version folder."""
+    try:
+        run_time = datetime.strptime(run, "%Y%m%d_%H%M%S").timestamp()
+    except ValueError:
+        return None
+
+    best_version = None
+    best_gap = None
+    for start_time, number in version_index:
+        gap = abs(start_time - run_time)
+        if best_gap is None or gap < best_gap:
+            best_gap = gap
+            best_version = number
+
+    # Only trust the match if the times line up (same run, within ~5 minutes).
+    if best_gap is not None and best_gap <= 300:
+        return best_version
+    return None
+
+
+def parse_checkpoint(path, version_index=None):
+    """Pull (epoch, accuracy, ic, version, run) out of a checkpoint path. The
+    version comes from lightning_logs (matched by run time), not the filename.
+    Metric fields are None for older / differently-named checkpoints."""
+    if version_index is None:
+        version_index = _version_index()
     name = os.path.basename(path)
     run = os.path.basename(os.path.dirname(path))   # the timestamp folder
     match = _CKPT_RE.search(name)
@@ -73,14 +131,20 @@ def parse_checkpoint(path):
         epoch = int(match.group(1))
         acc = float(match.group(2))
         ic = float(match.group(3))
-        version = int(match.group(4)) if match.group(4) else 0
     else:
         epoch = None
         acc = None
         ic = None
-        version = 0
+    version = _version_for_run(run, version_index)
     return {"path": path, "name": name, "run": run,
             "epoch": epoch, "acc": acc, "ic": ic, "version": version}
+
+
+def list_checkpoint_metas():
+    """Parse every checkpoint, tagging each with its lightning_logs version.
+    Builds the version index once and reuses it for all checkpoints."""
+    version_index = _version_index()
+    return [parse_checkpoint(p, version_index) for p in list_checkpoints()]
 
 
 def _clean_state_dict(raw):
@@ -199,7 +263,7 @@ def build_panel(tickers, start, end):
 
 @torch.no_grad()
 def predict(panel, model):
-    rows = []
+    frames = []
     for ticker, df in panel.groupby("ticker"):
         df = df.sort_values("Date")
         df = df.dropna(subset=FEATURE_COLS).reset_index(drop=True)
@@ -224,38 +288,31 @@ def predict(panel, model):
         logits = model(torch.from_numpy(windows))
         proba = torch.softmax(logits, dim=1).numpy()
 
-        # Record one prediction row per scored day.
-        scored_days = df.iloc[WINDOW - 1:].reset_index(drop=True)
-        for j in range(len(scored_days)):
-            day = scored_days.iloc[j]
-            p = proba[j]
-
+        # Assemble one output row per scored day — vectorized (no per-row loop).
+        scored = df.iloc[WINDOW - 1:].reset_index(drop=True)
+        valid = scored["fwd_valid"].to_numpy()
+        true_cls = scored["label_raw"].map(pp.LABEL_TO_CLASS).to_numpy(dtype=float)
+        frames.append(pd.DataFrame({
+            "date": scored["Date"].to_numpy(),
+            "ticker": ticker,
+            "open": scored["Open"].to_numpy(),
+            "high": scored["High"].to_numpy(),
+            "low": scored["Low"].to_numpy(),
+            "close": scored["Close"].to_numpy(),
+            "volume": scored["Volume"].to_numpy(),
+            "p_short": proba[:, 0],
+            "p_notrade": proba[:, 1],
+            "p_long": proba[:, 2],
+            "signal": proba[:, 2] - proba[:, 0],
+            "pred_class": proba.argmax(axis=1),
             # Forward return + true label only exist when the future is known.
-            if day["fwd_valid"]:
-                fwd_ret = float(day["fwd_ret"])
-                true_class = int(pp.LABEL_TO_CLASS[day["label_raw"]])
-            else:
-                fwd_ret = np.nan
-                true_class = np.nan
+            "fwd_ret": np.where(valid, scored["fwd_ret"].to_numpy(), np.nan),
+            "true_class": np.where(valid, true_cls, np.nan),
+        }))
 
-            rows.append({
-                "date": day["Date"],
-                "ticker": ticker,
-                "open": float(day["Open"]),
-                "high": float(day["High"]),
-                "low": float(day["Low"]),
-                "close": float(day["Close"]),
-                "volume": float(day["Volume"]),
-                "p_short": float(p[0]),
-                "p_notrade": float(p[1]),
-                "p_long": float(p[2]),
-                "signal": float(p[2] - p[0]),
-                "pred_class": int(p.argmax()),
-                "fwd_ret": fwd_ret,
-                "true_class": true_class,
-            })
-
-    out = pd.DataFrame(rows)
+    if not frames:
+        return pd.DataFrame()
+    out = pd.concat(frames, ignore_index=True)
     return out.sort_values(["date", "ticker"]).reset_index(drop=True)
 
 

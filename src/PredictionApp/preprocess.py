@@ -55,7 +55,15 @@ END_DATE = "2026-01-01"
 TRAIN_END = "2021-08-16"    # last decision date that may land in train
 HORIZON = 5                 # forward-return horizon (trading days)
 WINDOW = 20                 # sequence length fed to the LSTM
-LABEL_PCT = 0.05          # fixed +/-4% threshold (long / short)
+
+# ---- Volatility-scaled labeling -------------------------------------------
+# A signal is "good" when the forward move is large RELATIVE TO the name's own
+# typical noise, rather than larger than a fixed % (which just flags high-vol
+# names and starves quiet ones). Threshold per row = LABEL_K * sigma_HORIZON,
+# where sigma_HORIZON is the trailing daily vol scaled to the HORIZON-day move.
+LABEL_K = 1.0               # selectivity in sigmas: higher -> fewer, cleaner signals
+LABEL_VOL_WINDOW = 20       # trailing window (days) for the causal vol estimate
+LABEL_MIN_PCT = 0.01        # floor so ultra-quiet names don't trade on micro-moves
 
 # Market-context symbols, downloaded once and broadcast across every ticker.
 # These give the model a "regime" view so it can price a name relative to the
@@ -161,14 +169,24 @@ def build_features(df_ticker: pd.DataFrame) -> pd.DataFrame:
     df["intraday_range"] = (high - low) / close
     df["overnight_gap"] = op / close.shift(1) - 1.0
 
-    # ---- label: fixed % forward return ----
+    # ---- label: volatility-scaled forward return ----
+    # Threshold adapts per ticker: a move counts as Long/Short only if it exceeds
+    # LABEL_K standard deviations of that name's own HORIZON-day return. sigma is
+    # estimated from trailing daily returns (causal - no peek into the future) and
+    # scaled by sqrt(HORIZON). A small absolute floor avoids labeling micro-moves
+    # in ultra-quiet regimes.
     fwd_ret = (close.shift(-HORIZON) - close) / close
+    sigma_h = realized_vol(daily_ret, LABEL_VOL_WINDOW) * np.sqrt(HORIZON)
+    thresh = (LABEL_K * sigma_h).clip(lower=LABEL_MIN_PCT)
+
     label = pd.Series(0, index=df.index)
-    label[fwd_ret >= LABEL_PCT] = 1
-    label[fwd_ret <= -LABEL_PCT] = -1
+    label[fwd_ret >= thresh] = 1
+    label[fwd_ret <= -thresh] = -1
     df["fwd_ret"] = fwd_ret          # continuous target, kept for ranking metrics (IC)
+    df["label_thresh"] = thresh      # per-row threshold, kept for coverage tuning
     df["label_raw"] = label
-    df["fwd_valid"] = fwd_ret.notna()  # False for the last HORIZON rows
+    # Need both a valid forward return AND a valid (warmed-up) threshold.
+    df["fwd_valid"] = fwd_ret.notna() & thresh.notna()
 
     df = df.replace([np.inf, -np.inf], np.nan)
     return df
