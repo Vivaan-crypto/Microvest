@@ -147,8 +147,13 @@ def run_fold(panel, fold, run_dir, args):
         input_size=len(FEATURE_COLS),
     )
 
-    loader_tr = DataLoader(ds_tr, batch_size=args.batch_size, shuffle=True, drop_last=True)
-    loader_va = DataLoader(ds_va, batch_size=args.batch_size, shuffle=False)
+    # Parallel workers so window slicing/tensor conversion overlaps with the
+    # training step instead of blocking it (matches the old LightningDateModule).
+    loader_tr = DataLoader(ds_tr, batch_size=args.batch_size, shuffle=True, drop_last=True,
+                           num_workers=5, persistent_workers=True, prefetch_factor=2,
+                           pin_memory=False)
+    loader_va = DataLoader(ds_va, batch_size=args.batch_size, shuffle=False,
+                           num_workers=2, persistent_workers=True)
 
     ckpt_dir = os.path.join(run_dir, f"ckpt_{name}")
     checkpoint = ModelCheckpoint(monitor="val/ic_spearman", mode="max",

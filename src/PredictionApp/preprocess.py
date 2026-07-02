@@ -405,12 +405,13 @@ def build_panel(tickers: List[str] = None, start: str = None, end: str = None,
 # ------------------------------------------------------------------
 # Entry point (legacy single-split tensors for lightning_train.py)
 # ------------------------------------------------------------------
-def main(plot_charts: bool = False) -> None:
+def main(plot_charts: bool = False, universe: str = None) -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     if plot_charts:
         os.makedirs(label_dir, exist_ok=True)
 
-    panel = build_panel()
+    tickers = data_store.resolve_universe(universe) if universe else TICKERS
+    panel = build_panel(tickers)
 
     # ---- windowed [N, T, F] tensors for the LSTM / Transformer ----
     Xtr_all, ytr_all, Xte_all, yte_all = [], [], [], []
@@ -452,4 +453,11 @@ def main(plot_charts: bool = False) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser(description="Build legacy single-split .pt tensors for lightning_train.py")
+    ap.add_argument("--universe", default=None, choices=["sp500", "legacy100"],
+                    help="default: config.UNIVERSE_NAME (sp500). legacy100 is much "
+                         "smaller/faster and matches the old checkpoint sizes.")
+    ap.add_argument("--plot-charts", action="store_true")
+    args = ap.parse_args()
+    main(plot_charts=args.plot_charts, universe=args.universe)
