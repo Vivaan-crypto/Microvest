@@ -1,17 +1,24 @@
 """
-Unified, leak-free preprocessing pipeline.
+Unified, leak-free preprocessing pipeline (config v2).
 
-Replaces the fragmented Helpers chain (data_to_csv -> auto_label -> csv_to_pt),
-which produced flat [N, F] tensors with raw price levels, the ticker id as a
-feature, and no scaling.
-
-This module produces properly windowed [N, T, F] tensors with:
+Produces properly windowed [N, T, F] tensors with:
     - stationary, causal features only (no raw price/MA levels, no ticker id)
-    - fixed-percentage 5-day-forward labels (short / no-trade / long)
+    - factor features with decades of academic support (short-term reversal,
+      12-1 momentum, idiosyncratic volatility, cross-sectional ranks)
+    - v2 labels: beta-adjusted, vol-normalized forward z-score
+          fwd_excess = fwd_ret - beta_60d * mkt_fwd_ret
+          fwd_z      = fwd_excess / (vol_20d * sqrt(HORIZON))
+      Long / Short when |fwd_z| >= Z_THRESHOLD, else NoTrade. "Significant"
+      now means the same thing for a sleepy utility and for TSLA, in calm and
+      wild years alike — unlike the old flat +/-5%.
     - per-ticker StandardScaler fit on the TRAIN period only
     - a purge gap between train and test so no train label peeks into test
 
-Run directly to (re)build the .pt tensors under Data/CSV/.
+All downloads and the featurized panel are cached to parquet via data_store —
+first build is slow, every run after reads from disk in ~1s.
+
+Run directly to (re)build the legacy single-split .pt tensors under Data/.
+For the walk-forward pipeline use walkforward.py instead.
 """
 
 from typing import List, Tuple
@@ -19,11 +26,13 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 import torch
-import yfinance as yf
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import os
+
+import config
+import data_store
 from indicators import (
     ema,
     macd,
@@ -33,58 +42,36 @@ from indicators import (
     sma,
     volume_zscore,
 )
+
 # ------------------------------------------------------------------
-# Config
+# Config (re-exported so engine.py / backtest.py keep working)
 # ------------------------------------------------------------------
-TICKERS: List[str] = [
-    "AAPL",
-    "ABBV", "ADBE", "AMD", "AMZN", "APD", "ASML", "AVGO", "BA", "BAC",
-        "C", "CAT", "COP", "COST", "CRM", "CVX", "DIS", "DUK", "EOG", "EXC",
-        "FCX", "GE", "GOOGL", "GS", "HD", "HON", "INTC", "JNJ", "JPM", "KO",
-        "LIN", "META", "MMM", "MRK", "MS", "MSFT", "NEE", "NFLX", "NVDA", "PEP",
-        "PFE", "PG", "SHW", "SLB", "SO", "TSLA", "UNH", "WFC", "WMT", "XOM",
-        "ACN", "ADP", "AIG", "AMAT", "AMGN", "AMT", "AXP", "BK", "BKNG", "BLK",
-        "BMY", "BX", "CB", "CL", "CMCSA", "CME", "CSCO", "DE", "DHR", "EMR",
-        "F", "FDX", "GD", "GILD", "GM", "IBM", "ITW", "LLY", "LMT", "LOW",
-        "MA", "MCD", "MDT", "MO", "NKE", "ORCL", "PM", "QCOM", "RTX", "SBUX",
-        "SPG", "T", "TGT", "TMO", "TXN", "UNP", "UPS", "USB", "V", "VZ",
-]
+TICKERS: List[str] = data_store.resolve_universe()
 
-START_DATE = "2014-06-01"   # extra history so the 100-day EMA warms up
-END_DATE = "2026-01-01"
-TRAIN_END = "2021-08-16"    # last decision date that may land in train
-HORIZON = 5                 # forward-return horizon (trading days)
-WINDOW = 20                 # sequence length fed to the LSTM
+START_DATE = config.START_DATE
+END_DATE = config.END_DATE
+TRAIN_END = config.TRAIN_END
+HORIZON = config.HORIZON
+WINDOW = config.WINDOW
+Z_THRESHOLD = config.Z_THRESHOLD
 
-# ---- Volatility-scaled labeling -------------------------------------------
-# A signal is "good" when the forward move is large RELATIVE TO the name's own
-# typical noise, rather than larger than a fixed % (which just flags high-vol
-# names and starves quiet ones). Threshold per row = LABEL_K * sigma_HORIZON,
-# where sigma_HORIZON is the trailing daily vol scaled to the HORIZON-day move.
-LABEL_K = 1.0               # selectivity in sigmas: higher -> fewer, cleaner signals
-LABEL_VOL_WINDOW = 20       # trailing window (days) for the causal vol estimate
-LABEL_MIN_PCT = 0.01        # floor so ultra-quiet names don't trade on micro-moves
-
-# Market-context symbols, downloaded once and broadcast across every ticker.
-# These give the model a "regime" view so it can price a name relative to the
-# broad market and the volatility environment instead of in isolation.
 MARKET_SYMBOL = "^GSPC"     # S&P 500 index -> market return / vol features
 VIX_SYMBOL = "^VIX"         # CBOE volatility index -> fear/regime features
 
-OUT_DIR = "Data"
-#TODO: Migrate plot to this script
+OUT_DIR = config.DATA_DIR
 color_map = {1: "green", -1: "red", 0: "yellow"}
-
 label_dir = "label_charts"
+
 # Class mapping: ordered so down < flat < up.
 #   short (-1) -> 0,  no-trade (0) -> 1,  long (+1) -> 2
 LABEL_TO_CLASS = {-1: 0, 0: 1, 1: 2}
 CLASS_NAMES = ["Short", "NoTrade", "Long"]
 
-# Stationary feature columns produced by build_features (order matters).
-# Per-ticker, causal features (computed in isolation from one name's own history).
+# Stationary feature columns produced by the pipeline (order matters).
+# Per-ticker, causal features (computed from one name's own history).
 PER_TICKER_COLS = [
-    "ret_1d", "ret_5d", "ret_20d",
+    "ret_1d", "ret_2d", "ret_5d", "ret_20d",
+    "mom_12_1",
     "vol_20d", "vol_60d",
     "volume_zscore",
     "rsi_14",
@@ -103,37 +90,17 @@ MARKET_COLS = [
 
 # Market-relative features: this name's behavior net of the market (relative value).
 RELATIVE_COLS = [
-    "excess_ret_5d", "excess_ret_20d", "beta_60d",
+    "excess_ret_5d", "excess_ret_20d", "beta_60d", "idio_vol_60d",
 ]
 
 # Cross-sectional features: this name's standing vs. all peers on the same date.
 # Rank-percentile in [0, 1] -> robust, bounded, and inherently "priced vs. others".
 CROSS_SECTIONAL_COLS = [
-    "xs_rank_ret_5d", "xs_rank_ret_20d", "xs_rank_vol_20d",
+    "xs_rank_ret_5d", "xs_rank_ret_20d", "xs_rank_vol_20d", "xs_rank_mom_12_1",
 ]
 
 FEATURE_COLS = PER_TICKER_COLS + MARKET_COLS + RELATIVE_COLS + CROSS_SECTIONAL_COLS
-INPUT_SIZE = len(FEATURE_COLS)  # 26
-
-
-# ------------------------------------------------------------------
-# Download
-# ------------------------------------------------------------------
-def download_panel(tickers: List[str], start: str, end: str) -> pd.DataFrame:
-    frames = []
-    for t in tickers:
-        df = yf.download(
-            t, start=start, end=end, interval="1d",
-            auto_adjust=True, progress=False, multi_level_index=False,
-        )
-        if df.empty:
-            print(f"  WARN: no data for {t}, skipping")
-            continue
-        df = df.reset_index()[["Date", "Open", "High", "Low", "Close", "Volume"]]
-        df["ticker"] = t
-        frames.append(df)
-    panel = pd.concat(frames, ignore_index=True)
-    return panel.sort_values(["ticker", "Date"]).reset_index(drop=True)
+INPUT_SIZE = len(FEATURE_COLS)  # 30
 
 
 # ------------------------------------------------------------------
@@ -146,11 +113,16 @@ def build_features(df_ticker: pd.DataFrame) -> pd.DataFrame:
     )
 
     daily_ret = pct_return(close, 1)
-    macd_line, _signal, hist = macd(close)
+    _macd_line, _signal, hist = macd(close)
 
     df["ret_1d"] = daily_ret
+    df["ret_2d"] = pct_return(close, 2)      # short-term reversal input
     df["ret_5d"] = pct_return(close, 5)
     df["ret_20d"] = pct_return(close, 20)
+
+    # 12-1 momentum: past-year return, skipping the most recent month (the
+    # classic academic definition — the skipped month is reversal territory).
+    df["mom_12_1"] = close.shift(21) / close.shift(252) - 1.0
 
     df["vol_20d"] = realized_vol(daily_ret, 20)
     df["vol_60d"] = realized_vol(daily_ret, 60)
@@ -169,24 +141,9 @@ def build_features(df_ticker: pd.DataFrame) -> pd.DataFrame:
     df["intraday_range"] = (high - low) / close
     df["overnight_gap"] = op / close.shift(1) - 1.0
 
-    # ---- label: volatility-scaled forward return ----
-    # Threshold adapts per ticker: a move counts as Long/Short only if it exceeds
-    # LABEL_K standard deviations of that name's own HORIZON-day return. sigma is
-    # estimated from trailing daily returns (causal - no peek into the future) and
-    # scaled by sqrt(HORIZON). A small absolute floor avoids labeling micro-moves
-    # in ultra-quiet regimes.
-    fwd_ret = (close.shift(-HORIZON) - close) / close
-    sigma_h = realized_vol(daily_ret, LABEL_VOL_WINDOW) * np.sqrt(HORIZON)
-    thresh = (LABEL_K * sigma_h).clip(lower=LABEL_MIN_PCT)
-
-    label = pd.Series(0, index=df.index)
-    label[fwd_ret >= thresh] = 1
-    label[fwd_ret <= -thresh] = -1
-    df["fwd_ret"] = fwd_ret          # continuous target, kept for ranking metrics (IC)
-    df["label_thresh"] = thresh      # per-row threshold, kept for coverage tuning
-    df["label_raw"] = label
-    # Need both a valid forward return AND a valid (warmed-up) threshold.
-    df["fwd_valid"] = fwd_ret.notna() & thresh.notna()
+    # Raw forward return; the actual label needs beta + the market's forward
+    # return, so it's computed panel-level in add_labels().
+    df["fwd_ret"] = (close.shift(-HORIZON) - close) / close
 
     df = df.replace([np.inf, -np.inf], np.nan)
     return df
@@ -196,11 +153,14 @@ def build_features(df_ticker: pd.DataFrame) -> pd.DataFrame:
 # Market context: VIX + broad-market index (downloaded once, broadcast)
 # ------------------------------------------------------------------
 def build_market_features(start: str, end: str) -> pd.DataFrame:
-    """Download S&P 500 + VIX and return a [Date, MARKET_COLS] frame.
+    """Download S&P 500 + VIX and return a [Date, MARKET_COLS + helpers] frame.
 
-    All columns are causal/stationary and identical across tickers on a given
-    date. Merged onto every name so the model sees the regime it is trading in.
+    All MARKET_COLS are causal/stationary. Also carries two label-only helper
+    columns that must NEVER enter FEATURE_COLS (they'd leak the future):
+        mkt_ret_1d  — backward daily market return (beta / idio-vol input)
+        mkt_fwd_ret — FORWARD 5-day market return (v2 label input only)
     """
+    import yfinance as yf
     mkt = yf.download(
         MARKET_SYMBOL, start=start, end=end, interval="1d",
         auto_adjust=True, progress=False, multi_level_index=False,
@@ -219,8 +179,9 @@ def build_market_features(start: str, end: str) -> pd.DataFrame:
     out["mkt_ret_5d"] = pct_return(mkt_close, 5).values
     out["mkt_ret_20d"] = pct_return(mkt_close, 20).values
     out["mkt_vol_20d"] = realized_vol(mkt_daily, 20).values
-    # Carry the market daily/close series so per-ticker beta can use them.
     out["mkt_ret_1d"] = mkt_daily.values
+    # Forward market return over the label horizon — LABEL ONLY, not a feature.
+    out["mkt_fwd_ret"] = (mkt_close.shift(-HORIZON) / mkt_close - 1.0).values
 
     # VIX: level z-scored over a rolling year (stationary regime indicator),
     # plus its 5-day change (vol spiking vs. calming).
@@ -235,7 +196,9 @@ def build_market_features(start: str, end: str) -> pd.DataFrame:
 
 
 def add_relative_features(panel: pd.DataFrame) -> pd.DataFrame:
-    """Market-relative features (per row): excess returns + rolling beta.
+    """Market-relative features (per row): excess returns, rolling beta, and
+    idiosyncratic volatility (how much a name wiggles for its OWN reasons,
+    net of market moves — a documented negative predictor of returns).
 
     Requires MARKET_COLS already merged in (needs mkt_ret_1d / mkt_ret_5d / ...).
     """
@@ -243,15 +206,18 @@ def add_relative_features(panel: pd.DataFrame) -> pd.DataFrame:
     panel["excess_ret_5d"] = panel["ret_5d"] - panel["mkt_ret_5d"]
     panel["excess_ret_20d"] = panel["ret_20d"] - panel["mkt_ret_20d"]
 
-    # Rolling 60d beta per ticker. Built by concatenating per-group Series (instead
-    # of groupby.apply) so it's robust to a single-ticker panel — apply() returns a
-    # DataFrame for one group and breaks the assignment. Output is identical for many.
-    betas = []
+    # Rolling 60d beta + idio vol per ticker. Built by concatenating per-group
+    # Series (instead of groupby.apply) so it's robust to a single-ticker panel.
+    betas, idios = [], []
     for _, grp in panel.groupby("ticker"):
         cov = grp["ret_1d"].rolling(60, min_periods=60).cov(grp["mkt_ret_1d"])
         var = grp["mkt_ret_1d"].rolling(60, min_periods=60).var()
-        betas.append(cov / var.replace(0, np.nan))
+        beta = cov / var.replace(0, np.nan)
+        resid = grp["ret_1d"] - beta * grp["mkt_ret_1d"]
+        betas.append(beta)
+        idios.append(resid.rolling(60, min_periods=60).std())
     panel["beta_60d"] = pd.concat(betas)
+    panel["idio_vol_60d"] = pd.concat(idios)
     return panel.replace([np.inf, -np.inf], np.nan)
 
 
@@ -259,14 +225,14 @@ def add_cross_sectional_features(panel: pd.DataFrame) -> pd.DataFrame:
     """Cross-sectional rank features: where this name sits among all peers today.
 
     For each date, rank a feature across the universe and map to a [0, 1]
-    percentile. This is the "price relative to other names/indices" signal:
-    a 0.95 momentum rank means top-5% mover that day regardless of absolute level.
-    """
+    percentile. A 0.95 momentum rank means top-5% mover that day regardless of
+    absolute level."""
     panel = panel.copy()
     rank_src = {
         "xs_rank_ret_5d": "ret_5d",
         "xs_rank_ret_20d": "ret_20d",
         "xs_rank_vol_20d": "vol_20d",
+        "xs_rank_mom_12_1": "mom_12_1",
     }
     for out_col, src_col in rank_src.items():
         panel[out_col] = (
@@ -276,24 +242,59 @@ def add_cross_sectional_features(panel: pd.DataFrame) -> pd.DataFrame:
 
 
 # ------------------------------------------------------------------
+# Labels (v2): beta-adjusted, vol-normalized forward z-score
+# ------------------------------------------------------------------
+def add_labels(panel: pd.DataFrame) -> pd.DataFrame:
+    """Compute fwd_excess / fwd_z and the 3-class label from them.
+
+    Runs at panel level (not per-ticker) because it needs beta_60d and the
+    market's forward return, which only exist after the merge steps.
+
+        fwd_excess = fwd_ret - beta * mkt_fwd_ret     (the stock's OWN move)
+        fwd_z      = fwd_excess / (vol_20d * sqrt(H)) (in units of its normal
+                                                       weekly wiggle)
+    """
+    panel = panel.copy()
+    beta = panel["beta_60d"].fillna(1.0)          # neutral fallback pre-warmup
+    fwd_excess = panel["fwd_ret"] - beta * panel["mkt_fwd_ret"]
+    denom = (panel["vol_20d"] * np.sqrt(HORIZON)).replace(0, np.nan)
+    fwd_z = fwd_excess / denom
+
+    panel["fwd_excess"] = fwd_excess
+    panel["fwd_z"] = fwd_z
+
+    label = pd.Series(0, index=panel.index)
+    label[fwd_z >= Z_THRESHOLD] = 1
+    label[fwd_z <= -Z_THRESHOLD] = -1
+    panel["label_raw"] = label
+    # False for the last HORIZON rows (future unknown) and any row where the
+    # normalization inputs weren't available.
+    panel["fwd_valid"] = fwd_z.notna() & panel["fwd_ret"].notna()
+    return panel
+
+
+# ------------------------------------------------------------------
 # Scaling + windowing (per ticker, scaler fit on train only)
 # ------------------------------------------------------------------
 def windows_for_ticker(
-    df: pd.DataFrame,
-) -> Tuple[list, list, list, list, list, list]:
-    """(X_train, y_train, X_test, y_test, fwd_ret_test, date_test) for one ticker.
+    df: pd.DataFrame, train_end: str = None,
+) -> Tuple[list, list, list, list, list, list, list]:
+    """(X_train, y_train, X_test, y_test, fwd_ret_test, fwd_z_test, date_test)
+    for one ticker.
 
-    The last two align 1:1 with the test windows (realized forward return + decision
-    date) and feed the ranking metrics in `metrics.py`.
+    The last three align 1:1 with the test windows (realized forward return,
+    its normalized z, decision date) and feed the ranking metrics in metrics.py.
     """
     df = df.copy()
     df["Date"] = pd.to_datetime(df["Date"])
 
-    # Drop NaN warmup rows (e.g. 100-day EMA needs 100 days to fill)
+    # Drop NaN warmup rows (e.g. 12-1 momentum needs a year to fill)
     df = df[df[FEATURE_COLS].notna().all(axis=1)].reset_index(drop=True)
 
-    train_end = pd.Timestamp(TRAIN_END)
+    train_end = pd.Timestamp(train_end or TRAIN_END)
     train_mask = df["Date"] <= train_end
+    if not train_mask.any():
+        return [], [], [], [], [], [], []
 
     # Fit scaler on train rows only, apply to all
     scaler = StandardScaler()
@@ -301,6 +302,7 @@ def windows_for_ticker(
     labels = df["label_raw"].map(LABEL_TO_CLASS).values
     valid = df["fwd_valid"].values
     fwd = df["fwd_ret"].values.astype(np.float32)
+    fwd_z = df["fwd_z"].values.astype(np.float32)
     dates = df["Date"].values  # datetime64[ns]
 
     # last_train_i is the last row index that belongs to train.
@@ -309,7 +311,7 @@ def windows_for_ticker(
     last_train_i = int(np.where(train_mask.values)[0][-1])
     purge_start_i = last_train_i - HORIZON + 1
 
-    Xtr, ytr, Xte, yte, fwd_te, date_te = [], [], [], [], [], []
+    Xtr, ytr, Xte, yte, fwd_te, fwdz_te, date_te = [], [], [], [], [], [], []
     for i in range(WINDOW - 1, len(df)):
         if not valid[i]:
             continue
@@ -319,10 +321,10 @@ def windows_for_ticker(
             Xtr.append(window); ytr.append(label)
         elif i > last_train_i:
             Xte.append(window); yte.append(label)
-            fwd_te.append(fwd[i]); date_te.append(dates[i])
+            fwd_te.append(fwd[i]); fwdz_te.append(fwd_z[i]); date_te.append(dates[i])
         # purge_start_i <= i <= last_train_i: dropped
 
-    return Xtr, ytr, Xte, yte, fwd_te, date_te
+    return Xtr, ytr, Xte, yte, fwd_te, fwdz_te, date_te
 
 
 def ticker_graph(feat: pd.DataFrame, ticker: str) -> None:
@@ -337,10 +339,8 @@ def ticker_graph(feat: pd.DataFrame, ticker: str) -> None:
     ax.set_facecolor("#0A0A0F")
     fig.patch.set_facecolor("#0A0A0F")
     ax.tick_params(colors="#888888")
-    ax.spines["bottom"].set_color("#222233")
-    ax.spines["top"].set_color("#222233")
-    ax.spines["left"].set_color("#222233")
-    ax.spines["right"].set_color("#222233")
+    for side in ("bottom", "top", "left", "right"):
+        ax.spines[side].set_color("#222233")
     ax.yaxis.label.set_color("#888888")
     ax.xaxis.label.set_color("#888888")
     ax.title.set_color("#FFFFFF")
@@ -360,51 +360,67 @@ def ticker_graph(feat: pd.DataFrame, ticker: str) -> None:
     plt.tight_layout()
     plt.savefig(f"{label_dir}/{ticker}.png", dpi=150, facecolor=fig.get_facecolor())
     plt.close()
-    print(f"Saved {ticker}")
+
+
 # ------------------------------------------------------------------
 # Panel assembly: per-ticker features + market context + cross-section
 # ------------------------------------------------------------------
-def build_panel() -> pd.DataFrame:
-    """Download everything and return one fully-featured long panel.
-
-    Steps: per-ticker causal features -> merge market/VIX regime -> market-
-    relative features -> cross-sectional ranks across the universe per date.
-    """
-    print(f"Downloading {len(TICKERS)} tickers...")
-    raw = download_panel(TICKERS, START_DATE, END_DATE)
-
+def _assemble_panel(tickers, start, end) -> pd.DataFrame:
+    raw = data_store.get_raw_panel(tickers, start, end)
     print("Building per-ticker features...")
     frames = [build_features(grp) for _, grp in raw.groupby("ticker")]
     panel = pd.concat(frames, ignore_index=True)
     panel["Date"] = pd.to_datetime(panel["Date"])
 
-    print(f"Downloading market context ({MARKET_SYMBOL}, {VIX_SYMBOL})...")
-    market = build_market_features(START_DATE, END_DATE)
+    print(f"Merging market context ({MARKET_SYMBOL}, {VIX_SYMBOL})...")
+    market = build_market_features(start, end)
     panel = panel.merge(market, on="Date", how="left")
 
-    print("Adding market-relative + cross-sectional features...")
+    print("Adding market-relative + cross-sectional features + labels...")
     panel = add_relative_features(panel)
     panel = add_cross_sectional_features(panel)
+    panel = add_labels(panel)
     return panel.replace([np.inf, -np.inf], np.nan)
 
 
+def build_panel(tickers: List[str] = None, start: str = None, end: str = None,
+                refresh: bool = False) -> pd.DataFrame:
+    """The fully-featured, fully-labeled long panel — cached to parquet.
+
+    Cache key includes CONFIG_VERSION, so bumping the version in config.py
+    automatically invalidates panels built under the old label/feature rules.
+    """
+    tickers = sorted(set(tickers or TICKERS))
+    start = start or START_DATE
+    end = end or END_DATE
+    return data_store.cached_frame(
+        "features",
+        (config.CONFIG_VERSION, tuple(tickers), start, end, tuple(FEATURE_COLS),
+         Z_THRESHOLD, HORIZON),
+        lambda: _assemble_panel(tickers, start, end),
+        refresh=refresh,
+    )
+
+
 # ------------------------------------------------------------------
-# Entry point
+# Entry point (legacy single-split tensors for lightning_train.py)
 # ------------------------------------------------------------------
-def main() -> None:
+def main(plot_charts: bool = False) -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
-    os.makedirs(label_dir, exist_ok=True)
+    if plot_charts:
+        os.makedirs(label_dir, exist_ok=True)
 
     panel = build_panel()
 
     # ---- windowed [N, T, F] tensors for the LSTM / Transformer ----
     Xtr_all, ytr_all, Xte_all, yte_all = [], [], [], []
-    fwd_te_all, date_te_all = [], []
+    fwd_te_all, fwdz_te_all, date_te_all = [], [], []
     for t, grp in panel.groupby("ticker"):
-        Xtr, ytr, Xte, yte, fwd_te, date_te = windows_for_ticker(grp)
+        Xtr, ytr, Xte, yte, fwd_te, fwdz_te, date_te = windows_for_ticker(grp)
         Xtr_all += Xtr; ytr_all += ytr; Xte_all += Xte; yte_all += yte
-        fwd_te_all += fwd_te; date_te_all += date_te
-        ticker_graph(grp, t)
+        fwd_te_all += fwd_te; fwdz_te_all += fwdz_te; date_te_all += date_te
+        if plot_charts:
+            ticker_graph(grp, t)
 
     X_train = torch.tensor(np.array(Xtr_all), dtype=torch.float32)
     y_train = torch.tensor(np.array(ytr_all), dtype=torch.long).unsqueeze(-1)
@@ -419,6 +435,8 @@ def main() -> None:
     # Ranking-metric side data, aligned 1:1 with X_test (order preserved above).
     torch.save(torch.tensor(np.array(fwd_te_all), dtype=torch.float32),
                f"{OUT_DIR}/fwd_ret_test.pt")
+    torch.save(torch.tensor(np.array(fwdz_te_all), dtype=torch.float32),
+               f"{OUT_DIR}/fwd_z_test.pt")
     np.save(f"{OUT_DIR}/dates_test.npy", np.array(date_te_all, dtype="datetime64[ns]"))
 
     def dist(y):

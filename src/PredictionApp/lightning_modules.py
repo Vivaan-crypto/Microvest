@@ -34,17 +34,17 @@ class LightningDateModule(L.LightningDataModule):
 
 class LightningModule(L.LightningModule):
     def __init__(self, y, lr=1e-3, weight_decay=1e-3, val_fwd_ret=None, val_dates=None,
-                 edge_min_count=20):
+                 input_size=26):
         super().__init__()
         self.save_hyperparameters(ignore=["y", "val_fwd_ret", "val_dates"])
 
-        # Ranking / edge side-data, aligned 1:1 with the val set.
+        # Ranking side-data, aligned 1:1 with the val set. Pass fwd_z here (v2)
+        # so the IC grades the model on the vol-normalized target it's trained on.
         self.val_fwd_ret = None if val_fwd_ret is None else np.asarray(val_fwd_ret, dtype=float)
         self.val_dates = None if val_dates is None else np.asarray(val_dates)
-        self.edge_min_count = edge_min_count
 
         #self.model = StockTransformerModel(d_model=64, transformer_layers=1)
-        self.model = torch.compile(StockLSTMModel())
+        self.model = torch.compile(StockLSTMModel(input_size=input_size))
         # Macro-F1 (collapse-sensitive) + per-class recall = per-class accuracy.
         self.train_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
         self.val_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
@@ -82,14 +82,12 @@ class LightningModule(L.LightningModule):
     def on_validation_epoch_end(self):
         if not self.val_preds:
             return
-        preds = torch.cat(self.val_preds)          # logits [N, 3]
-        targets = torch.cat(self.val_targets)      # [N]
-        pred_cls = preds.argmax(1)                 # hard class [N]
-        proba = torch.softmax(preds, 1).numpy()    # [N, 3] for signal / edge
+        preds = torch.cat(self.val_preds)
+        targets = torch.cat(self.val_targets)
+        pred_cls = preds.argmax(1)
 
         self.log("val/loss", self.criterion(preds, targets), prog_bar=True)
-        # torchmetrics expects probs/labels, not raw logits -> pass softmax probs.
-        self.log("val/f1", self.val_f1(torch.softmax(preds, 1), targets), prog_bar=True)
+        self.log("val/f1", self.val_f1(preds, targets), prog_bar=True)
         self.log("val/accuracy", (pred_cls == targets).float().mean())
 
         # Per-class accuracy (correct / total per class) for train and val.
@@ -104,42 +102,21 @@ class LightningModule(L.LightningModule):
             for name, a in zip(CLASS_NAMES, train_acc):
                 self.log(f"train/acc_{name}", float(a))
 
-        # Confusion matrix expects probs/labels -> pass softmax probs, not logits.
         self._log_figure("confusion_matrix", self._plot_confusion(
-            self.confusion_matrix(torch.softmax(preds, 1), targets)))
+            self.confusion_matrix(preds, targets)))
         self._log_figure("per_class_accuracy", self._plot_per_class_acc(train_acc, val_acc))
 
-        # ---- The objective: edge + ranking diagnostics ----
-        # edge = mean fwd_ret of predicted-Long minus predicted-Short (the rows we
-        # actually act on). IC stays as a side diagnostic / leakage tripwire.
-        if self.val_fwd_ret is not None and proba.shape[0] == len(self.val_fwd_ret):
-            rep = evaluate_signal(self.val_fwd_ret, proba=proba,
-                                  dates=self.val_dates,
-                                  edge_min_count=self.edge_min_count, verbose=False)
-
-            # Primary objective (checkpoint / early-stop monitor in lightning_train).
-            edge = rep.get("edge", float("nan"))
-            if np.isfinite(edge):
-                self.log("val/edge", float(edge), prog_bar=True)
-
-            # Per-class conditional returns + coverage for context.
-            for src, dst in (("long_mean_ret", "val/long_ret"),
-                             ("short_mean_ret", "val/short_ret"),
-                             ("notrade_mean_ret", "val/notrade_ret"),
-                             ("edge_coverage", "val/edge_coverage")):
-                v = rep.get(src, float("nan"))
-                if np.isfinite(v):
-                    self.log(dst, float(v))
-
-            # Ranking diagnostics (NOT the objective): IC can drift from edge, and
-            # a suspiciously high IC is the cheapest lookahead alarm we have.
+        # Ranking metrics: the real objective. IC ignores calibration, so it can
+        # keep rising even as CE val/loss climbs (sharper, over-confident softmax).
+        if self.val_fwd_ret is not None and preds.shape[0] == len(self.val_fwd_ret):
+            rep = evaluate_signal(self.val_fwd_ret, proba=torch.softmax(preds, 1).numpy(),
+                                  dates=self.val_dates, verbose=False)
             for src, dst in (("ic_spearman", "val/ic_spearman"),
-                             ("ic_mean", "val/ic_mean"),
                              ("decile_spread", "val/decile_spread"),
                              ("ls_sharpe", "val/ls_sharpe")):
                 v = rep.get(src, float("nan"))
                 if np.isfinite(v):
-                    self.log(dst, float(v))
+                    self.log(dst, float(v), prog_bar=(dst == "val/ic_spearman"))
 
         self.val_preds.clear()
         self.val_targets.clear()
@@ -160,7 +137,11 @@ class LightningModule(L.LightningModule):
         return out
 
     def _log_figure(self, name, fig):
-        self.logger.experiment.add_figure(f"val/{name}", fig, global_step=self.current_epoch)
+        # Only TensorBoard-style loggers expose add_figure; skip cleanly when
+        # there's no logger (e.g. quick eval runs) or it doesn't support figures.
+        exp = getattr(self.logger, "experiment", None) if self.logger else None
+        if exp is not None and hasattr(exp, "add_figure"):
+            exp.add_figure(f"val/{name}", fig, global_step=self.current_epoch)
         plt.close(fig)
 
     def _plot_confusion(self, cm):

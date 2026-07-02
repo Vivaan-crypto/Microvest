@@ -24,7 +24,11 @@ def main():
 
     # Edge / ranking side-data (forward return + decision date per val row), aligned 1:1.
     val_fwd_ret, val_dates = None, None
-    fwd_path, dates_path = f"{data_dir}/fwd_ret_test.pt", f"{data_dir}/dates_test.npy"
+    # Prefer the v2 vol-normalized target for IC grading when available.
+    fwd_path = f"{data_dir}/fwd_z_test.pt"
+    if not os.path.exists(fwd_path):
+        fwd_path = f"{data_dir}/fwd_ret_test.pt"
+    dates_path = f"{data_dir}/dates_test.npy"
     if os.path.exists(fwd_path) and os.path.exists(dates_path):
         val_fwd_ret = torch.load(fwd_path).numpy()
         val_dates = np.load(dates_path)
@@ -75,7 +79,8 @@ def main():
     print()
 
     data_module = LightningDateModule(X_train, y_train, X_val, y_val, batch_size=32)
-    model = LightningModule(y_train.numpy(), val_fwd_ret=val_fwd_ret, val_dates=val_dates)
+    model = LightningModule(y_train.numpy(), val_fwd_ret=val_fwd_ret, val_dates=val_dates,
+                            input_size=X_train.shape[-1])
 
     # --------------------------------------------------
     # TensorBoard logger
