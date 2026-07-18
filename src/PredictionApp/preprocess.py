@@ -54,6 +54,8 @@ TRAIN_END = config.TRAIN_END
 HORIZON = config.HORIZON
 WINDOW = config.WINDOW
 Z_THRESHOLD = config.Z_THRESHOLD
+VOL_FLOOR = config.VOL_FLOOR
+Z_CLIP = config.Z_CLIP
 
 MARKET_SYMBOL = "^GSPC"     # S&P 500 index -> market return / vol features
 VIX_SYMBOL = "^VIX"         # CBOE volatility index -> fear/regime features
@@ -257,8 +259,13 @@ def add_labels(panel: pd.DataFrame) -> pd.DataFrame:
     panel = panel.copy()
     beta = panel["beta_60d"].fillna(1.0)          # neutral fallback pre-warmup
     fwd_excess = panel["fwd_ret"] - beta * panel["mkt_fwd_ret"]
-    denom = (panel["vol_20d"] * np.sqrt(HORIZON)).replace(0, np.nan)
-    fwd_z = fwd_excess / denom
+    # Floor the vol denominator so a near-zero vol_20d can't explode fwd_z, then
+    # winsorize the surviving tails (earnings gaps) to +/-Z_CLIP sigmas. Both
+    # stop a handful of pathological rows from defining the class edges and
+    # dominating the regression target / the extreme picks a top-K book uses.
+    vol = panel["vol_20d"].clip(lower=VOL_FLOOR)
+    denom = (vol * np.sqrt(HORIZON)).replace(0, np.nan)
+    fwd_z = (fwd_excess / denom).clip(lower=-Z_CLIP, upper=Z_CLIP)
 
     panel["fwd_excess"] = fwd_excess
     panel["fwd_z"] = fwd_z

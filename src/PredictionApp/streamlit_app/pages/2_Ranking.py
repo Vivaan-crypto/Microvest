@@ -4,7 +4,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from src.PredictionApp.streamlit_app import engine, ui
+import engine
+import ui
 
 st.set_page_config(page_title="Ranking", page_icon="🏆", layout="wide")
 cfg = ui.controls()

@@ -9,7 +9,8 @@ import streamlit as st
 import yfinance as yf
 from plotly.subplots import make_subplots
 
-from src.PredictionApp.streamlit_app import engine, ui
+import engine
+import ui
 
 st.set_page_config(page_title="Chart", page_icon="📈", layout="wide")
 ckpt, mtime, info = ui.pick_checkpoint()

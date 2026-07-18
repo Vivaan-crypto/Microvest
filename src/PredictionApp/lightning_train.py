@@ -1,5 +1,3 @@
-# lightning_train.py
-
 import torch
 import lightning as L
 from lightning.pytorch.loggers import TensorBoardLogger
@@ -9,7 +7,7 @@ import numpy as np
 from datetime import datetime
 from lightning_modules import LightningModule, LightningDateModule
 
-
+#TODO (IDEAS): 1. Switch to HFT or minute candles cause more news resistance. 2.
 def main():
     # --------------------------------------------------
     # Load pre-split tensors (already processed)

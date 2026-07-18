@@ -34,7 +34,7 @@ class LightningDateModule(L.LightningDataModule):
 
 class LightningModule(L.LightningModule):
     def __init__(self, y, lr=1e-3, weight_decay=1e-3, val_fwd_ret=None, val_dates=None,
-                 input_size=26):
+                 input_size=26, hidden_size=64, num_layers=2, dropout=0.2):
         super().__init__()
         self.save_hyperparameters(ignore=["y", "val_fwd_ret", "val_dates"])
 
@@ -43,8 +43,11 @@ class LightningModule(L.LightningModule):
         self.val_fwd_ret = None if val_fwd_ret is None else np.asarray(val_fwd_ret, dtype=float)
         self.val_dates = None if val_dates is None else np.asarray(val_dates)
 
+        # Eager, not torch.compile: on Windows CPU the LSTM gains almost nothing
+        # from inductor, and each walk-forward fold would pay the compile stall.
         #self.model = StockTransformerModel(d_model=64, transformer_layers=1)
-        self.model = torch.compile(StockLSTMModel(input_size=input_size))
+        self.model = StockLSTMModel(input_size=input_size, lstm_hidden_size=hidden_size,
+                                    lstm_layers=num_layers, dropout_prob=dropout)
         # Macro-F1 (collapse-sensitive) + per-class recall = per-class accuracy.
         self.train_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
         self.val_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
@@ -66,11 +69,13 @@ class LightningModule(L.LightningModule):
         y_true = y.squeeze(-1)
         loss = self.criterion(preds, y_true)
 
-        # Epoch-aggregated so train/f1 is directly comparable to val/f1.
+        # Loss every step (cheap, and the epoch mean should cover every batch);
+        # heavier torchmetrics updates subsampled. Epoch-aggregated so train/f1
+        # is directly comparable to val/f1.
+        self.log("train/loss", loss, prog_bar=True, on_step=True, on_epoch=True)
         if self.global_step % 5 == 0:
             self.train_f1.update(preds, y_true)
             self.train_acc_pc.update(preds, y_true)
-            self.log("train/loss", loss, prog_bar=True, on_step=True, on_epoch=True)
             self.log("train/f1", self.train_f1, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
@@ -115,6 +120,12 @@ class LightningModule(L.LightningModule):
                              ("decile_spread", "val/decile_spread"),
                              ("ls_sharpe", "val/ls_sharpe")):
                 v = rep.get(src, float("nan"))
+                # val/ic_spearman is the monitored metric: it must be logged every
+                # epoch or EarlyStopping/Checkpoint error out mid-run. A degenerate
+                # epoch (constant preds -> NaN spearman) logs -1 so mode="max"
+                # treats it as terrible instead of killing the run.
+                if dst == "val/ic_spearman" and not np.isfinite(v):
+                    v = -1.0
                 if np.isfinite(v):
                     self.log(dst, float(v), prog_bar=(dst == "val/ic_spearman"))
 
@@ -122,8 +133,18 @@ class LightningModule(L.LightningModule):
         self.val_targets.clear()
 
     def configure_optimizers(self):
-        opt = torch.optim.AdamW(self.parameters(), lr=self.hparams.lr,
-                                weight_decay=self.hparams.weight_decay)
+        # Decay weight matrices only. Decaying biases/LayerNorm gains drags them
+        # toward zero for no generalization benefit -- it measurably hurts small
+        # models like this one.
+        decay, no_decay = [], []
+        for name, p in self.named_parameters():
+            if not p.requires_grad:
+                continue
+            (no_decay if p.ndim <= 1 else decay).append(p)
+        opt = torch.optim.AdamW(
+            [{"params": decay, "weight_decay": self.hparams.weight_decay},
+             {"params": no_decay, "weight_decay": 0.0}],
+            lr=self.hparams.lr)
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(
             opt, T_max=self.trainer.max_epochs, eta_min=self.hparams.lr * 0.01)
         return {"optimizer": opt, "lr_scheduler": sched}

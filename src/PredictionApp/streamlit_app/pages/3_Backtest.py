@@ -20,7 +20,8 @@ import plotly.graph_objects as go
 import streamlit as st
 import yfinance as yf
 
-from src.PredictionApp.streamlit_app import engine, ui
+import engine
+import ui
 
 st.set_page_config(page_title="Backtest", page_icon="🧪", layout="wide")
 ckpt, mtime, info = ui.pick_checkpoint()

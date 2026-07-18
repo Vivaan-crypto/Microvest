@@ -203,6 +203,90 @@ def decile_spread(
     return {"top": float(top), "bottom": float(bottom), "spread": float(top - bottom)}
 
 
+def gated_return(
+    dates: np.ndarray, signal: np.ndarray, fwd_ret: np.ndarray,
+    threshold: float, periods_per_year: int = TRADING_DAYS,
+) -> Dict[str, float]:
+    """Confidence-GATED book: take a position only when |signal| >= threshold
+    (long if signal>0, short if <0), variable count per day -- quiet days may
+    trade nothing. Suits a NoTrade-aware concentrated strategy better than a
+    forced top-K, because it stops jamming weak/noisy days into the book.
+
+    Per-trade return is sign(signal)*fwd_ret (a short profits when price falls).
+    Returns the average per-trade return (`edge_mean` -- the number that must
+    beat costs), directional hit rate, average trades/day (coverage), and the
+    Sharpe of the daily equal-weight book PnL.
+    """
+    df = pd.DataFrame({"date": dates, "signal": signal, "fwd_ret": fwd_ret})
+    df = df.replace([np.inf, -np.inf], np.nan).dropna()
+    df = df[np.abs(df["signal"]) >= threshold]
+    if df.empty:
+        return {"edge_mean": float("nan"), "edge_sharpe": float("nan"),
+                "hit_rate": float("nan"), "trades_per_day": 0.0, "n_trades": 0}
+
+    df["ret"] = np.sign(df["signal"]) * df["fwd_ret"]     # signed per-trade return
+    daily = df.groupby("date")["ret"].mean()              # equal-weight book PnL/day
+    n_days = df["date"].nunique()
+    sharpe = (float(daily.mean() / daily.std() * np.sqrt(periods_per_year))
+              if len(daily) >= 2 and daily.std() > 0 else float("nan"))
+    return {
+        "edge_mean": float(df["ret"].mean()),             # avg return per position taken
+        "edge_sharpe": sharpe,
+        "hit_rate": float((df["ret"] > 0).mean()),
+        "trades_per_day": float(len(df) / n_days),
+        "n_trades": int(len(df)),
+    }
+
+
+def topk_return(
+    dates: np.ndarray, signal: np.ndarray, fwd_ret: np.ndarray,
+    k: int = 3, periods_per_year: int = TRADING_DAYS,
+) -> Dict[str, float]:
+    """Concentrated-book metric: each day, long the top-K names by signal and
+    short the bottom-K (NOT top/bottom quantile of whatever's available).
+
+    This is the right lens for a swing trader holding a handful of positions,
+    not a diversified cross-sectional book: `long_short_sharpe`/`decile_spread`
+    implicitly assume you trade a broad basket, so their noise averages out
+    across many names. Here breadth is fixed at 2*K per day regardless of
+    universe size, so the realized edge/Sharpe reflects what a low-breadth
+    trader actually experiences -- and needs a much higher bar to be usable
+    (see the Fundamental Law of Active Management: IR ~ IC * sqrt(breadth)).
+
+    Days with fewer than 2*K names (can't form distinct top/bottom-K) are
+    skipped. Overlapping HORIZON-day returns make daily Sharpe optimistic --
+    same caveat as long_short_sharpe/icir, treat as relative not absolute.
+    """
+    df = pd.DataFrame({"date": dates, "signal": signal, "fwd_ret": fwd_ret})
+    df = df.replace([np.inf, -np.inf], np.nan).dropna()
+
+    pnl, long_hits, short_hits = {}, {}, {}
+    for d, grp in df.groupby("date"):
+        if len(grp) < 2 * k or grp["signal"].std() == 0:
+            continue
+        ordered = grp.sort_values("signal")
+        shorts = ordered.head(k)["fwd_ret"]     # lowest-signal candidates
+        longs = ordered.tail(k)["fwd_ret"]      # highest-signal candidates
+        ts = pd.Timestamp(d)
+        pnl[ts] = float(longs.mean() - shorts.mean())
+        long_hits[ts] = float((longs > 0).mean())
+        short_hits[ts] = float((shorts < 0).mean())
+
+    pnl = pd.Series(pnl).sort_index()
+    if len(pnl) < 2 or pnl.std() == 0:
+        return {"edge_mean": float(pnl.mean()) if len(pnl) else float("nan"),
+                "edge_sharpe": float("nan"), "hit_rate": float("nan"),
+                "n_days": int(len(pnl))}
+
+    hits = pd.concat([pd.Series(long_hits), pd.Series(short_hits)])
+    return {
+        "edge_mean": float(pnl.mean()),
+        "edge_sharpe": float(pnl.mean() / pnl.std() * np.sqrt(periods_per_year)),
+        "hit_rate": float(hits.mean()),   # fraction of the K longs/K shorts correctly signed
+        "n_days": int(len(pnl)),
+    }
+
+
 def long_short_sharpe(
     dates: np.ndarray, signal: np.ndarray, fwd_ret: np.ndarray,
     quantile: float = 0.2, periods_per_year: int = TRADING_DAYS,

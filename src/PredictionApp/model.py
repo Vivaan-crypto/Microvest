@@ -5,8 +5,9 @@ import torch.nn as nn
 
 class StockLSTMModel(nn.Module):
     # input_size must match the feature count from preprocess.FEATURE_COLS.
-    # Small on purpose: the target has a tiny edge, so a big LSTM just memorizes.
-    def __init__(self, input_size=26, lstm_hidden_size=256, lstm_layers=3, dropout_prob=0.3, num_classes=3):
+    # Small on purpose: the target has a tiny edge, so a big LSTM just memorizes
+    # -- and CPU cost scales with size (256x3 was ~30x slower per step than this).
+    def __init__(self, input_size=26, lstm_hidden_size=64, lstm_layers=2, dropout_prob=0.2, num_classes=3):
         super().__init__()
         self.LSTM = nn.LSTM(
             input_size=input_size,

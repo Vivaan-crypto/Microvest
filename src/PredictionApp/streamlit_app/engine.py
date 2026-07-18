@@ -18,6 +18,7 @@ import glob
 import os
 import re
 import sys
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -44,6 +45,52 @@ UNIVERSE = list(pp.TICKERS)
 CLASS_NAMES = ["Short", "NoTrade", "Long"]
 CLASS_COLOR = {0: "#e74c3c", 1: "#f1c40f", 2: "#2ecc71"}  # red / yellow / green
 
+# ------------------------------------------------------------------
+# Feature sets by era. preprocess.py's FEATURE_COLS has changed shape over time
+# (new factor columns inserted mid-list, not just appended), so a checkpoint's
+# input width alone tells you WHICH columns it needs, but not by simple slicing.
+# FEATURE_COLS_V1 is recovered verbatim from the commit before the "config v2"
+# rewrite (git show 4fb2052:.../preprocess.py) — the underlying indicator math
+# (indicators.py) is unchanged since then, so these column names still mean
+# exactly what they meant when the 26-input checkpoints were trained.
+# ------------------------------------------------------------------
+FEATURE_COLS_V1 = [
+    "ret_1d", "ret_5d", "ret_20d",
+    "vol_20d", "vol_60d",
+    "volume_zscore",
+    "rsi_14",
+    "macd_hist_norm",
+    "dist_sma_20", "dist_sma_50",
+    "dist_ema_20", "dist_ema_50", "dist_ema_100",
+    "intraday_range",
+    "overnight_gap",
+    "mkt_ret_5d", "mkt_ret_20d", "mkt_vol_20d",
+    "vix_z", "vix_chg_5d",
+    "excess_ret_5d", "excess_ret_20d", "beta_60d",
+    "xs_rank_ret_5d", "xs_rank_ret_20d", "xs_rank_vol_20d",
+]
+
+# input_size (from the checkpoint's own LSTM weight shape) -> the feature list
+# that size was trained on. Add an entry here whenever the feature set changes
+# again — everything downstream (predict, scaling) picks it up automatically.
+FEATURE_SETS_BY_SIZE = {
+    len(FEATURE_COLS_V1): FEATURE_COLS_V1,   # 26 — pre "config v2"
+    len(pp.FEATURE_COLS): pp.FEATURE_COLS,   # 30 — current
+}
+
+
+def feature_cols_for(input_size):
+    """The feature list a checkpoint of this input width was trained on.
+    Raises clearly instead of silently guessing when the width is unrecognized —
+    feeding the wrong columns produces confident-looking garbage, not a crash."""
+    cols = FEATURE_SETS_BY_SIZE.get(input_size)
+    if cols is None:
+        known = sorted(FEATURE_SETS_BY_SIZE)
+        raise ValueError(
+            f"No known feature set has {input_size} columns (known: {known}). "
+            f"Add this era's column list to FEATURE_SETS_BY_SIZE in engine.py.")
+    return cols
+
 
 # ------------------------------------------------------------------
 # Checkpoint loading (architecture derived from the weights, so any ckpt loads)
@@ -58,29 +105,112 @@ def list_checkpoints():
     return cks
 
 
-# Filenames look like: best-model-23-acc0.62-ic+0.065-v37.ckpt
-#                                  ^epoch  ^acc    ^ic     ^version
-_CKPT_RE = re.compile(r"best-model-(\d+)-acc([\d.]+)-ic([+-]?[\d.]+)(?:-v(\d+))?\.ckpt$")
+# Filenames look like: best-model-23-acc0.62-ic+0.065-v37.ckpt   (older runs)
+#                   or: best-model-31-acc0.50-edge+0.0042.ckpt   (current runs)
+#                                  ^epoch  ^acc  ^metric name+value  ^version
+# The training objective's name has changed over time (ic_spearman -> edge), so
+# the metric tag itself is a capture group, not hardcoded, and any future rename
+# is picked up automatically as long as it follows the same "-name+value" shape.
+_CKPT_RE = re.compile(r"best-model-(\d+)-acc([\d.]+)-([a-zA-Z_]+)([+-]?[\d.]+)(?:-v(\d+))?\.ckpt$")
 
 
 def parse_checkpoint(path):
-    """Pull (epoch, accuracy, ic, version, run) out of a checkpoint path.
-    Metric fields are None for older / differently-named checkpoints that don't match."""
+    """Pull (epoch, accuracy, score, metric_name, version, run) out of a checkpoint
+    path. Metric fields are None for older / differently-named checkpoints that
+    don't match. `score` is whichever objective the run was checkpointed on (IC,
+    edge, ...) — higher is always better, so it's safe to sort/filter on directly."""
     name = os.path.basename(path)
     run = os.path.basename(os.path.dirname(path))   # the timestamp folder
     match = _CKPT_RE.search(name)
     if match:
         epoch = int(match.group(1))
         acc = float(match.group(2))
-        ic = float(match.group(3))
-        version = int(match.group(4)) if match.group(4) else 0
+        metric_name = match.group(3)
+        score = float(match.group(4))
+        version = int(match.group(5)) if match.group(5) else 0
     else:
         epoch = None
         acc = None
-        ic = None
+        metric_name = None
+        score = None
         version = 0
-    return {"path": path, "name": name, "run": run,
-            "epoch": epoch, "acc": acc, "ic": ic, "version": version}
+    return {"path": path, "name": name, "run": run, "epoch": epoch, "acc": acc,
+            "metric_name": metric_name, "ic": score, "version": version}
+
+
+# ------------------------------------------------------------------
+# Version numbers — sourced from lightning_logs, not the checkpoint filename.
+# Newer training runs stopped suffixing "-vN" onto the checkpoint name, so the
+# filename alone can't tell you the version; matching run start-times against
+# the version_N folders in lightning_logs is the reliable source of truth.
+# ------------------------------------------------------------------
+def _version_start_time(version_dir):
+    """When a training run started: prefer the epoch embedded in the TensorBoard
+    events file name, fall back to the folder's mtime."""
+    for events in glob.glob(os.path.join(version_dir, "events.out.tfevents.*")):
+        parts = os.path.basename(events).split(".")
+        if len(parts) > 3:
+            try:
+                return float(parts[3])
+            except ValueError:
+                pass
+    return os.path.getmtime(version_dir)
+
+
+def _version_index():
+    """[(start_time, version_number)] for every run logged under lightning_logs.
+    These version_N folders are the source of truth for the version numbers."""
+    base = os.path.join(PARENT, "lightning_logs", "stock_prediction_model")
+    index = []
+    for path in glob.glob(os.path.join(base, "version_*")):
+        try:
+            number = int(os.path.basename(path).split("_")[1])
+        except (IndexError, ValueError):
+            continue
+        index.append((_version_start_time(path), number))
+    return index
+
+
+def list_versions():
+    """Every version number available in lightning_logs, sorted."""
+    return sorted(number for _, number in _version_index())
+
+
+def _version_for_run(run, version_index):
+    """Map a checkpoints/<run> folder (named YYYYMMDD_HHMMSS) to its lightning_logs
+    version by matching the run's start time to the nearest version folder."""
+    try:
+        run_time = datetime.strptime(run, "%Y%m%d_%H%M%S").timestamp()
+    except ValueError:
+        return None
+
+    best_version = None
+    best_gap = None
+    for start_time, number in version_index:
+        gap = abs(start_time - run_time)
+        if best_gap is None or gap < best_gap:
+            best_gap = gap
+            best_version = number
+
+    # Only trust the match if the times line up (same run, within ~5 minutes).
+    if best_gap is not None and best_gap <= 300:
+        return best_version
+    return None
+
+
+def list_checkpoint_metas():
+    """Parse every checkpoint and tag each with its lightning_logs version (the
+    filename's own "-vN" suffix is unreliable/absent on newer runs, so the
+    folder-name -> version_N time match takes priority when it's available)."""
+    version_index = _version_index()
+    metas = []
+    for path in list_checkpoints():
+        meta = parse_checkpoint(path)
+        matched_version = _version_for_run(meta["run"], version_index)
+        if matched_version is not None:
+            meta["version"] = matched_version
+        metas.append(meta)
+    return metas
 
 
 def _clean_state_dict(raw):
@@ -134,8 +264,14 @@ def load_model(path):
     model.load_state_dict(model_weights)
     model.eval()
 
+    # Which columns this checkpoint's era was trained on — predict() reads this
+    # instead of the module-level FEATURE_COLS, so an older/newer checkpoint
+    # automatically gets the feature set that matches its own input width.
+    feature_cols = feature_cols_for(inp)
+
     info = {"input": inp, "hidden": hidden, "layers": layers,
-            "classes": n_classes, "missing": [], "path": path}
+            "classes": n_classes, "missing": [], "path": path,
+            "feature_cols": feature_cols}
     return model, info
 
 
@@ -199,11 +335,15 @@ def build_panel(tickers, start, end):
 
 
 @torch.no_grad()
-def predict(panel, model):
+def predict(panel, model, info):
+    """Score every ticker in `panel` with `model`. `info` (from load_model) carries
+    `feature_cols` — the exact column set this checkpoint's era was trained on —
+    so older and newer checkpoints each get fed the columns they actually expect."""
+    feature_cols = info["feature_cols"]
     rows = []
     for ticker, df in panel.groupby("ticker"):
         df = df.sort_values("Date")
-        df = df.dropna(subset=FEATURE_COLS).reset_index(drop=True)
+        df = df.dropna(subset=feature_cols).reset_index(drop=True)
         if len(df) < WINDOW:
             continue
 
@@ -212,8 +352,8 @@ def predict(panel, model):
         if len(train_rows) < WINDOW:
             train_rows = df
         scaler = StandardScaler()
-        scaler.fit(train_rows[FEATURE_COLS])
-        feats = scaler.transform(df[FEATURE_COLS]).astype(np.float32)
+        scaler.fit(train_rows[feature_cols])
+        feats = scaler.transform(df[feature_cols]).astype(np.float32)
 
         # Build one rolling window of WINDOW days for each day we can score.
         windows = []

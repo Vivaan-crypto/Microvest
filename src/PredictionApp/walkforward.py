@@ -139,21 +139,28 @@ def run_fold(panel, fold, run_dir, args):
         print("  SKIP: an empty split")
         return None
 
+    # Same seed per fold: fold-to-fold and run-to-run comparisons in scorecard.py
+    # are only meaningful if init/shuffle noise is fixed.
+    L.seed_everything(config.SEED, workers=True)
+
     ytr = train_labels(ds_tr)
     model = LightningModule(
-        ytr, lr=args.lr,
+        ytr, lr=args.lr, weight_decay=config.WEIGHT_DECAY,
         val_fwd_ret=np.array(va_side["fwd_z"]),      # grade IC on the v2 target
         val_dates=np.array(va_side["date"]),
         input_size=len(FEATURE_COLS),
+        hidden_size=config.LSTM_HIDDEN,
+        num_layers=config.LSTM_LAYERS,
+        dropout=config.DROPOUT,
     )
 
-    # Parallel workers so window slicing/tensor conversion overlaps with the
-    # training step instead of blocking it (matches the old LightningDateModule).
+    # num_workers=0 on purpose: Windows spawn-workers each copy the fold's
+    # feature arrays (hundreds of MB on sp500) and __getitem__ is a trivial
+    # array slice, so main-process loading is faster AND lighter here.
     loader_tr = DataLoader(ds_tr, batch_size=args.batch_size, shuffle=True, drop_last=True,
-                           num_workers=5, persistent_workers=True, prefetch_factor=2,
-                           pin_memory=False)
+                           num_workers=config.WF_NUM_WORKERS)
     loader_va = DataLoader(ds_va, batch_size=args.batch_size, shuffle=False,
-                           num_workers=2, persistent_workers=True)
+                           num_workers=config.WF_NUM_WORKERS)
 
     ckpt_dir = os.path.join(run_dir, f"ckpt_{name}")
     checkpoint = ModelCheckpoint(monitor="val/ic_spearman", mode="max",

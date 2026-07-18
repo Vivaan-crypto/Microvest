@@ -307,46 +307,56 @@ def get_panel(tickers, end_iso):
 
 @st.cache_data(show_spinner=True, ttl=60 * 60)
 def get_predictions(tickers, ckpt_path, _mtime, end_iso):
-    model, _ = get_model(ckpt_path, _mtime)
+    model, info = get_model(ckpt_path, _mtime)
     panel = get_panel(tickers, end_iso)   # reused across every model
-    return engine.predict(panel, model)
+    return engine.predict(panel, model, info)
 
 
 @st.cache_data(show_spinner=True, ttl=60 * 60)
 def get_single_prediction(ticker, ckpt_path, _mtime, end_iso):
     """Predict one (possibly out-of-universe) ticker fetched live. Cross-sectional
     features are neutralized when ranked against itself — fine for a lookup."""
-    model, _ = get_model(ckpt_path, _mtime)
+    model, info = get_model(ckpt_path, _mtime)
     panel = get_panel((ticker,), end_iso)   # reused across every model
-    return engine.predict(panel, model)
+    return engine.predict(panel, model, info)
 
 
 # ------------------------------------------------------------------
 # Shared sidebar
 # ------------------------------------------------------------------
 def _checkpoint_label(meta):
-    """Short dropdown label built from a parsed checkpoint's metrics."""
+    """Short dropdown label built from a parsed checkpoint's metrics. The score's
+    name (IC, edge, ...) reflects whatever objective that run was trained on —
+    training has changed metrics before, so this is read from the filename, not
+    assumed to always be IC."""
     if meta["ic"] is None:
         return meta["name"]   # couldn't parse metrics — show the raw filename
     version = meta["version"]
     version_text = f"v{version}" if version is not None else "v?"
-    return (f"ic {meta['ic']:+.3f} · acc {meta['acc']:.2f} · "
+    metric_name = meta["metric_name"] or "score"
+    return (f"{metric_name} {meta['ic']:+.4g} · acc {meta['acc']:.2f} · "
             f"e{meta['epoch']:02d} · {version_text}")
 
 
 def _filter_checkpoints(metas):
-    """Sidebar filters (IC range / accuracy range / version). Returns the kept
+    """Sidebar filters (score range / accuracy range / version). Returns the kept
     checkpoints. Checkpoints whose metrics didn't parse bypass the numeric filters
     so they're never hidden."""
     ic_values = sorted(m["ic"] for m in metas if m["ic"] is not None)
     acc_values = sorted(m["acc"] for m in metas if m["acc"] is not None)
     versions = engine.list_versions()   # every version_N folder in lightning_logs
 
+    # Different training runs may checkpoint on different objectives (IC vs edge,
+    # etc) — label the slider with whichever one is actually present.
+    metric_names = sorted({m["metric_name"] for m in metas if m["metric_name"]})
+    score_label = "/".join(n.upper() for n in metric_names) if metric_names else "Score"
+
     with st.sidebar.expander("🔎 Filter models"):
         ic_range = None
         if len(ic_values) >= 2 and ic_values[0] < ic_values[-1]:
             lo, hi = float(ic_values[0]), float(ic_values[-1])
-            ic_range = st.slider("IC range", lo, hi, (lo, hi), step=0.001, format="%.3f")
+            ic_range = st.slider(f"{score_label} range", lo, hi, (lo, hi),
+                                 step=(hi - lo) / 200 or 0.001, format="%.4g")
 
         acc_range = None
         if len(acc_values) >= 2 and acc_values[0] < acc_values[-1]:
