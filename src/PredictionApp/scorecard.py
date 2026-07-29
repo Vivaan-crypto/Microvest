@@ -162,16 +162,15 @@ def grade_checkpoint(ckpt_path: str, universe: str):
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     "streamlit_app"))
     import engine  # noqa: E402
-    import data_store  # noqa: E402
     import preprocess as pp  # noqa: E402
 
     model, info = engine.load_model(ckpt_path)
     print(f"Checkpoint: {ckpt_path}")
     print(f"  arch: {info['layers']}L h{info['hidden']} {info['input']}f\n")
 
-    tickers = data_store.resolve_universe(universe)
+    tickers = pp.resolve_universe(universe)   # universe helpers now live in preprocess
     panel = pp.build_panel(tickers)
-    preds = engine.predict(panel, model)
+    preds = engine.predict(panel, model, info)
     oos = preds[preds["date"] > pd.Timestamp(pp.TRAIN_END)].copy()
 
     ic_fmt = {"n": "{:,.0f}", "ic_z": "{:+.4f}", "ic_ret": "{:+.4f}",

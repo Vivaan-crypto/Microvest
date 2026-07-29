@@ -127,7 +127,11 @@ def cross_sectional_ic(
 
     out = {}
     for d, grp in df.groupby("date"):
-        if len(grp) < min_names or grp["signal"].std() == 0 or grp["fwd_ret"].std() == 0:
+        if (
+            len(grp) < min_names
+            or grp["signal"].std() == 0
+            or grp["fwd_ret"].std() == 0
+        ):
             continue
         if method == "pearson":
             ic = pearsonr(grp["signal"], grp["fwd_ret"])[0]
@@ -137,8 +141,9 @@ def cross_sectional_ic(
     return pd.Series(out, name=f"ic_{method}").sort_index()
 
 
-def icir(daily_ic: pd.Series, annualize: bool = True,
-         periods_per_year: int = TRADING_DAYS) -> Dict[str, float]:
+def icir(
+    daily_ic: pd.Series, annualize: bool = True, periods_per_year: int = TRADING_DAYS
+) -> Dict[str, float]:
     """Summarize a daily IC series: mean, std, hit rate, and ICIR.
 
     ICIR = mean(IC) / std(IC). Annualized by sqrt(periods_per_year) -- note this
@@ -146,9 +151,13 @@ def icir(daily_ic: pd.Series, annualize: bool = True,
     """
     ic = daily_ic.replace([np.inf, -np.inf], np.nan).dropna()
     if len(ic) < 2 or ic.std() == 0:
-        return {"ic_mean": float(ic.mean()) if len(ic) else float("nan"),
-                "ic_std": float("nan"), "icir": float("nan"),
-                "ic_hit_rate": float("nan"), "n_days": int(len(ic))}
+        return {
+            "ic_mean": float(ic.mean()) if len(ic) else float("nan"),
+            "ic_std": float("nan"),
+            "icir": float("nan"),
+            "ic_hit_rate": float("nan"),
+            "n_days": int(len(ic)),
+        }
     raw = ic.mean() / ic.std()
     return {
         "ic_mean": float(ic.mean()),
@@ -204,8 +213,11 @@ def decile_spread(
 
 
 def gated_return(
-    dates: np.ndarray, signal: np.ndarray, fwd_ret: np.ndarray,
-    threshold: float, periods_per_year: int = TRADING_DAYS,
+    dates: np.ndarray,
+    signal: np.ndarray,
+    fwd_ret: np.ndarray,
+    threshold: float,
+    periods_per_year: int = TRADING_DAYS,
 ) -> Dict[str, float]:
     """Confidence-GATED book: take a position only when |signal| >= threshold
     (long if signal>0, short if <0), variable count per day -- quiet days may
@@ -221,16 +233,24 @@ def gated_return(
     df = df.replace([np.inf, -np.inf], np.nan).dropna()
     df = df[np.abs(df["signal"]) >= threshold]
     if df.empty:
-        return {"edge_mean": float("nan"), "edge_sharpe": float("nan"),
-                "hit_rate": float("nan"), "trades_per_day": 0.0, "n_trades": 0}
+        return {
+            "edge_mean": float("nan"),
+            "edge_sharpe": float("nan"),
+            "hit_rate": float("nan"),
+            "trades_per_day": 0.0,
+            "n_trades": 0,
+        }
 
-    df["ret"] = np.sign(df["signal"]) * df["fwd_ret"]     # signed per-trade return
-    daily = df.groupby("date")["ret"].mean()              # equal-weight book PnL/day
+    df["ret"] = np.sign(df["signal"]) * df["fwd_ret"]  # signed per-trade return
+    daily = df.groupby("date")["ret"].mean()  # equal-weight book PnL/day
     n_days = df["date"].nunique()
-    sharpe = (float(daily.mean() / daily.std() * np.sqrt(periods_per_year))
-              if len(daily) >= 2 and daily.std() > 0 else float("nan"))
+    sharpe = (
+        float(daily.mean() / daily.std() * np.sqrt(periods_per_year))
+        if len(daily) >= 2 and daily.std() > 0
+        else float("nan")
+    )
     return {
-        "edge_mean": float(df["ret"].mean()),             # avg return per position taken
+        "edge_mean": float(df["ret"].mean()),  # avg return per position taken
         "edge_sharpe": sharpe,
         "hit_rate": float((df["ret"] > 0).mean()),
         "trades_per_day": float(len(df) / n_days),
@@ -239,8 +259,11 @@ def gated_return(
 
 
 def topk_return(
-    dates: np.ndarray, signal: np.ndarray, fwd_ret: np.ndarray,
-    k: int = 3, periods_per_year: int = TRADING_DAYS,
+    dates: np.ndarray,
+    signal: np.ndarray,
+    fwd_ret: np.ndarray,
+    k: int = 3,
+    periods_per_year: int = TRADING_DAYS,
 ) -> Dict[str, float]:
     """Concentrated-book metric: each day, long the top-K names by signal and
     short the bottom-K (NOT top/bottom quantile of whatever's available).
@@ -265,8 +288,8 @@ def topk_return(
         if len(grp) < 2 * k or grp["signal"].std() == 0:
             continue
         ordered = grp.sort_values("signal")
-        shorts = ordered.head(k)["fwd_ret"]     # lowest-signal candidates
-        longs = ordered.tail(k)["fwd_ret"]      # highest-signal candidates
+        shorts = ordered.head(k)["fwd_ret"]  # lowest-signal candidates
+        longs = ordered.tail(k)["fwd_ret"]  # highest-signal candidates
         ts = pd.Timestamp(d)
         pnl[ts] = float(longs.mean() - shorts.mean())
         long_hits[ts] = float((longs > 0).mean())
@@ -274,22 +297,30 @@ def topk_return(
 
     pnl = pd.Series(pnl).sort_index()
     if len(pnl) < 2 or pnl.std() == 0:
-        return {"edge_mean": float(pnl.mean()) if len(pnl) else float("nan"),
-                "edge_sharpe": float("nan"), "hit_rate": float("nan"),
-                "n_days": int(len(pnl))}
+        return {
+            "edge_mean": float(pnl.mean()) if len(pnl) else float("nan"),
+            "edge_sharpe": float("nan"),
+            "hit_rate": float("nan"),
+            "n_days": int(len(pnl)),
+        }
 
     hits = pd.concat([pd.Series(long_hits), pd.Series(short_hits)])
     return {
         "edge_mean": float(pnl.mean()),
         "edge_sharpe": float(pnl.mean() / pnl.std() * np.sqrt(periods_per_year)),
-        "hit_rate": float(hits.mean()),   # fraction of the K longs/K shorts correctly signed
+        "hit_rate": float(
+            hits.mean()
+        ),  # fraction of the K longs/K shorts correctly signed
         "n_days": int(len(pnl)),
     }
 
 
 def long_short_sharpe(
-    dates: np.ndarray, signal: np.ndarray, fwd_ret: np.ndarray,
-    quantile: float = 0.2, periods_per_year: int = TRADING_DAYS,
+    dates: np.ndarray,
+    signal: np.ndarray,
+    fwd_ret: np.ndarray,
+    quantile: float = 0.2,
+    periods_per_year: int = TRADING_DAYS,
 ) -> Dict[str, float]:
     """Annualized Sharpe of a daily, dollar-neutral long-short book.
 
@@ -314,8 +345,11 @@ def long_short_sharpe(
 
     pnl = pd.Series(pnl).sort_index()
     if len(pnl) < 2 or pnl.std() == 0:
-        return {"sharpe": float("nan"), "mean_pnl": float(pnl.mean()) if len(pnl) else float("nan"),
-                "n_days": int(len(pnl))}
+        return {
+            "sharpe": float("nan"),
+            "mean_pnl": float(pnl.mean()) if len(pnl) else float("nan"),
+            "n_days": int(len(pnl)),
+        }
     return {
         "sharpe": float(pnl.mean() / pnl.std() * np.sqrt(periods_per_year)),
         "mean_pnl": float(pnl.mean()),
@@ -360,21 +394,33 @@ def evaluate_signal(
     if proba is not None:
         report.update(conditional_returns(proba, fwd_ret, min_count=edge_min_count))
     else:
-        report.update({"short_mean_ret": float("nan"), "short_n": 0,
-                       "notrade_mean_ret": float("nan"), "notrade_n": 0,
-                       "long_mean_ret": float("nan"), "long_n": 0,
-                       "edge": float("nan"), "edge_coverage": float("nan")})
+        report.update(
+            {
+                "short_mean_ret": float("nan"),
+                "short_n": 0,
+                "notrade_mean_ret": float("nan"),
+                "notrade_n": 0,
+                "long_mean_ret": float("nan"),
+                "long_n": 0,
+                "edge": float("nan"),
+                "edge_coverage": float("nan"),
+            }
+        )
 
-    report.update({f"hit_{k}": v for k, v in
-                   directional_hit_rate(signal, fwd_ret, hit_threshold).items()})
-    report.update({f"decile_{k}": v for k, v in
-                   decile_spread(signal, fwd_ret).items()})
+    report.update(
+        {
+            f"hit_{k}": v
+            for k, v in directional_hit_rate(signal, fwd_ret, hit_threshold).items()
+        }
+    )
+    report.update({f"decile_{k}": v for k, v in decile_spread(signal, fwd_ret).items()})
 
     if dates is not None:
         daily_ic = cross_sectional_ic(dates, signal, fwd_ret, "spearman")
         report.update(icir(daily_ic))
-        report.update({f"ls_{k}": v for k, v in
-                       long_short_sharpe(dates, signal, fwd_ret).items()})
+        report.update(
+            {f"ls_{k}": v for k, v in long_short_sharpe(dates, signal, fwd_ret).items()}
+        )
 
     if verbose:
         _print_report(report, hit_threshold)
@@ -386,23 +432,37 @@ def _print_report(r: Dict[str, float], hit_threshold: float) -> None:
         return r.get(k, float("nan"))
 
     print("\n=== Signal metrics (P(Long) - P(Short) vs. forward return) ===")
-    print(f"  EDGE (long-short ret): {g('edge'):+.4f}  "
-          f"(long {g('long_mean_ret'):+.4f} n={int(g('long_n'))} / "
-          f"short {g('short_mean_ret'):+.4f} n={int(g('short_n'))})")
-    print(f"  NoTrade mean ret     : {g('notrade_mean_ret'):+.4f} "
-          f"(n={int(g('notrade_n'))}), edge coverage {g('edge_coverage'):.1%}")
+    print(
+        f"  EDGE (long-short ret): {g('edge'):+.4f}  "
+        f"(long {g('long_mean_ret'):+.4f} n={int(g('long_n'))} / "
+        f"short {g('short_mean_ret'):+.4f} n={int(g('short_n'))})"
+    )
+    print(
+        f"  NoTrade mean ret     : {g('notrade_mean_ret'):+.4f} "
+        f"(n={int(g('notrade_n'))}), edge coverage {g('edge_coverage'):.1%}"
+    )
     print(f"  IC  (Pearson)        : {g('ic_pearson'):+.4f}")
     print(f"  IC  (Spearman/rank)  : {g('ic_spearman'):+.4f}")
     if "icir" in r:
-        print(f"  Cross-sectional IC   : {g('ic_mean'):+.4f} "
-              f"(std {g('ic_std'):.4f}, {int(g('n_days'))} days)")
-        print(f"  ICIR (annualized)    : {g('icir'):+.3f}  "
-              f"(IC>0 on {g('ic_hit_rate'):.1%} of days)")
-    print(f"  Hit rate (|sig|>{hit_threshold:g}) : {g('hit_hit_rate'):.1%} "
-          f"(coverage {g('hit_coverage'):.1%}, n={int(g('hit_n'))})")
-    print(f"  Decile spread        : {g('decile_spread'):+.4f} "
-          f"(top {g('decile_top'):+.4f} / bottom {g('decile_bottom'):+.4f})")
+        print(
+            f"  Cross-sectional IC   : {g('ic_mean'):+.4f} "
+            f"(std {g('ic_std'):.4f}, {int(g('n_days'))} days)"
+        )
+        print(
+            f"  ICIR (annualized)    : {g('icir'):+.3f}  "
+            f"(IC>0 on {g('ic_hit_rate'):.1%} of days)"
+        )
+    print(
+        f"  Hit rate (|sig|>{hit_threshold:g}) : {g('hit_hit_rate'):.1%} "
+        f"(coverage {g('hit_coverage'):.1%}, n={int(g('hit_n'))})"
+    )
+    print(
+        f"  Decile spread        : {g('decile_spread'):+.4f} "
+        f"(top {g('decile_top'):+.4f} / bottom {g('decile_bottom'):+.4f})"
+    )
     if "ls_sharpe" in r:
-        print(f"  Long-short Sharpe    : {g('ls_sharpe'):+.2f} "
-              f"(mean daily PnL {g('ls_mean_pnl'):+.4f})")
+        print(
+            f"  Long-short Sharpe    : {g('ls_sharpe'):+.2f} "
+            f"(mean daily PnL {g('ls_mean_pnl'):+.4f})"
+        )
     print("=" * 62)

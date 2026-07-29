@@ -1,16 +1,17 @@
+import config
 import lightning as L
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 import torch
+from dataset import StockDataset
+from metrics import evaluate_signal
+from model import StockLSTMModel
+from sklearn.utils.class_weight import compute_class_weight
 from torch import nn
 from torch.utils.data import DataLoader
-import matplotlib.pyplot as plt
 from torchmetrics import F1Score
 from torchmetrics.classification import MulticlassConfusionMatrix, MulticlassRecall
-import seaborn as sns
-from model import StockTransformerModel, StockLSTMModel
-from dataset import StockDataset
-from sklearn.utils.class_weight import compute_class_weight
-from metrics import evaluate_signal
-import numpy as np
 
 CLASS_NAMES = ("Short", "NoTrade", "Long")
 
@@ -22,39 +23,72 @@ class LightningDateModule(L.LightningDataModule):
         self.val_dataset = StockDataset(X_val, y_val)
         self.batch_size = batch_size
 
+    def _loader_kwargs(self):
+        # persistent_workers/prefetch_factor are only valid when num_workers > 0
+        # (0 on Windows -- see config.py).
+        kw = dict(num_workers=config.DATALOADER_WORKERS)
+        if config.DATALOADER_WORKERS > 0:
+            kw.update(persistent_workers=True, prefetch_factor=2)
+        return kw
+
     def train_dataloader(self):
-        # Natural distribution + shuffle. Imbalance is handled once, in the loss.
-        return DataLoader(self.train_dataset, batch_size=self.batch_size,
-                          shuffle=True, drop_last=True, num_workers=5, pin_memory=False, persistent_workers=True, prefetch_factor=2)
+        # Natural distribution + shuffle; imbalance is handled in the loss.
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            drop_last=True,
+            **self._loader_kwargs(),
+        )
 
     def val_dataloader(self):
         # shuffle=False keeps prediction order aligned with the ranking side-data.
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            **self._loader_kwargs(),
+        )
 
 
 class LightningModule(L.LightningModule):
-    def __init__(self, y, lr=1e-3, weight_decay=1e-3, val_fwd_ret=None, val_dates=None,
-                 input_size=26, hidden_size=64, num_layers=2, dropout=0.2):
+    def __init__(
+        self,
+        y,
+        lr=1e-3,
+        weight_decay=1e-3,
+        val_fwd_ret=None,
+        val_dates=None,
+        input_size=26,
+        hidden_size=64,
+        num_layers=2,
+        dropout=0.2,
+    ):
         super().__init__()
         self.save_hyperparameters(ignore=["y", "val_fwd_ret", "val_dates"])
 
-        # Ranking side-data, aligned 1:1 with the val set. Pass fwd_z here (v2)
-        # so the IC grades the model on the vol-normalized target it's trained on.
-        self.val_fwd_ret = None if val_fwd_ret is None else np.asarray(val_fwd_ret, dtype=float)
+        # Ranking side-data aligned 1:1 with the val set (pass fwd_z so IC grades
+        # the vol-normalized target the model trains on).
+        self.val_fwd_ret = (
+            None if val_fwd_ret is None else np.asarray(val_fwd_ret, dtype=float)
+        )
         self.val_dates = None if val_dates is None else np.asarray(val_dates)
 
-        # Eager, not torch.compile: on Windows CPU the LSTM gains almost nothing
-        # from inductor, and each walk-forward fold would pay the compile stall.
-        #self.model = StockTransformerModel(d_model=64, transformer_layers=1)
-        self.model = StockLSTMModel(input_size=input_size, lstm_hidden_size=hidden_size,
-                                    lstm_layers=num_layers, dropout_prob=dropout)
+        self.model = StockLSTMModel(
+            input_size=input_size,
+            lstm_hidden_size=hidden_size,
+            lstm_layers=num_layers,
+            dropout_prob=dropout,
+        )
         # Macro-F1 (collapse-sensitive) + per-class recall = per-class accuracy.
         self.train_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
         self.val_f1 = F1Score(task="multiclass", num_classes=3, average="macro")
         self.train_acc_pc = MulticlassRecall(num_classes=3, average=None)
         self.confusion_matrix = MulticlassConfusionMatrix(num_classes=3)
 
-        class_weights = compute_class_weight("balanced", classes=np.unique(y), y=y).astype(np.float32)
+        class_weights = compute_class_weight(
+            "balanced", classes=np.unique(y), y=y
+        ).astype(np.float32)
         print(f"Class weights: {class_weights}")
         self.criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights))
 
@@ -69,26 +103,31 @@ class LightningModule(L.LightningModule):
         y_true = y.squeeze(-1)
         loss = self.criterion(preds, y_true)
 
-        # Loss every step (cheap, and the epoch mean should cover every batch);
-        # heavier torchmetrics updates subsampled. Epoch-aggregated so train/f1
-        # is directly comparable to val/f1.
+        # Loss every step (cheap); heavier torchmetrics subsampled. Epoch-aggregated
+        # so train/f1 is comparable to val/f1.
         self.log("train/loss", loss, prog_bar=True, on_step=True, on_epoch=True)
         if self.global_step % 5 == 0:
             self.train_f1.update(preds, y_true)
             self.train_acc_pc.update(preds, y_true)
-            self.log("train/f1", self.train_f1, prog_bar=True, on_step=False, on_epoch=True)
+            self.log(
+                "train/f1", self.train_f1, prog_bar=True, on_step=False, on_epoch=True
+            )
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        self.val_preds.append(self(x).detach().cpu())
+        # .float(): under bf16-mixed the logits come back bf16; upcast so the loss
+        # (float32 class weights) and downstream metrics don't hit a dtype clash.
+        self.val_preds.append(self(x).detach().float().cpu())
         self.val_targets.append(y.squeeze(-1).detach().cpu())
 
     def on_validation_epoch_end(self):
         if not self.val_preds:
             return
-        preds = torch.cat(self.val_preds)
-        targets = torch.cat(self.val_targets)
+        # Accumulated on CPU (validation_step) to avoid growing GPU memory; move the
+        # tiny [N,3]/[N] batch back onto the model's device for the loss/metrics.
+        preds = torch.cat(self.val_preds).to(self.device)
+        targets = torch.cat(self.val_targets).to(self.device)
         pred_cls = preds.argmax(1)
 
         self.log("val/loss", self.criterion(preds, targets), prog_bar=True)
@@ -107,23 +146,31 @@ class LightningModule(L.LightningModule):
             for name, a in zip(CLASS_NAMES, train_acc):
                 self.log(f"train/acc_{name}", float(a))
 
-        self._log_figure("confusion_matrix", self._plot_confusion(
-            self.confusion_matrix(preds, targets)))
-        self._log_figure("per_class_accuracy", self._plot_per_class_acc(train_acc, val_acc))
+        self._log_figure(
+            "confusion_matrix",
+            self._plot_confusion(self.confusion_matrix(preds, targets)),
+        )
+        self._log_figure(
+            "per_class_accuracy", self._plot_per_class_acc(train_acc, val_acc)
+        )
 
         # Ranking metrics: the real objective. IC ignores calibration, so it can
-        # keep rising even as CE val/loss climbs (sharper, over-confident softmax).
+        # rise even as CE val/loss climbs.
         if self.val_fwd_ret is not None and preds.shape[0] == len(self.val_fwd_ret):
-            rep = evaluate_signal(self.val_fwd_ret, proba=torch.softmax(preds, 1).numpy(),
-                                  dates=self.val_dates, verbose=False)
-            for src, dst in (("ic_spearman", "val/ic_spearman"),
-                             ("decile_spread", "val/decile_spread"),
-                             ("ls_sharpe", "val/ls_sharpe")):
+            rep = evaluate_signal(
+                self.val_fwd_ret,
+                proba=torch.softmax(preds, 1).cpu().numpy(),
+                dates=self.val_dates,
+                verbose=False,
+            )
+            for src, dst in (
+                ("ic_spearman", "val/ic_spearman"),
+                ("decile_spread", "val/decile_spread"),
+                ("ls_sharpe", "val/ls_sharpe"),
+            ):
                 v = rep.get(src, float("nan"))
-                # val/ic_spearman is the monitored metric: it must be logged every
-                # epoch or EarlyStopping/Checkpoint error out mid-run. A degenerate
-                # epoch (constant preds -> NaN spearman) logs -1 so mode="max"
-                # treats it as terrible instead of killing the run.
+                # A degenerate epoch (constant preds -> NaN spearman) logs -1 so
+                # mode="max" treats it as terrible instead of erroring mid-run.
                 if dst == "val/ic_spearman" and not np.isfinite(v):
                     v = -1.0
                 if np.isfinite(v):
@@ -133,20 +180,23 @@ class LightningModule(L.LightningModule):
         self.val_targets.clear()
 
     def configure_optimizers(self):
-        # Decay weight matrices only. Decaying biases/LayerNorm gains drags them
-        # toward zero for no generalization benefit -- it measurably hurts small
-        # models like this one.
+        # Weight decay on weight matrices only; decaying biases/LayerNorm gains
+        # measurably hurts small models like this one.
         decay, no_decay = [], []
         for name, p in self.named_parameters():
             if not p.requires_grad:
                 continue
             (no_decay if p.ndim <= 1 else decay).append(p)
         opt = torch.optim.AdamW(
-            [{"params": decay, "weight_decay": self.hparams.weight_decay},
-             {"params": no_decay, "weight_decay": 0.0}],
-            lr=self.hparams.lr)
+            [
+                {"params": decay, "weight_decay": self.hparams.weight_decay},
+                {"params": no_decay, "weight_decay": 0.0},
+            ],
+            lr=self.hparams.lr,
+        )
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(
-            opt, T_max=self.trainer.max_epochs, eta_min=self.hparams.lr * 0.01)
+            opt, T_max=self.trainer.max_epochs, eta_min=self.hparams.lr * 0.01
+        )
         return {"optimizer": opt, "lr_scheduler": sched}
 
     @staticmethod
@@ -154,12 +204,15 @@ class LightningModule(L.LightningModule):
         out = []
         for c in range(3):
             mask = targets == c
-            out.append(float((pred_cls[mask] == c).float().mean()) if mask.any() else float("nan"))
+            out.append(
+                float((pred_cls[mask] == c).float().mean())
+                if mask.any()
+                else float("nan")
+            )
         return out
 
     def _log_figure(self, name, fig):
-        # Only TensorBoard-style loggers expose add_figure; skip cleanly when
-        # there's no logger (e.g. quick eval runs) or it doesn't support figures.
+        # Only TensorBoard-style loggers expose add_figure; skip cleanly otherwise.
         exp = getattr(self.logger, "experiment", None) if self.logger else None
         if exp is not None and hasattr(exp, "add_figure"):
             exp.add_figure(f"val/{name}", fig, global_step=self.current_epoch)
@@ -167,8 +220,15 @@ class LightningModule(L.LightningModule):
 
     def _plot_confusion(self, cm):
         fig, ax = plt.subplots(figsize=(6, 5))
-        sns.heatmap(cm.cpu().numpy(), annot=True, fmt="d", cmap="Blues", ax=ax,
-                    xticklabels=CLASS_NAMES, yticklabels=CLASS_NAMES)
+        sns.heatmap(
+            cm.cpu().numpy(),
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            ax=ax,
+            xticklabels=CLASS_NAMES,
+            yticklabels=CLASS_NAMES,
+        )
         ax.set_xlabel("Predicted")
         ax.set_ylabel("True")
         ax.set_title("Validation Confusion Matrix")

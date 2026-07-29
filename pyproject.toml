@@ -37,3 +37,21 @@ dependencies = [
     "transformers>=5.12.1",
     "yfinance>=1.1.0",
 ]
+
+# ------------------------------------------------------------------
+# CUDA build of PyTorch.
+#
+# PyPI ships the CPU-only torch wheel by default, which silently trains on CPU.
+# Pull torch from PyTorch's CUDA 12.8 index instead. cu128 is required for
+# Blackwell GPUs (RTX 50-series, sm_120) -- older cu12x wheels install but then
+# fail at runtime with "no kernel image is available". `explicit = true` keeps
+# this index scoped to torch only, so every other dependency still resolves from
+# PyPI.
+# ------------------------------------------------------------------
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }

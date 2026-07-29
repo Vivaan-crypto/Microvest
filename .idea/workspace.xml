@@ -21,20 +21,44 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Model filtering + version labeling">
+      <change beforePath="$PROJECT_DIR$/.idea/Microvest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Microvest.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AWS_SAGEMAKER_COST_ESTIMATE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CODE_REVIEW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ENHANCED_LOGGING_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FINAL_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/GRADIENT_LOGGING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/INTEL_I5_VS_AWS_CPU_COMPARISON.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERFORMANCE_CLASS_BALANCE_FIXES.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/QUICK_FIX_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TRAINING_READY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/data_cache.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/stocks_to_dict.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/backtest.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/data_store.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/indicators.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/metrics.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model_final.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/news_sentiment.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/preprocess.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PredictionApp/scorecard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/scorecard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PredictionApp/walkforward.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/walkforward.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/Home.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/walkforward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +86,7 @@
   <component name="CopilotPersistence">
     <persistenceIdMap>
       <entry key="_C:/GitHub/Microvest" value="393FMfQpOsg9klmgBr8m8AmdkRT" />
+      <entry key="_C:/Github/Microvest-Stock-Market-Prediction" value="3H73EGopdkjtcjpnyoxeJzd7iB2" />
       <entry key="_C:/Users/shahv/OneDrive/Documents/GitHub/Microvest" value="2zQvGxede9A8i8o6ribiPLdyyXj" />
     </persistenceIdMap>
   </component>
@@ -110,61 +135,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.1015315495780689" />
-      <entry key="MS500" value="1.6466514219904609" />
-      <entry key="S2" value="2.561024995018685" />
-      <entry key="S5" value="3.750939462322411" />
-      <entry key="S10" value="4.611609523172971" />
-      <entry key="S30" value="5.45857374955626" />
-      <entry key="S60" value="5.738831737791959" />
-      <entry key="M2" value="6.484078343746749" />
-      <entry key="M5" value="10.792492523456716" />
-      <entry key="M10" value="15.568493114857953" />
-      <entry key="M15" value="18.030977089496997" />
-      <entry key="M30" value="21.121187105239443" />
-      <entry key="H1" value="22.950462860326883" />
-      <entry key="H2" value="23.94610588500701" />
-      <entry key="H4" value="24.465961022569093" />
-      <entry key="D1" value="43.74694657799541" />
-      <entry key="W1" value="310.66970662345267" />
+      <entry key="MS100" value="1.0001750433652363" />
+      <entry key="MS500" value="1.1772675044599323" />
+      <entry key="S2" value="1.6488693834695916" />
+      <entry key="S5" value="1.8411295935693497" />
+      <entry key="S10" value="1.9171311757700475" />
+      <entry key="S30" value="1.9715768382734766" />
+      <entry key="S60" value="1.9858346916728449" />
+      <entry key="M2" value="2.038489354469876" />
+      <entry key="M5" value="3.8113248592851003" />
+      <entry key="M10" value="9.187437112160962" />
+      <entry key="M15" value="13.666966607926717" />
+      <entry key="M30" value="21.193426339109216" />
+      <entry key="H1" value="26.74187642560067" />
+      <entry key="H2" value="30.12632723368185" />
+      <entry key="H4" value="31.998023135551584" />
+      <entry key="D1" value="52.34367370748445" />
+      <entry key="W1" value="319.30684385418203" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
       <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="0.0" />
-      <entry key="M2" value="0.0" />
-      <entry key="M5" value="4.079179463592466E-193" />
-      <entry key="M10" value="6.386845436984109E-97" />
-      <entry key="M15" value="7.416362299046968E-65" />
-      <entry key="M30" value="8.611830408897781E-33" />
-      <entry key="H1" value="9.280052504334606E-17" />
-      <entry key="H2" value="9.687101183637626E-9" />
-      <entry key="H4" value="1.1490535667001424E-4" />
-      <entry key="D1" value="1.4218941982703173" />
-      <entry key="W1" value="26.685232003840596" />
+      <entry key="S2" value="2.5430899113101374E-145" />
+      <entry key="S5" value="1.464463327399947E-58" />
+      <entry key="S10" value="1.3141910202628884E-29" />
+      <entry key="S30" value="3.321756317740467E-10" />
+      <entry key="S60" value="2.5285819440670083E-5" />
+      <entry key="M2" value="0.007076213193312228" />
+      <entry key="M5" value="0.2089378160091895" />
+      <entry key="M10" value="0.6463034175935999" />
+      <entry key="M15" value="0.9417774297872646" />
+      <entry key="M30" value="1.3723960466163798" />
+      <entry key="H1" value="1.6567321773309363" />
+      <entry key="H2" value="1.8202898549138753" />
+      <entry key="H4" value="1.9081391701534016" />
+      <entry key="D1" value="3.3949272303145492" />
+      <entry key="W1" value="28.652494059125953" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.8830561686384142" />
-      <entry key="MS500" value="1.553034858254141" />
-      <entry key="S2" value="2.5252490734800612" />
-      <entry key="S5" value="3.731468988991487" />
-      <entry key="S10" value="4.600027013518311" />
-      <entry key="S30" value="5.454107922755416" />
-      <entry key="S60" value="5.736463607899092" />
-      <entry key="M2" value="6.48226083947648" />
-      <entry key="M5" value="10.790084822426309" />
-      <entry key="M10" value="15.56635271753499" />
-      <entry key="M15" value="18.029228485611863" />
-      <entry key="M30" value="21.120111117144972" />
-      <entry key="H1" value="22.9498652095886" />
-      <entry key="H2" value="23.945790839992394" />
-      <entry key="H4" value="24.46591415665422" />
-      <entry key="D1" value="45.16878371969066" />
-      <entry key="W1" value="337.3548108911488" />
+      <entry key="MS100" value="0.9267302412832503" />
+      <entry key="MS500" value="1.1549127994462949" />
+      <entry key="S2" value="1.6383528526277669" />
+      <entry key="S5" value="1.836114936384758" />
+      <entry key="S10" value="1.9144638653048376" />
+      <entry key="S30" value="1.9706495044876207" />
+      <entry key="S60" value="1.985389356400678" />
+      <entry key="M2" value="2.0450310966083793" />
+      <entry key="M5" value="4.016350137741403" />
+      <entry key="M10" value="9.827425680406872" />
+      <entry key="M15" value="14.602451049977361" />
+      <entry key="M30" value="22.561089028977552" />
+      <entry key="H1" value="28.395698250916322" />
+      <entry key="H2" value="31.945002271893742" />
+      <entry key="H4" value="33.905311595936226" />
+      <entry key="D1" value="55.738423575280045" />
+      <entry key="W1" value="347.95919295447123" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -206,7 +231,7 @@
     "Python.backtest.executor": "Run",
     "Python.gpu_test.executor": "Run",
     "Python.lightning_modules.executor": "Run",
-    "Python.lightning_train.executor": "Debug",
+    "Python.lightning_train.executor": "Run",
     "Python.main.executor": "Run",
     "Python.marketmap.executor": "Debug",
     "Python.model.executor": "Run",
@@ -228,6 +253,7 @@
     "Python.scratch_9.executor": "Run",
     "Python.squeeze_pro.executor": "Run",
     "Python.stock dashboard.executor": "Run",
+    "Python.stocks_to_dict.executor": "Run",
     "Python.tempCodeRunnerFile.executor": "Run",
     "Python.test.executor": "Run",
     "Python.train.executor": "Run",
@@ -236,13 +262,16 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "ai.playground.ignore.import.keys.banner.in.settings": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "copilot.chat.legacySessionMetadata.migrated": "true",
     "dart.analysis.tool.window.visible": "false",
     "deletionFromPopupRequiresConfirmation": "false",
     "git-widget-placeholder": "develop",
     "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "C:/GitHub/Microvest/src/PredictionApp/Data",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -250,7 +279,8 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "run.code.analysis.last.selected.profile": "aDefault",
-    "settings.editor.selected.configurable": "editor.preferences.appearance",
+    "settings.editor.selected.configurable": "settings.sync",
+    "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -373,9 +403,34 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="stocks_to_dict" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/stocks_to_dict.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.lightning_train" />
+        <item itemvalue="Python.stocks_to_dict" />
         <item itemvalue="Python.preprocess" />
         <item itemvalue="Python.backtest" />
         <item itemvalue="Python.scratch_4" />
@@ -385,7 +440,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+        <option value="bundled-python-sdk-6fa658e1df1a-5bd6d13a2a75-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-262.8665.369" />
       </set>
     </attachedChunks>
   </component>

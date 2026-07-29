@@ -1,52 +1,254 @@
 """
-Unified, leak-free preprocessing pipeline (config v2).
+Data + features + labels: the whole leak-free preprocessing pipeline (config v2).
 
-Produces properly windowed [N, T, F] tensors with:
-    - stationary, causal features only (no raw price/MA levels, no ticker id)
-    - factor features with decades of academic support (short-term reversal,
-      12-1 momentum, idiosyncratic volatility, cross-sectional ranks)
-    - v2 labels: beta-adjusted, vol-normalized forward z-score
-          fwd_excess = fwd_ret - beta_60d * mkt_fwd_ret
-          fwd_z      = fwd_excess / (vol_20d * sqrt(HORIZON))
-      Long / Short when |fwd_z| >= Z_THRESHOLD, else NoTrade. "Significant"
-      now means the same thing for a sleepy utility and for TSLA, in calm and
-      wild years alike — unlike the old flat +/-5%.
-    - per-ticker StandardScaler fit on the TRAIN period only
-    - a purge gap between train and test so no train label peeks into test
+This one module now owns everything between "a list of tickers" and "windowed
+[N, T, F] tensors":
+    * pure technical-indicator math (was indicators.py)
+    * download + parquet cache of raw prices and the S&P 500 universe
+      (was data_store.py)
+    * stationary, causal feature construction + v2 labels (beta-adjusted,
+      vol-normalized forward z-score)
 
-All downloads and the featurized panel are cached to parquet via data_store —
-first build is slow, every run after reads from disk in ~1s.
+Features are stationary/causal only (no raw price/MA levels, no ticker id) and the
+per-ticker StandardScaler is fit on the TRAIN period only, with a purge gap so no
+train label peeks into test.
 
-Run directly to (re)build the legacy single-split .pt tensors under Data/.
-For the walk-forward pipeline use walkforward.py instead.
+All downloads and the featurized panel are cached to parquet — first build is
+slow, every run after reads from disk in ~1s.
+
+Run directly to (re)build the legacy single-split .pt tensors under Data/ that
+`train.py fit` consumes. For the walk-forward pipeline use `train.py walkforward`.
 """
 
-from typing import List, Tuple
+import hashlib
+import io
+import os
+import urllib.request
+from typing import Callable, List, Tuple
 
 import numpy as np
 import pandas as pd
 import torch
+import yfinance as yf
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import os
 
 import config
-import data_store
-from indicators import (
-    ema,
-    macd,
-    pct_return,
-    realized_vol,
-    rsi,
-    sma,
-    volume_zscore,
-)
+
+
+# ==================================================================
+# Technical indicators (pure Series -> Series; no DataFrame/ticker logic)
+# ==================================================================
+def sma(series: pd.Series, length: int) -> pd.Series:
+    """Simple Moving Average."""
+    return series.rolling(window=length, min_periods=length).mean()
+
+
+def ema(series: pd.Series, length: int) -> pd.Series:
+    """Exponential Moving Average."""
+    return series.ewm(span=length, adjust=False, min_periods=length).mean()
+
+
+def rsi(series: pd.Series, length: int = 14) -> pd.Series:
+    """Relative Strength Index (Wilder)."""
+    delta = series.diff()
+
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+
+    avg_gain = gain.rolling(length, min_periods=length).mean()
+    avg_loss = loss.rolling(length, min_periods=length).mean()
+
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rsi_val = 100 - (100 / (1 + rs))
+
+    return rsi_val
+
+
+def macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
+    """MACD, signal line, and histogram. Returns (macd_line, signal_line, hist)."""
+    ema_fast = ema(series, fast)
+    ema_slow = ema(series, slow)
+    macd_line = ema_fast - ema_slow
+    signal_line = macd_line.ewm(span=signal, adjust=False, min_periods=signal).mean()
+    hist = macd_line - signal_line
+    return macd_line, signal_line, hist
+
+
+def pct_return(series: pd.Series, periods: int = 1) -> pd.Series:
+    """Backward-looking percentage return over 'periods' steps."""
+    return series.pct_change(periods=periods)
+
+
+def forward_return(series: pd.Series, horizon: int) -> pd.Series:
+    """Forward percentage return: (P_{t+horizon} / P_t) - 1."""
+    future = series.shift(-horizon)
+    return (future / series) - 1.0
+
+
+def realized_vol(returns: pd.Series, window: int) -> pd.Series:
+    """Rolling realized volatility (std) of returns over a window."""
+    return returns.rolling(window, min_periods=window).std()
+
+
+def volume_zscore(volume: pd.Series, window: int) -> pd.Series:
+    """Rolling z-score of volume: (V_t - mean) / std over 'window'."""
+    roll_mean = volume.rolling(window, min_periods=window).mean()
+    roll_std = volume.rolling(window, min_periods=window).std()
+    return (volume - roll_mean) / roll_std.replace(0, np.nan)
+
+
+# ==================================================================
+# Disk cache + universe + raw prices (was data_store.py)
+#
+# Download/compute ONCE, save to parquet under Data/cache/, reuse forever. Cache
+# keys hash the inputs that define the artifact (tickers + dates + config
+# version), so changing the universe or bumping CONFIG_VERSION naturally produces
+# a fresh file instead of silently reusing stale data. Pass refresh=True to force.
+# ==================================================================
+# The original hand-picked 100 mega-caps (fallback universe).
+LEGACY_100: List[str] = [
+    "AAPL",
+    "ABBV", "ADBE", "AMD", "AMZN", "APD", "ASML", "AVGO", "BA", "BAC",
+    "C", "CAT", "COP", "COST", "CRM", "CVX", "DIS", "DUK", "EOG", "EXC",
+    "FCX", "GE", "GOOGL", "GS", "HD", "HON", "INTC", "JNJ", "JPM", "KO",
+    "LIN", "META", "MMM", "MRK", "MS", "MSFT", "NEE", "NFLX", "NVDA", "PEP",
+    "PFE", "PG", "SHW", "SLB", "SO", "TSLA", "UNH", "WFC", "WMT", "XOM",
+    "ACN", "ADP", "AIG", "AMAT", "AMGN", "AMT", "AXP", "BK", "BKNG", "BLK",
+    "BMY", "BX", "CB", "CL", "CMCSA", "CME", "CSCO", "DE", "DHR", "EMR",
+    "F", "FDX", "GD", "GILD", "GM", "IBM", "ITW", "LLY", "LMT", "LOW",
+    "MA", "MCD", "MDT", "MO", "NKE", "ORCL", "PM", "QCOM", "RTX", "SBUX",
+    "SPG", "T", "TGT", "TMO", "TXN", "UNP", "UPS", "USB", "V", "VZ",
+]
+
+_SP500_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+
+
+def _ensure_cache_dir():
+    os.makedirs(config.CACHE_DIR, exist_ok=True)
+
+
+def _key(*parts) -> str:
+    """Stable short hash of whatever defines a cached artifact."""
+    blob = "|".join(str(p) for p in parts)
+    return hashlib.md5(blob.encode()).hexdigest()[:12]
+
+
+def cached_frame(name: str, key_parts: tuple, builder: Callable[[], pd.DataFrame],
+                 refresh: bool = False) -> pd.DataFrame:
+    """Generic parquet cache: return the saved frame if it exists, else build,
+    save, and return. `name` is a human-readable prefix so the cache dir is
+    browsable; `key_parts` are hashed into the filename."""
+    _ensure_cache_dir()
+    path = os.path.join(config.CACHE_DIR, f"{name}_{_key(*key_parts)}.parquet")
+    if os.path.exists(path) and not refresh:
+        return pd.read_parquet(path)
+    df = builder()
+    df.to_parquet(path, index=False)
+    print(f"  cached {name} -> {os.path.basename(path)} ({len(df):,} rows)")
+    return df
+
+
+def sp500_tickers(refresh: bool = False) -> List[str]:
+    """Current S&P 500 constituents from Wikipedia, cached to disk.
+
+    NOTE: this is TODAY'S list — survivorship bias (see config.py). Falls back
+    to LEGACY_100 if the fetch fails (no internet / page format change).
+    """
+    def _fetch() -> pd.DataFrame:
+        # Wikipedia 403s bare urllib (pandas' default); send a browser UA and
+        # hand the fetched HTML to read_html via StringIO.
+        req = urllib.request.Request(_SP500_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            html = resp.read().decode("utf-8")
+        tables = pd.read_html(io.StringIO(html))
+        symbols = tables[0]["Symbol"].astype(str).str.strip()
+        # Wikipedia uses BRK.B / BF.B; yfinance wants BRK-B / BF-B.
+        symbols = symbols.str.replace(".", "-", regex=False)
+        return pd.DataFrame({"ticker": sorted(symbols.unique())})
+
+    try:
+        df = cached_frame("universe_sp500", ("sp500",), _fetch, refresh=refresh)
+        tickers = df["ticker"].tolist()
+        if len(tickers) < 400:   # sanity: a mangled scrape shouldn't pass
+            raise ValueError(f"only {len(tickers)} symbols parsed")
+        return tickers
+    except Exception as e:
+        print(f"WARN: S&P 500 fetch failed ({e}); falling back to LEGACY_100")
+        return list(LEGACY_100)
+
+
+def resolve_universe(name: str = None) -> List[str]:
+    name = name or config.UNIVERSE_NAME
+    if name == "sp500":
+        return sp500_tickers()
+    if name == "legacy100":
+        return list(LEGACY_100)
+    raise ValueError(f"Unknown universe: {name}")
+
+
+def _download_chunk(tickers: List[str], start: str, end: str) -> pd.DataFrame:
+    """One threaded yfinance call for a batch of tickers -> long frame."""
+    cols = ["Date", "Open", "High", "Low", "Close", "Volume"]
+    raw = yf.download(tickers, start=start, end=end, interval="1d",
+                      auto_adjust=True, progress=False, group_by="ticker",
+                      threads=True)
+    if raw is None or len(raw) == 0:
+        return pd.DataFrame(columns=cols + ["ticker"])
+    multi = isinstance(raw.columns, pd.MultiIndex)
+    frames = []
+    for t in tickers:
+        if multi:
+            if t not in raw.columns.get_level_values(0):
+                continue
+            df = raw[t].copy()
+        else:
+            df = raw.copy()
+        df = df.reset_index()
+        if not set(cols).issubset(df.columns):
+            continue
+        df = df[cols].dropna(subset=["Close"])
+        df["ticker"] = t
+        if len(df):
+            frames.append(df)
+    if not frames:
+        return pd.DataFrame(columns=cols + ["ticker"])
+    return pd.concat(frames, ignore_index=True)
+
+
+def get_raw_panel(tickers: List[str], start: str = None, end: str = None,
+                  refresh: bool = False, chunk_size: int = 50) -> pd.DataFrame:
+    """Long OHLCV frame (Date, O, H, L, C, V, ticker) for a universe — cached.
+
+    First call for a big universe downloads in chunks (yfinance is flaky on
+    500-name single calls); every call after that is a ~1s parquet read.
+    """
+    start = start or config.START_DATE
+    end = end or config.END_DATE
+    tickers = sorted(set(tickers))
+
+    def _build() -> pd.DataFrame:
+        frames = []
+        for i in range(0, len(tickers), chunk_size):
+            batch = tickers[i:i + chunk_size]
+            print(f"  downloading {i + 1}-{i + len(batch)} of {len(tickers)}...")
+            frames.append(_download_chunk(batch, start, end))
+        panel = pd.concat(frames, ignore_index=True)
+        panel["Date"] = pd.to_datetime(panel["Date"])
+        got = panel["ticker"].nunique()
+        if got < len(tickers):
+            missing = sorted(set(tickers) - set(panel["ticker"].unique()))
+            print(f"  WARN: no data for {len(missing)} tickers: {missing[:10]}...")
+        return panel.sort_values(["ticker", "Date"]).reset_index(drop=True)
+
+    return cached_frame("raw", (tuple(tickers), start, end), _build, refresh=refresh)
+
 
 # ------------------------------------------------------------------
-# Config (re-exported so engine.py / backtest.py keep working)
+# Config (re-exported so engine.py keeps working)
 # ------------------------------------------------------------------
-TICKERS: List[str] = data_store.resolve_universe()
+TICKERS: List[str] = resolve_universe()
 
 START_DATE = config.START_DATE
 END_DATE = config.END_DATE
@@ -162,7 +364,6 @@ def build_market_features(start: str, end: str) -> pd.DataFrame:
         mkt_ret_1d  — backward daily market return (beta / idio-vol input)
         mkt_fwd_ret — FORWARD 5-day market return (v2 label input only)
     """
-    import yfinance as yf
     mkt = yf.download(
         MARKET_SYMBOL, start=start, end=end, interval="1d",
         auto_adjust=True, progress=False, multi_level_index=False,
@@ -373,7 +574,7 @@ def ticker_graph(feat: pd.DataFrame, ticker: str) -> None:
 # Panel assembly: per-ticker features + market context + cross-section
 # ------------------------------------------------------------------
 def _assemble_panel(tickers, start, end) -> pd.DataFrame:
-    raw = data_store.get_raw_panel(tickers, start, end)
+    raw = get_raw_panel(tickers, start, end)
     print("Building per-ticker features...")
     frames = [build_features(grp) for _, grp in raw.groupby("ticker")]
     panel = pd.concat(frames, ignore_index=True)
@@ -400,7 +601,7 @@ def build_panel(tickers: List[str] = None, start: str = None, end: str = None,
     tickers = sorted(set(tickers or TICKERS))
     start = start or START_DATE
     end = end or END_DATE
-    return data_store.cached_frame(
+    return cached_frame(
         "features",
         (config.CONFIG_VERSION, tuple(tickers), start, end, tuple(FEATURE_COLS),
          Z_THRESHOLD, HORIZON),
@@ -410,14 +611,14 @@ def build_panel(tickers: List[str] = None, start: str = None, end: str = None,
 
 
 # ------------------------------------------------------------------
-# Entry point (legacy single-split tensors for lightning_train.py)
+# Entry point (legacy single-split tensors for `train.py fit`)
 # ------------------------------------------------------------------
 def main(plot_charts: bool = False, universe: str = None) -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     if plot_charts:
         os.makedirs(label_dir, exist_ok=True)
 
-    tickers = data_store.resolve_universe(universe) if universe else TICKERS
+    tickers = resolve_universe(universe) if universe else TICKERS
     panel = build_panel(tickers)
 
     # ---- windowed [N, T, F] tensors for the LSTM / Transformer ----
@@ -461,7 +662,7 @@ def main(plot_charts: bool = False, universe: str = None) -> None:
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description="Build legacy single-split .pt tensors for lightning_train.py")
+    ap = argparse.ArgumentParser(description="Build legacy single-split .pt tensors for `train.py fit`")
     ap.add_argument("--universe", default=None, choices=["sp500", "legacy100"],
                     help="default: config.UNIVERSE_NAME (sp500). legacy100 is much "
                          "smaller/faster and matches the old checkpoint sizes.")

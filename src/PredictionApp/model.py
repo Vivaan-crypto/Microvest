@@ -1,12 +1,10 @@
-# model.py
 import torch
 import torch.nn as nn
 
 
 class StockLSTMModel(nn.Module):
-    # input_size must match the feature count from preprocess.FEATURE_COLS.
-    # Small on purpose: the target has a tiny edge, so a big LSTM just memorizes
-    # -- and CPU cost scales with size (256x3 was ~30x slower per step than this).
+    # input_size must match preprocess.FEATURE_COLS. Small on purpose: a tiny edge
+    # means a big LSTM just memorizes, and CPU cost scales with size.
     def __init__(self, input_size=26, lstm_hidden_size=64, lstm_layers=2, dropout_prob=0.2, num_classes=3):
         super().__init__()
         self.LSTM = nn.LSTM(
@@ -16,7 +14,7 @@ class StockLSTMModel(nn.Module):
             batch_first=True,
             dropout=dropout_prob if lstm_layers > 1 else 0.0,
         )
-        # Classification head (outputs raw logits, NOT softmax)
+        # Raw logits, not softmax.
         self.classification_head = nn.Sequential(
             nn.LayerNorm(lstm_hidden_size),
             nn.Dropout(dropout_prob),
@@ -24,24 +22,17 @@ class StockLSTMModel(nn.Module):
         )
 
     def forward(self, price_seq: torch.Tensor) -> torch.Tensor:
-        """
-        Args:
-            price_seq: [B, T, F] - batch of sequences
-        Returns:
-            logits: [B, num_classes] - class logits for each sample
-        """
-        lstm_out, _ = self.LSTM(price_seq)   # [B, T, hidden_size]
-        last_hidden = lstm_out[:, -1, :]     # [B, hidden_size] — take final timestep
-        output = self.classification_head(last_hidden)  # [B, num_classes]
-        return output
+        """price_seq [B, T, F] -> logits [B, num_classes]."""
+        lstm_out, _ = self.LSTM(price_seq)
+        last_hidden = lstm_out[:, -1, :]  # final timestep
+        return self.classification_head(last_hidden)
 
 
 class StockTransformerModel(nn.Module):
-    # input_size must match the feature count from preprocess.FEATURE_COLS.
+    # input_size must match preprocess.FEATURE_COLS.
     def __init__(self, input_size=26, d_model=512, transformer_layers=3, dropout_prob=0.2, num_classes=3):
         super().__init__()
-        # nhead must divide d_model; pick the largest power-of-2 ≤ 8 that works.
-        nhead = max(1, min(8, d_model // 8))
+        nhead = max(1, min(8, d_model // 8))  # must divide d_model
         self.input_to_transformer_linear = nn.Linear(input_size, d_model)
         self.LayerNorm = nn.LayerNorm(d_model)
         self.TransformerEncoderLayer = nn.TransformerEncoderLayer(
@@ -58,7 +49,7 @@ class StockTransformerModel(nn.Module):
             norm=self.LayerNorm,
             enable_nested_tensor=True
         )
-        # Classification head (outputs raw logits, NOT softmax)
+        # Raw logits, not softmax.
         self.classification_head = nn.Sequential(
             nn.LayerNorm(d_model),
             nn.Dropout(dropout_prob),
@@ -66,21 +57,8 @@ class StockTransformerModel(nn.Module):
         )
 
     def forward(self, price_seq: torch.Tensor) -> torch.Tensor:
-        """
-        Args:
-            price_seq: [B, T, F] - batch of sequences
-        Returns:
-            logits: [B, num_classes] - class logits for each sample
-        """
-        # Project input to d_model dimension
-        x = self.input_to_transformer_linear(price_seq)  # [B, T, d_model]
-
-        # Apply transformer encoder
-        x = self.Transformer(x)  # [B, T, d_model]
-
-        # Pool the sequence: use last token
-        x = x[:, -1, :]  # [B, d_model]
-
-        # Classification head
-        output = self.classification_head(x)  # [B, num_classes]
-        return output
+        """price_seq [B, T, F] -> logits [B, num_classes]."""
+        x = self.input_to_transformer_linear(price_seq)
+        x = self.Transformer(x)
+        x = x[:, -1, :]  # last token
+        return self.classification_head(x)
