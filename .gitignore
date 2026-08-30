@@ -8,3 +8,6 @@ src/PredictionApp/__pycache__/model.cpython-312.pyc
 /src/PredictionApp/LightningLogs/
 /src/PredictionApp/Model/
 /src/PredictionApp/tb_logs/
+.idea/workspace.xml
+
+/src/PredictionApp/.claude/worktrees/

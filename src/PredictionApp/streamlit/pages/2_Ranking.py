@@ -1,0 +1,111 @@
+"""Cross-sectional ranking view — the signal that actually matters."""
+
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+
+import engine
+import ui
+
+st.set_page_config(page_title="Ranking", page_icon="🏆", layout="wide")
+cfg = ui.controls()
+view = cfg["view"]
+
+ui.page_header("RANKING", "CROSS-SECTIONAL SIGNAL · the score that actually matters")
+
+# ---- Pick which stocks to rank ----
+all_tickers = sorted(view["ticker"].unique())
+picked = st.multiselect("Stocks to rank", all_tickers, default=all_tickers,
+                        help="Subset of the loaded universe to rank against each other.")
+if not picked:
+    st.warning("Pick at least one stock to rank.")
+    st.stop()
+view = view[view["ticker"].isin(picked)]
+
+# ---- As-of leaderboard ----
+last_date = view["date"].max()
+today = view[view["date"] == last_date].sort_values("signal", ascending=False)
+half = max(1, len(today) // 2)
+if half > 1:
+    n = st.slider("Names per side", 1, half, min(5, half))
+else:
+    n = 1
+
+def leaderboard_table(rows, cmap):
+    """Format a slice of the leaderboard: pick columns, format the numbers, and
+    shade the signal column. `cmap` is a matplotlib colormap name (Greens / Reds_r)."""
+    cols = ["ticker", "signal", "p_long", "p_short", "close"]
+    number_format = {"signal": "{:+.2f}", "p_long": "{:.0%}",
+                     "p_short": "{:.0%}", "close": "${:.2f}"}
+    return (rows[cols].style
+            .format(number_format)
+            .background_gradient(cmap=cmap, subset=["signal"]))
+
+
+st.subheader(f"Leaderboard — {last_date:%Y-%m-%d}")
+lc, rc = st.columns(2)
+with lc:
+    st.caption("🟢 Top — go long")
+    top = today.head(n)
+    st.dataframe(leaderboard_table(top, "Greens"), width="stretch", hide_index=True)
+with rc:
+    st.caption("🔴 Bottom — go short")
+    # tail() gives the weakest names; reverse so the most-bearish is on top.
+    bottom = today.tail(n).iloc[::-1]
+    st.dataframe(leaderboard_table(bottom, "Reds_r"), width="stretch", hide_index=True)
+
+st.divider()
+
+# ---- Signal quality: OUT-OF-SAMPLE ONLY ----
+# The model memorized the training period, so its in-sample IC/Sharpe look
+# world-class but are meaningless. Score only on data after the train cutoff.
+oos = view[view["date"] > engine.TRAIN_END]
+rep = engine.signal_report(oos)
+if not rep:
+    st.info(f"No out-of-sample data (after {engine.TRAIN_END.date()}) in this window "
+            f"to score the signal. Move the as-of date later.")
+    ui.caveats()
+    st.stop()
+
+st.subheader("Signal quality")
+st.caption(f"📏 Out-of-sample only — after the {engine.TRAIN_END.date()} train cutoff "
+           f"({len(oos):,} of {len(view):,} predictions). In-sample rows are excluded "
+           f"because the model memorized them.")
+m = st.columns(5)
+m[0].metric("Rank IC", f"{rep.get('ic_spearman', float('nan')):+.3f}", help=ui.HELP["ic"])
+m[1].metric("ICIR (ann.)", f"{rep.get('icir', float('nan')):+.2f}", help=ui.HELP["icir"])
+m[2].metric("IC>0 days", f"{rep.get('ic_hit_rate', float('nan')):.0%}", help=ui.HELP["ic_hit_rate"])
+m[3].metric("Decile spread", f"{rep.get('decile_spread', float('nan')):+.4f}", help=ui.HELP["decile"])
+m[4].metric("Long-short Sharpe", f"{rep.get('ls_sharpe', float('nan')):+.2f}", help=ui.HELP["ls_sharpe"])
+
+@st.fragment
+def long_short_section(oos):
+    """Runs alone when the quantile slider moves — the rest of the page doesn't rerun."""
+    q = st.select_slider("Long-short book quantile", [0.1, 0.2, 0.3], value=0.2,
+                         help=ui.HELP["ls_quantile"])
+    st.caption(f"Cumulative top-{int(q*100)}% minus bottom-{int(q*100)}% (gross)")
+    curve = engine.long_short_curve(oos, quantile=q)
+    if len(curve):
+        st.area_chart(curve.rename("cum. spread"), color=ui.CYAN)
+
+
+c1, c2 = st.columns(2)
+with c1:
+    st.caption("Mean forward return by signal decile (monotone up = good)")
+    dec = engine.decile_table(oos)
+    if not dec.empty:
+        fig = px.bar(x=dec.index.astype(int), y=(dec.values * 100),
+                     labels={"x": "signal decile (0=bearish, 9=bullish)", "y": "fwd ret %"})
+        fig.update_traces(marker_color=ui.CYAN)
+        ui.style_chart(fig, height=320)
+        ui.show_chart(fig, key="decile_bar")
+with c2:
+    long_short_section(oos)
+
+st.caption("Daily cross-sectional rank IC (stability of the edge over time)")
+ic = engine.rolling_ic(oos)
+if len(ic):
+    roll = ic.rolling(21, min_periods=5).mean().rename("21-day mean IC")
+    st.line_chart(pd.concat([ic.rename("daily IC"), roll], axis=1))
+
+ui.caveats()

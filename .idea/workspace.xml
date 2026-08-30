@@ -20,7 +20,46 @@
     </option>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
+    <list default="true" id="0562ae30-6872-43b0-8370-4a0d6823ebf5" name="Changes" comment="Model filtering + version labeling">
+      <change beforePath="$PROJECT_DIR$/.idea/Microvest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Microvest.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AWS_SAGEMAKER_COST_ESTIMATE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CODE_REVIEW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ENHANCED_LOGGING_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FINAL_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/GRADIENT_LOGGING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/INTEL_I5_VS_AWS_CPU_COMPARISON.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERFORMANCE_CLASS_BALANCE_FIXES.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/QUICK_FIX_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TRAINING_READY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/data_cache.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/stocks_to_dict.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/Helpers/test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/data_store.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/indicators.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/lightning_train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/metrics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/model_final.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/news_sentiment.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/preprocess.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/scorecard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/PredictionApp/scorecard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/Home.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/2_Ranking.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/3_Backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/streamlit_app/ui.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PredictionApp/walkforward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -47,6 +86,7 @@
   <component name="CopilotPersistence">
     <persistenceIdMap>
       <entry key="_C:/GitHub/Microvest" value="393FMfQpOsg9klmgBr8m8AmdkRT" />
+      <entry key="_C:/Github/Microvest-Stock-Market-Prediction" value="3H73EGopdkjtcjpnyoxeJzd7iB2" />
       <entry key="_C:/Users/shahv/OneDrive/Documents/GitHub/Microvest" value="2zQvGxede9A8i8o6ribiPLdyyXj" />
     </persistenceIdMap>
   </component>
@@ -69,6 +109,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
@@ -90,61 +135,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000000000103682" />
-      <entry key="MS500" value="1.0120558931420256" />
-      <entry key="S2" value="2.1899689472152994" />
-      <entry key="S5" value="6.101759276661108" />
-      <entry key="S10" value="11.690072326358122" />
-      <entry key="S30" value="21.081632626750558" />
-      <entry key="S60" value="25.017092050273362" />
-      <entry key="M2" value="27.35869831552316" />
-      <entry key="M5" value="28.91669129469958" />
-      <entry key="M10" value="29.715494055379718" />
-      <entry key="M15" value="30.415284201146054" />
-      <entry key="M30" value="32.505914090191496" />
-      <entry key="H1" value="35.951843415299805" />
-      <entry key="H2" value="39.789483606775875" />
-      <entry key="H4" value="42.81195061179841" />
-      <entry key="D1" value="46.201924251706785" />
-      <entry key="W1" value="46.8832406215209" />
+      <entry key="MS100" value="1.0001750433652363" />
+      <entry key="MS500" value="1.1772675044599323" />
+      <entry key="S2" value="1.6488693834695916" />
+      <entry key="S5" value="1.8411295935693497" />
+      <entry key="S10" value="1.9171311757700475" />
+      <entry key="S30" value="1.9715768382734766" />
+      <entry key="S60" value="1.9858346916728449" />
+      <entry key="M2" value="2.038489354469876" />
+      <entry key="M5" value="3.8113248592851003" />
+      <entry key="M10" value="9.187437112160962" />
+      <entry key="M15" value="13.666966607926717" />
+      <entry key="M30" value="21.193426339109216" />
+      <entry key="H1" value="26.74187642560067" />
+      <entry key="H2" value="30.12632723368185" />
+      <entry key="H4" value="31.998023135551584" />
+      <entry key="D1" value="52.34367370748445" />
+      <entry key="W1" value="319.30684385418203" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="9.017196880868152E-74" />
-      <entry key="MS500" value="2.4604486874095964E-15" />
-      <entry key="S2" value="2.2451345760349426E-4" />
-      <entry key="S5" value="0.03963420090428971" />
-      <entry key="S10" value="0.25695405616168787" />
-      <entry key="S30" value="0.9848042692678913" />
-      <entry key="S60" value="1.398939713306925" />
-      <entry key="M2" value="1.6713399629491106" />
-      <entry key="M5" value="1.861057998873094" />
-      <entry key="M10" value="1.9296412017125266" />
-      <entry key="M15" value="1.9581661036306557" />
-      <entry key="M30" value="2.0512875899806913" />
-      <entry key="H1" value="2.2622062215737184" />
-      <entry key="H2" value="2.5176303236629525" />
-      <entry key="H4" value="2.720620966640336" />
-      <entry key="D1" value="2.947012859249468" />
-      <entry key="W1" value="2.9922560442734287" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="2.5430899113101374E-145" />
+      <entry key="S5" value="1.464463327399947E-58" />
+      <entry key="S10" value="1.3141910202628884E-29" />
+      <entry key="S30" value="3.321756317740467E-10" />
+      <entry key="S60" value="2.5285819440670083E-5" />
+      <entry key="M2" value="0.007076213193312228" />
+      <entry key="M5" value="0.2089378160091895" />
+      <entry key="M10" value="0.6463034175935999" />
+      <entry key="M15" value="0.9417774297872646" />
+      <entry key="M30" value="1.3723960466163798" />
+      <entry key="H1" value="1.6567321773309363" />
+      <entry key="H2" value="1.8202898549138753" />
+      <entry key="H4" value="1.9081391701534016" />
+      <entry key="D1" value="3.3949272303145492" />
+      <entry key="W1" value="28.652494059125953" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9395227492237662" />
-      <entry key="MS500" value="0.999519919391731" />
-      <entry key="S2" value="2.1833482459647295" />
-      <entry key="S5" value="6.11849531898121" />
-      <entry key="S10" value="11.887736638100876" />
-      <entry key="S30" value="21.99290913622644" />
-      <entry key="S60" value="26.36360396869618" />
-      <entry key="M2" value="28.998605819371615" />
-      <entry key="M5" value="30.763702313910134" />
-      <entry key="M10" value="31.63775472730536" />
-      <entry key="M15" value="32.36833995296308" />
-      <entry key="M30" value="34.5543526146711" />
-      <entry key="H1" value="38.21237948452146" />
-      <entry key="H2" value="42.306146479141596" />
-      <entry key="H4" value="45.53203725058459" />
-      <entry key="D1" value="49.14883880965358" />
-      <entry key="W1" value="49.87548236059246" />
+      <entry key="MS100" value="0.9267302412832503" />
+      <entry key="MS500" value="1.1549127994462949" />
+      <entry key="S2" value="1.6383528526277669" />
+      <entry key="S5" value="1.836114936384758" />
+      <entry key="S10" value="1.9144638653048376" />
+      <entry key="S30" value="1.9706495044876207" />
+      <entry key="S60" value="1.985389356400678" />
+      <entry key="M2" value="2.0450310966083793" />
+      <entry key="M5" value="4.016350137741403" />
+      <entry key="M10" value="9.827425680406872" />
+      <entry key="M15" value="14.602451049977361" />
+      <entry key="M30" value="22.561089028977552" />
+      <entry key="H1" value="28.395698250916322" />
+      <entry key="H2" value="31.945002271893742" />
+      <entry key="H4" value="33.905311595936226" />
+      <entry key="D1" value="55.738423575280045" />
+      <entry key="W1" value="347.95919295447123" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -155,6 +200,7 @@
 }</component>
   <component name="ProjectId" id="2zQvGxede9A8i8o6ribiPLdyyXj" />
   <component name="ProjectLevelVcsManager">
+    <OptionsSetting value="false" id="Update" />
     <ConfirmationsSetting value="1" id="Add" />
   </component>
   <component name="ProjectSessionTemplates">
@@ -175,67 +221,75 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.AWS.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ai_insights.executor&quot;: &quot;Run&quot;,
-    &quot;Python.app (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.app.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.auto_label.executor&quot;: &quot;Run&quot;,
-    &quot;Python.gpu_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lightning_modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.lightning_train.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.marketmap.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot.executor&quot;: &quot;Run&quot;,
-    &quot;Python.pred.executor&quot;: &quot;Run&quot;,
-    &quot;Python.preprocessing.executor&quot;: &quot;Run&quot;,
-    &quot;Python.response_agent.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_10.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_3.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_4.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_5.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_6.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_7.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_8.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_9.executor&quot;: &quot;Run&quot;,
-    &quot;Python.squeeze_pro.executor&quot;: &quot;Run&quot;,
-    &quot;Python.stock dashboard.executor&quot;: &quot;Run&quot;,
-    &quot;Python.tempCodeRunnerFile.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;v2&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/GitHub/Microvest/src/PredictionApp/Data&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.appearance&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.AWS.executor": "Run",
+    "Python.ai_insights.executor": "Run",
+    "Python.app (1).executor": "Run",
+    "Python.app.executor": "Debug",
+    "Python.auto_label.executor": "Run",
+    "Python.backtest.executor": "Run",
+    "Python.gpu_test.executor": "Run",
+    "Python.lightning_modules.executor": "Run",
+    "Python.lightning_train.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.marketmap.executor": "Debug",
+    "Python.model.executor": "Run",
+    "Python.plot (1).executor": "Run",
+    "Python.plot.executor": "Run",
+    "Python.pred.executor": "Run",
+    "Python.preprocess.executor": "Run",
+    "Python.preprocessing.executor": "Run",
+    "Python.response_agent.executor": "Debug",
+    "Python.scratch_1.executor": "Run",
+    "Python.scratch_10.executor": "Run",
+    "Python.scratch_2.executor": "Run",
+    "Python.scratch_3.executor": "Run",
+    "Python.scratch_4.executor": "Run",
+    "Python.scratch_5.executor": "Run",
+    "Python.scratch_6.executor": "Run",
+    "Python.scratch_7.executor": "Run",
+    "Python.scratch_8.executor": "Run",
+    "Python.scratch_9.executor": "Run",
+    "Python.squeeze_pro.executor": "Run",
+    "Python.stock dashboard.executor": "Run",
+    "Python.stocks_to_dict.executor": "Run",
+    "Python.tempCodeRunnerFile.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.train.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "ai.playground.ignore.import.keys.banner.in.settings": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "copilot.chat.legacySessionMetadata.migrated": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "develop",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/GitHub/Microvest/src/PredictionApp/Data",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "aDefault",
+    "settings.editor.selected.configurable": "settings.sync",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
-      &quot;Python&quot;,
-      &quot;PLAIN_TEXT&quot;
+  "keyToStringList": {
+    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
+      "Python",
+      "PLAIN_TEXT"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\GitHub\Microvest\src\PredictionApp\Data" />
@@ -253,7 +307,7 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.lightning_train">
-    <configuration name="AWS" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="backtest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -268,31 +322,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/AWS.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="auto_label" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="microvest" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/auto_label.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/backtest.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -325,7 +355,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="plot (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="preprocess" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -334,13 +364,13 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/plot.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/preprocess.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -349,7 +379,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="scratch_4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microvest" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -364,7 +394,31 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_4.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="stocks_to_dict" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="microvest" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/PredictionApp/Helpers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/PredictionApp/Helpers/stocks_to_dict.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -376,17 +430,17 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.lightning_train" />
-        <item itemvalue="Python.auto_label" />
-        <item itemvalue="Python.AWS" />
-        <item itemvalue="Python.scratch_1" />
-        <item itemvalue="Python.plot (1)" />
+        <item itemvalue="Python.stocks_to_dict" />
+        <item itemvalue="Python.preprocess" />
+        <item itemvalue="Python.backtest" />
+        <item itemvalue="Python.scratch_4" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
+        <option value="bundled-python-sdk-6fa658e1df1a-5bd6d13a2a75-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-262.8665.369" />
       </set>
     </attachedChunks>
   </component>
@@ -529,7 +583,39 @@
       <option name="project" value="LOCAL" />
       <updated>1781293141722</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="A decent model has been trained + streamlit app to display rankings and classification predictions.">
+      <option name="closed" value="true" />
+      <created>1781921831777</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1781921831777</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Added Backtesting">
+      <option name="closed" value="true" />
+      <created>1781978816385</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1781978816385</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Updated UI">
+      <option name="closed" value="true" />
+      <created>1782332133906</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1782332133906</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Model filtering + version labeling">
+      <option name="closed" value="true" />
+      <created>1782332721324</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1782332721324</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -560,15 +646,19 @@
     <MESSAGE value="AI Chats and config.yaml work" />
     <MESSAGE value="PRE-UI Fixes" />
     <MESSAGE value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
-    <option name="LAST_COMMIT_MESSAGE" value="New Transformer Model integration with a scope change: price prediction -&gt; directionality prediction" />
+    <MESSAGE value="A decent model has been trained + streamlit app to display rankings and classification predictions." />
+    <MESSAGE value="Added Backtesting" />
+    <MESSAGE value="Updated UI" />
+    <MESSAGE value="Model filtering + version labeling" />
+    <option name="LAST_COMMIT_MESSAGE" value="Model filtering + version labeling" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py</url>
-          <line>20</line>
-          <option name="timeStamp" value="1" />
+          <url>file://$PROJECT_DIR$/src/PredictionApp/streamlit_app/pages/1_Classification.py</url>
+          <line>4</line>
+          <option name="timeStamp" value="14" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

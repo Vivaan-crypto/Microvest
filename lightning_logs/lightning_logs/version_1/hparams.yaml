@@ -1,0 +1,6 @@
+dropout: 0.2
+hidden_size: 64
+input_size: 30
+lr: 0.001
+num_layers: 2
+weight_decay: 0.001

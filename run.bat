@@ -1,1 +1,0 @@
- tensorboard --logdir C:\Users\shahv\OneDrive\Documents\GitHub\Microvest\src\runs\simple_stock_model
